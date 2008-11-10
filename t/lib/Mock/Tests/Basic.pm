@@ -88,6 +88,22 @@ sub t_05_select_all_iterator : Tests(5) {
     is $i, 3;
 }
 
+sub t_05_select_all_iterator_with_reset : Tests(8) {
+    my $itr = $mock->get('bookmark_user');
+    isa_ok $itr, 'Data::Model::Iterator';
+    my $i = 0;
+    while (my $row = $itr->next) {
+        $i++;
+        isa_ok $row, "$mock_class\::bookmark_user";
+    }
+    $itr->reset;
+    while (my $row = $itr->next) {
+        $i++;
+        isa_ok $row, "$mock_class\::bookmark_user";
+    }
+    is $i, 6;
+}
+
 sub t_05_select_all_iterator_limit : Tests(4) {
     my $itr = $mock->get('bookmark_user', { limit => 2 });
     isa_ok $itr, 'Data::Model::Iterator';
