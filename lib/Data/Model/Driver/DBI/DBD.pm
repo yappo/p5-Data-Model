@@ -5,7 +5,7 @@ use warnings;
 sub new {
     my($class, $dbd, %args) = @_;
     my $dbd_class = "$class\::$dbd";
-    eval "use $dbd_class;";
+    eval "use $dbd_class;"; ## no critic
     die $@ if $@;
     bless { %args }, $dbd_class;
 }
