@@ -3,7 +3,6 @@ use t::Utils;
 use base qw/Test::Class/;
 use Test::More;
 
-sub tests { 39 }
 
 my $mock;
 my $mock_class;
@@ -12,7 +11,7 @@ sub set_mock {
     $mock_class = ref($mock);
 }
 
-sub t_01_basic : Test {
+sub t_01_basic : Tests {
     my $ret1 = $mock->set( user => 'yappo', { name => 'Kazuhiro Osawa' } );
     isa_ok $ret1, "$mock_class\::user";
     is $ret1->id, 'yappo';
@@ -29,7 +28,7 @@ sub t_01_basic : Test {
     ok !$mock->delete( user => 'yappo' ), 'delete error';
 }
 
-sub t_02_insert_bookmark_user : Test {
+sub t_02_insert_bookmark_user : Tests {
     my $ret1 = $mock->set( bookmark_user => [qw/ 1 yappo /] );
     isa_ok $ret1, "$mock_class\::bookmark_user";
     is $ret1->bookmark_id, 1, 'bookmark_id';
@@ -48,21 +47,21 @@ sub t_02_insert_bookmark_user : Test {
     is $ret1->user_id, 'lopnor';
 }
 
-sub t_03_get : Test {
+sub t_03_get : Tests {
     my($ret2) = $mock->get( bookmark_user => [qw/ 1 yappo /] );
     isa_ok $ret2, "$mock_class\::bookmark_user";
     is $ret2->bookmark_id, 1;
     is $ret2->user_id, 'yappo';
 }
         
-sub t_03_order : Test {
+sub t_03_order : Tests {
     my($ret3) = $mock->get( bookmark_user => '1', { order => [ { user_id => 'DESC' } ] } );
     isa_ok $ret3, "$mock_class\::bookmark_user";
     is $ret3->bookmark_id, 1;
     is $ret3->user_id, 'yappo';
 }
 
-sub t_03_index : Test {
+sub t_03_index : Tests {
     my($ret4) = $mock->get( bookmark_user => {
         index => { user_id => 'lopnor' },
         order => [{ bookmark_id => 'DESC' }],
@@ -72,7 +71,7 @@ sub t_03_index : Test {
     is $ret4->user_id, 'lopnor';
 }
     
-sub t_04_delete : Test {
+sub t_04_delete : Tests {
     ok $mock->delete( bookmark_user => [qw/ 1 yappo /] ), 'delete bookmark_user';
     ok !$mock->get( bookmark_user => [qw/ 1 yappo /] ), 'get error bookmark_user';
     ok !$mock->delete( bookmark_user => [qw/ 1 yappo /] ), 'delete error bookmark_user';

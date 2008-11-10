@@ -1,7 +1,5 @@
 use t::Utils;
 use Mock::Tests::Basic;
-use Test::More tests => Mock::Tests::Basic->tests;
-
 use Mock::Memory::Basic;
 
 my $mock = Mock::Memory::Basic->new;
