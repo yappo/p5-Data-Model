@@ -28,7 +28,9 @@ sub new {
     my($class, %args) = @_;
     my $self = bless { %args }, $class;
     for my $name (qw/ select from joins bind group order where /) {
-        $self->$name( [] ) unless $self->$name && ref $self->$name eq 'ARRAY';
+        unless ($self->$name && ref $self->$name eq 'ARRAY') {
+            $self->$name ? $self->$name([ $self->$name ]) : $self->$name([]);;
+        }
     }
     for my $name (qw/ select_map select_map_reverse where_values /) {
         $self->$name( {} ) unless $self->$name && ref $self->$name eq 'HASH';

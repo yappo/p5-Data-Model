@@ -2,7 +2,12 @@ package Data::Model::Driver;
 use strict;
 use warnings;
 
-sub new { bless {}, shift }
+sub new { 
+    my($class, %args) = @_;
+    my $self = bless { %args }, shift;
+    $self->init;
+    $self;
+}
 
 sub init {}
 

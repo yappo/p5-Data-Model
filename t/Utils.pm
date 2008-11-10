@@ -1,6 +1,8 @@
 package t::Utils;
 use strict;
 use warnings;
+use File::Temp ();
+use DBI;
 use Path::Class;
 use lib Path::Class::Dir->new('t', 'lib')->stringify;
 
@@ -11,6 +13,31 @@ sub import {
     strict->import;
     warnings->import;
 
+    for my $name (qw/ temp_filename setup_sqlite /) {
+        no strict 'refs';
+        *{"$caller\::$name"} = \&{$name};
+    }
 }
+
+sub temp_filename {
+    my $fh = File::Temp->new;
+    my $filename = $fh->filename;
+    close $fh;
+    $filename;
+}
+
+sub setup_sqlite {
+    my($sqls, $filename) = @_;
+    $filename ||= temp_filename;
+
+    my $dbh = DBI->connect('dbi:SQLite:dbname=' . $filename,
+                           '', '', { RaiseError => 1, PrintError => 0 });
+    for my $sql (@{ $sqls }) {
+        $dbh->do( $sql );
+    }
+    $dbh->disconnect;
+    $filename;
+}
+
 
 1;

@@ -251,7 +251,8 @@ sub get_result_list {
         push @{ $results }, [ $id => $data->{records}->{$id} ];
     }
 
-    $self->limit($schema, $query, $self->sort($schema, $query, $self->grep($schema, $query, $results)));
+    return $results unless $query && ref($query) eq 'HASH';
+    return $self->limit($schema, $query, $self->sort($schema, $query, $self->grep($schema, $query, $results)));
 }
 
 sub grep {
@@ -261,7 +262,35 @@ sub grep {
 
 sub sort {
     my($self, $schema, $query, $rows) = @_;
-    $rows unless exists $query->{order};
+    return $rows unless exists $query->{order};
+
+    my $sort_data = [];
+    for my $data (@{ $query->{order} }) {
+        my($column, $vec) = (%{ $data });
+        push @{ $sort_data }, +{
+            column => $column,
+            vec    => uc($vec),
+            int    => !!($schema->{column}->{$column}->{type} =~ /int/i),
+        };
+    }
+
+    my @ordered = sort {
+        my $v = 0;
+        for my $data (@{ $sort_data }) {
+            my $column = $data->{column};
+            if ($data->{int}) {
+                next if $a->[1]->{$column} == $b->[1]->{$column};
+                $v = $a->[1]->{$column} <=> $b->[1]->{$column};
+            } else {
+                next if $a->[1]->{$column} eq $b->[1]->{$column};
+                $v = $a->[1]->{$column} cmp $b->[1]->{$column};
+            }
+            $v *= -1 if $data->{vec} eq 'DESC';
+            last;
+        }
+        $v;
+    } @{ $rows };
+    \@ordered;
 }
 
 sub limit {

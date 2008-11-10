@@ -92,7 +92,7 @@ sub _column (@) {
     };
 
     $schema->{column}->{$column} = +{
-        type    => $type    || 'null',
+        type    => $type    || 'char',
         options => $options || +{},
     };
 }

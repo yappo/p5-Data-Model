@@ -93,9 +93,11 @@ sub _get_query_args {
     } elsif (ref($_[0]) eq 'HASH') {
         ## get query
         $query = shift;
+    } else {
+        shift;
     }
 
-    return [ $key_array, $query ];
+    return [ $key_array, $query, @_ ];
 }
 
 =head2 delete
@@ -122,7 +124,7 @@ sub get {
         my @objs = ();
         while (my $data = $iterator->()) {
             my $obj = $schema->{class}->new($data);
-            $obj->call_trigger('post_load');
+            $obj->call_trigger('post_load'); # inflate
             push @objs, $obj;
         }
         return @objs;
@@ -178,11 +180,13 @@ sub set {
         $columns = $self->get_columns_hash_by_key_array_and_hash($schema, {}, $key_array);
     }
 
-    my $result = $schema->{driver}->set( $schema, $key_array => $columns );
+    # $columns deflate
+
+    my $result = $schema->{driver}->set( $schema, $key_array => $columns, @_ );
     return unless $result;
 
     my $obj = $schema->{class}->new($result);
-    $obj->call_trigger('post_load');
+    $obj->call_trigger('post_load'); # inflate
     $obj;
 }
 

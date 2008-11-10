@@ -28,7 +28,7 @@ sub run {
     do {
         my $ret1 = $mock->set( bookmark_user => [qw/ 1 yappo /] );
         isa_ok $ret1, "$mock_class\::bookmark_user";
-        is $ret1->bookmark_id, 1;
+        is $ret1->bookmark_id, 1, 'bookmark_id';
         is $ret1->user_id, 'yappo';
 
         $ret1 = $mock->set( bookmark_user => [qw/ 1 lopnor /] );
@@ -49,7 +49,7 @@ sub run {
         is $ret2->bookmark_id, 1;
         is $ret2->user_id, 'yappo';
         
-        my($ret3) = $mock->get( bookmark_user => '1' );
+        my($ret3) = $mock->get( bookmark_user => '1', { order => [ { user_id => 'DESC' } ] } );
         isa_ok $ret3, "$mock_class\::bookmark_user";
         is $ret3->bookmark_id, 1;
         is $ret3->user_id, 'yappo';
