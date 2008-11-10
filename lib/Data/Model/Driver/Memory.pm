@@ -72,7 +72,7 @@ sub get {
     return unless $results && @{ $results };
 
     $results = [ map { $_->[1] } @{ $results } ];
-    $self->_generate_result_iterator($results);
+    return $self->_generate_result_iterator($results), +{};
 }
 
 sub set {
@@ -130,6 +130,7 @@ sub get_record_id_list {
         $result_id_list = $self->get_memory_index($schema, 'key', undef, $key);
     } else {
         # hash
+        $columns = +{};
         if (exists $columns->{index} && ref($columns->{index}) eq 'HASH') {
             my($index, $index_key) = %{ $columns->{index} };
             $index_key = [ $index_key ] unless ref($index_key);
@@ -139,6 +140,11 @@ sub get_record_id_list {
                     last;
                 }
             }
+        } else {
+            my $data = $self->load_key($schema);
+            $result_id_list = [
+                values %{ $data->{key} }
+            ];
         }
     }
     $result_id_list;
@@ -296,6 +302,21 @@ sub sort {
 sub limit {
     my($self, $schema, $query, $rows) = @_;
     return $rows unless exists $query->{limit} || exists $query->{offset};
+
+    my @limitted;
+    if (exists $query->{offset}) {
+        for (1..$query->{offset}) {
+            shift @{ $rows };
+        }
+    }
+    if (exists $query->{limit}) {
+        for (1..$query->{limit}) {
+            push @limitted, shift @{ $rows };
+        }
+    } else {
+        push @limitted, @{ $rows };
+    }
+    return \@limitted;
 }
 
 1;

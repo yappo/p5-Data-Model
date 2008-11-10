@@ -128,7 +128,9 @@ sub get {
 
     # pre load
     return unless $iterator->();
-    return $iterator;
+    return $iterator, +{
+        end => sub { $sth->finish; $self->end_query($sth) },
+    };
 }
 
 # insert or replace

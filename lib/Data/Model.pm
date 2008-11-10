@@ -4,6 +4,8 @@ use strict;
 use warnings;
 our $VERSION = '0.01';
 
+use Data::Model::Iterator;
+
 ## for schema methods
 sub driver  {};
 sub model   {};
@@ -69,7 +71,7 @@ sub get_columns_hash_by_key_array_and_hash {
 
 sub _get_query_args {
     my $schema = shift;
-    return unless exists $_[0];
+    return [] unless exists $_[0];
 
     # get key array or query
     my $key_array = undef;
@@ -84,7 +86,7 @@ sub _get_query_args {
         ## ->get( modelname => 'key');
         $key_array = [ shift ];
     } else {
-        return;
+        return [];
     }
 
     # get query
@@ -116,8 +118,7 @@ sub get {
     return unless $schema;
 
     my $query = _get_query_args($schema, @_);
-    return unless $query;
-    my $iterator = $schema->{driver}->get( $schema, @{ $query } );
+    my($iterator, $iterator_options) = $schema->{driver}->get( $schema, @{ $query } );
     return unless $iterator;
 
     if (wantarray) {
@@ -127,9 +128,18 @@ sub get {
             $obj->call_trigger('post_load'); # inflate
             push @objs, $obj;
         }
+        $iterator_options->{end}->() if exists $iterator_options->{end} && ref($iterator_options->{end}) eq 'CODE';
         return @objs;
     }
-    return $iterator;
+    return Data::Model::Iterator->new(
+        $iterator,
+        %{ $iterator_options },
+        wrapper => sub {
+            my $obj = $schema->{class}->new(shift);
+            $obj->call_trigger('post_load'); # inflate 
+            $obj;
+        },
+    );
 }
 
 sub get_multi {
