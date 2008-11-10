@@ -6,6 +6,7 @@ use Class::Trigger qw( pre_save post_save post_load );
 
 sub new {
     my($class, $columns) = @_;
+    $columns ||= {};
     bless {
         column_values => { %{ $columns } },
         changed_cols  => +{},
