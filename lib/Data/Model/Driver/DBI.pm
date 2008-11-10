@@ -53,9 +53,31 @@ sub r_handle { shift->rw_handle(@_) }
 
 sub last_error {}
 
+sub add_key_to_where {
+    my($self, $stmt, $columns, $key) = @_;
+    if ($key) { 
+        # add where
+        my $i = 0;
+        for my $i (0..( scalar(@{ $key }) - 1 )) {
+            $stmt->add_where( $columns->[$i] => $key->[$i] );
+        }
+    }
+}
 
-sub get {
-    my($self, $schema, $key, $columns, %args) = @_;
+sub add_index_to_where {
+    my($self, $schema, $stmt, $index_obj) = @_;
+    return unless my($index, $index_key) = (%{ $index_obj });
+    $index_key = [ $index_key ] unless ref($index_key) eq 'ARRAY';
+    for my $index_type (qw/ unique index /) {
+        if (exists $schema->{$index_type}->{$index}) {
+            $self->add_key_to_where($stmt, $schema->{$index_type}->{$index}, $index_key);
+            last;
+        }
+    }
+}
+
+sub fetch {
+    my($self, $rec, $schema, $key, $columns, %args) = @_;
 
     $columns = +{} unless $columns;
 
@@ -67,18 +89,12 @@ sub get {
     unshift @{ $columns->{from} }, $schema->{model};
 
     my $stmt = Data::Model::SQL->new(%{ $columns });
-    if ($key) { 
-        # add where
-        my $i = 0;
-        for my $i (0..( scalar(@{ $key }) - 1 )) {
-            $stmt->add_where( $schema->{key}->[$i] => $key->[$i] );
-        }
-    }
+    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+    $self->add_index_to_where($schema, $stmt, $columns->{index}) if exists $columns->{index};
     my $sql = $stmt->as_sql;
 
     my @bind;
     my $map = $stmt->select_map;
-    my $rec = +{};
     for my $col (@{ $stmt->select }) {
         push @bind, \$rec->{ exists $map->{$col} ? $map->{$col} : $col };
     }
@@ -88,6 +104,16 @@ sub get {
     my $sth = $args{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
     $sth->execute(@{ $stmt->bind });
     $sth->bind_columns(undef, @bind);
+
+    $sth;
+}
+
+
+sub get {
+    my($self, $schema, $key, $columns, %args) = @_;
+
+    my $rec = +{};
+    my $sth = $self->fetch($rec, $schema, $key, $columns, %args);
 
     my $i = 0;
     my $iterator = sub {
@@ -128,7 +154,6 @@ sub set {
     $sth->finish;
     $self->end_query($sth);
 
-
     # set autoincrement key
 
     $columns;
@@ -143,13 +168,8 @@ sub delete {
 
     $columns->{from} = [ $schema->{model} ];
     my $stmt = Data::Model::SQL->new(%{ $columns });
-    if ($key) { 
-        # add where
-        my $i = 0;
-        for my $i (0..( scalar(@{ $key }) - 1 )) {
-            $stmt->add_where( $schema->{key}->[$i] => $key->[$i] );
-        }
-    }
+    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+
     my $sql = "DELETE " . $stmt->as_sql;
     my $dbh = $self->rw_handle;
     $self->start_query($sql, $stmt->bind);

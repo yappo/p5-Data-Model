@@ -5,7 +5,8 @@ use Test::More tests => Mock::Tests::Basic->tests;
 use Mock::Memory::Basic;
 
 my $mock = Mock::Memory::Basic->new;
-Mock::Tests::Basic->run($mock);
+Mock::Tests::Basic->set_mock($mock);
+Mock::Tests::Basic->runtests;
 
 __END__
 
