@@ -26,7 +26,7 @@ sub import {
 
 my $CALLER = undef;
 sub model ($$;%) {
-    my($name, $schema, %args) = @_;
+    my($name, $schema_code, %args) = @_;
     my $caller = caller;
 
     my $pkg = "$caller\::$name";
@@ -34,22 +34,27 @@ sub model ($$;%) {
     no strict 'refs';
     @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
 
-    $caller->__properties->{schema}->{$name} = +{
-        driver   => undef,
-        model    => $name,
-        class    => $pkg,
-        column   => {},
-        index    => {},
-        unique   => {},
-        key      => undef,
-        triggers => {},
-        options  => +{},
+    my $schema = $caller->__properties->{schema}->{$name} = +{
+        driver       => undef,
+        schema_class => $caller,
+        model        => $name,
+        class        => $pkg,
+        column       => {},
+        index        => {},
+        unique       => {},
+        key          => undef,
+        triggers     => {},
+        options      => +{},
     };
 
     $caller->__properties->{__process_tmp}->{name} = $name;
     $CALLER = $caller;
-    $schema->();
+    $schema_code->();
     $CALLER = undef;
+
+    if (exists $schema->{driver}) {
+        $schema->{driver}->init_model($name, $schema);
+    }
 }
 sub schema (&) { shift }
 

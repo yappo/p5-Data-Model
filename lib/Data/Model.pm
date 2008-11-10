@@ -118,6 +118,7 @@ sub get {
     return unless $schema;
 
     my $query = _get_query_args($schema, @_);
+    local $schema->{schema_obj} = $self;
     my($iterator, $iterator_options) = $schema->{driver}->get( $schema, @{ $query } );
     return unless $iterator;
 
@@ -192,6 +193,7 @@ sub set {
 
     # $columns deflate
 
+    local $schema->{schema_obj} = $self;
     my $result = $schema->{driver}->set( $schema, $key_array => $columns, @_ );
     return unless $result;
 
@@ -220,6 +222,7 @@ sub delete {
     my $query = _get_query_args($schema, @_);
     return unless $query;
 
+    local $schema->{schema_obj} = $self;
     $schema->{driver}->delete( $schema, @{ $query } );
 }
 

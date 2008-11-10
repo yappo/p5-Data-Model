@@ -10,6 +10,7 @@ sub new {
 }
 
 sub init {}
+sub init_model {}
 
 my $KEYSEPARATE = "\0";
 sub _generate_key_data {
