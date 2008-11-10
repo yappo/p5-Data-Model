@@ -39,8 +39,8 @@ sub new {
 
 sub add_select {
     my($self, $term, $col) = @_;
-    $col ||= $term;
     push @{ $self->{select} }, $term;
+    return unless $col;
     $self->select_map->{$term}        = $col;
     $self->select_map_reverse->{$col} = $term;
 }
@@ -98,7 +98,7 @@ sub as_select {
         $sql .= 'SELECT ';
         $sql .= join(', ',  map {
             my $alias = $self->select_map->{$_};
-            $alias && /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias";
+            $alias ? /(?:^|\.)\Q$alias\E$/ ? $_ : "$_ $alias" : $_;
         } @{ $self->select });
         $sql .= "\n";
     }
