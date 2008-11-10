@@ -9,7 +9,7 @@ sub driver  {};
 sub model   {};
 sub schema  {};
 sub column  {};
-sub cokumns {};
+sub columns {};
 sub key     {};
 sub index   {};
 sub unique  {};
