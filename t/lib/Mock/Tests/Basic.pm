@@ -99,4 +99,15 @@ sub t_05_select_all_iterator_limit : Tests(4) {
     is $i, 2;
 }
 
+sub t_05_select_all_iterator_limit_offset : Tests(3) {
+    my $itr = $mock->get('bookmark_user', { limit => 1, offset => 2 });
+    isa_ok $itr, 'Data::Model::Iterator';
+    my $i = 0;
+    while (my $row = $itr->next) {
+        $i++;
+        isa_ok $row, "$mock_class\::bookmark_user";
+    }
+    is $i, 1;
+}
+
 1;
