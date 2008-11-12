@@ -41,6 +41,7 @@ install_model bookmark_user => schema {
 sub as_sqls {
     [
         "CREATE TABLE user ( id CHAR(255), name CHAR(255), PRIMARY KEY ( id ) )",
+        "CREATE TABLE bookmark ( id INTEGER NOT NULL PRIMARY KEY, url CHAR(255) )",
         "CREATE TABLE bookmark_user ( bookmark_id CHAR(255), user_id CHAR(255), PRIMARY KEY ( bookmark_id, user_id ) )",
     ];
 }

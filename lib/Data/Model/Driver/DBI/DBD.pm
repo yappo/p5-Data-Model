@@ -10,6 +10,7 @@ sub new {
     bless { %args }, $dbd_class;
 }
 
+sub fetch_last_id {}
 sub bind_param_attributes {}
 
 1;
