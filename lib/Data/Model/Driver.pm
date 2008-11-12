@@ -35,6 +35,7 @@ sub _generate_result_iterator {
 sub get {}
 sub set {}
 sub delete {}
+sub update {}
 
 sub get_multi {}
 sub set_multi {}

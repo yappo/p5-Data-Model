@@ -159,6 +159,7 @@ sub get_multi {
 sub set {
     my $self   = shift;
     my $model  = shift;
+    return $self->update($model, @_) if ref($model) && $model->isa('Data::Model::Row');
     my $schema = $self->get_schema($model);
     return unless $schema;
     return unless exists $_[0];
@@ -203,6 +204,32 @@ sub set {
 }
 
 sub set_multi {
+}
+
+
+sub update {
+    my($self, $row, %args) = @_;
+    my $class = ref($row);
+    return unless $class;
+    my($klass, $model) = $class =~ /^(.+)::([^:]+)$/;
+    return unless ref($self) eq $klass;
+    my $schema = $self->get_schema($model);
+    return unless $schema;
+    return unless @{ $schema->{key} } > 0;
+
+    my $columns = +{};
+    for my $name (keys %{ $schema->{column} }) {
+        $columns->{$name} = $row->$name;
+    }
+    my $key_array = $self->get_key_array_by_hash($schema, $columns);
+
+    # update された column のみ $columns に入れる
+    # $columns deflate
+
+    my $result = $schema->{driver}->update( $schema, $key_array, $columns, %args);
+    return unless $result;
+
+    $row;
 }
 
 

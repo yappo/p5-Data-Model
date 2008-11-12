@@ -162,7 +162,33 @@ sub set {
 }
 
 # update
+sub update {
+    my($self, $schema, $key, $columns, %args) = @_;
+    
+    my $stmt = Data::Model::SQL->new(%{ $columns });
+    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
 
+    my $where_sql = $stmt->as_sql_where;
+    return unless $where_sql;
+
+    my @bind;
+    my @set;
+    while (my($column, $value) = each %{ $columns }) {
+        push @set, "$column = ?";
+        push @bind, $value;
+    }
+    push @bind, @{ $stmt->bind };
+
+    my $sql = 'UPDATE ' . $schema->{model} . ' SET ' . join(', ', @set) . $where_sql;
+    my $dbh = $self->rw_handle;
+    $self->start_query($sql, \@bind);
+    my $sth = $dbh->prepare_cached($sql);
+    $sth->execute(@bind);
+    $sth->finish;
+    $self->end_query($sth);
+
+    return $sth->rows;
+}
 
 # delete
 sub delete {
