@@ -164,7 +164,7 @@ sub set {
 # update
 sub update {
     my($self, $schema, $key, $columns, %args) = @_;
-    
+
     my $stmt = Data::Model::SQL->new(%{ $columns });
     $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
 

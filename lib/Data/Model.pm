@@ -47,6 +47,11 @@ sub get_driver {
 
 sub get_key_array_by_hash {
     my($self, $schema, $hash) = @_;
+    my @keys;
+    for my $key (@{ $schema->{key} }) {
+        push @keys, $hash->{$key};
+    }
+    \@keys;
 }
 
 sub get_columns_hash_by_key_array_and_hash {
