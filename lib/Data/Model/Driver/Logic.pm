@@ -10,8 +10,17 @@ sub get {
     my $self   = shift;
     my $schema = shift;
     my $obj = $schema->{schema_obj};
+
     my $method = 'get_' . $schema->{model};
-    return $self->_generate_result_iterator([ $obj->$method($schema, @_) ]), +{};
+    my @ret = $obj->$method($schema, @_);
+    $ret[1] = +{};
+    if (ref($ret[0]) eq 'CODE') {
+        return @ret;
+    } elsif (ref($ret[0]) eq 'ARRAY') {
+        return $self->_generate_result_iterator($ret[0]), $ret[1];
+    } else {
+        return $self->_generate_result_iterator([ $ret[0] ]), $ret[1];
+    }
 }
 
 sub set {
