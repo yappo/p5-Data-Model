@@ -7,7 +7,7 @@ use Data::Model::Driver::Logic;
 
 my $logic = Data::Model::Driver::Logic->new;
 
-model user => schema {
+install_model user => schema {
     driver $logic;
     key 'id';
     columns qw/id name/;

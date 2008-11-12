@@ -10,7 +10,7 @@ sub import {
     my $caller = caller;
 
     no strict 'refs';
-    for my $name (qw/ driver model schema column columns key index unique schema_options /) {
+    for my $name (qw/ driver install_model schema column columns key index unique schema_options /) {
         *{"$caller\::$name"} = \&$name;
     }
 
@@ -25,7 +25,7 @@ sub import {
 }
 
 my $CALLER = undef;
-sub model ($$;%) {
+sub install_model ($$;%) {
     my($name, $schema_code, %args) = @_;
     my $caller = caller;
 

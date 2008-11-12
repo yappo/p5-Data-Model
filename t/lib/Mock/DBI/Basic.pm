@@ -12,13 +12,13 @@ my $dbi = Data::Model::Driver::DBI->new(
     password => 'password',
 );
 
-model user => schema {
+install_model user => schema {
     driver $dbi;
     key 'id';
     columns qw/id name/;
 };
 
-model bookmark => schema {
+install_model bookmark => schema {
     driver $dbi;
     key 'id';
 
@@ -30,7 +30,7 @@ model bookmark => schema {
     column 'url';
 };
 
-model bookmark_user => schema {
+install_model bookmark_user => schema {
     my $columns = [qw/ bookmark_id user_id /];
     driver $dbi;
     key $columns;

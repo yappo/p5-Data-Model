@@ -7,13 +7,13 @@ use Data::Model::Driver::Memory;
 
 my $memory = Data::Model::Driver::Memory->new;
 
-model user => schema {
+install_model user => schema {
     driver $memory;
     key 'id';
     columns qw/id name/;
 };
 
-model bookmark => schema {
+install_model bookmark => schema {
     driver $memory;
     key 'id';
 
@@ -25,7 +25,7 @@ model bookmark => schema {
     column 'url';
 };
 
-model bookmark_user => schema {
+install_model bookmark_user => schema {
     my $columns = [qw/ bookmark_id user_id /];
     driver $memory;
     key $columns;
