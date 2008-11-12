@@ -130,7 +130,7 @@ sub get {
     if (wantarray) {
         my @objs = ();
         while (my $data = $iterator->()) {
-            my $obj;
+            my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
                 $obj = $schema->{class}->new($data);
                 $obj->call_trigger('post_load'); # inflate
