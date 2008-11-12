@@ -125,8 +125,11 @@ sub get {
     if (wantarray) {
         my @objs = ();
         while (my $data = $iterator->()) {
-            my $obj = $schema->{class}->new($data);
-            $obj->call_trigger('post_load'); # inflate
+            my $obj;
+            unless ($schema->{options}->{bare_row}) {
+                $obj = $schema->{class}->new($data);
+                $obj->call_trigger('post_load'); # inflate
+            }
             push @objs, $obj;
         }
         $iterator_options->{end}->() if exists $iterator_options->{end} && ref($iterator_options->{end}) eq 'CODE';
@@ -136,6 +139,7 @@ sub get {
         $iterator,
         %{ $iterator_options },
         wrapper => sub {
+            return shift if $schema->{options}->{bare_row};
             my $obj = $schema->{class}->new(shift);
             $obj->call_trigger('post_load'); # inflate 
             $obj;
@@ -198,9 +202,12 @@ sub set {
     my $result = $schema->{driver}->set( $schema, $key_array => $columns, @_ );
     return unless $result;
 
-    my $obj = $schema->{class}->new($result);
-    $obj->call_trigger('post_load'); # inflate
-    $obj;
+    unless ($schema->{options}->{bare_row}) {
+        my $obj = $schema->{class}->new($result);
+        $obj->call_trigger('post_load'); # inflate
+        return $obj;
+    }
+    return $result;
 }
 
 sub set_multi {
