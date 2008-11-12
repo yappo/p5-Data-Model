@@ -52,7 +52,7 @@ sub model ($$;%) {
     $schema_code->();
     $CALLER = undef;
 
-    if (exists $schema->{driver}) {
+    if (exists $schema->{driver} && $schema->{driver}) {
         $schema->{driver}->init_model($name, $schema);
     }
 }
