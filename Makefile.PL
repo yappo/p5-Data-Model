@@ -4,7 +4,6 @@ all_from 'lib/Data/Model.pm';
 
 # requires '';
 requires 'Carp';
-requires 'Class::Accessor::Fast';
 requires 'Class::Trigger';
 # DBI
 

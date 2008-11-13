@@ -1,7 +1,7 @@
 package Data::Model::SQL;
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
+use base qw(Data::Model::Accessor);
 
 __PACKAGE__->mk_accessors(qw/ select where having bind limit offset select_map select_map_reverse column_mutator where_values /);
 
