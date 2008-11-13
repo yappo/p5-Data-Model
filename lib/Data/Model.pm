@@ -166,8 +166,17 @@ sub get_multi {
 =cut
 
 sub set {
-    my $self   = shift;
-    my $model  = shift;
+    shift->_insert_or_replace(0, @_);
+}
+
+sub replace {
+    shift->_insert_or_replace(1, @_);
+}
+
+sub _insert_or_replace {
+    my $self       = shift;
+    my $is_replace = shift;
+    my $model      = shift;
     return $self->update($model, @_) if ref($model) && $model->isa('Data::Model::Row');
     my $schema = $self->get_schema($model);
     return unless $schema;
@@ -204,7 +213,8 @@ sub set {
     # $columns deflate
 
     local $schema->{schema_obj} = $self;
-    my $result = $schema->{driver}->set( $schema, $key_array => $columns, @_ );
+    my $method = $is_replace ? 'replace' : 'set';
+    my $result = $schema->{driver}->$method( $schema, $key_array => $columns, @_ );
     return unless $result;
 
     unless ($schema->{options}->{bare_row}) {
@@ -217,6 +227,7 @@ sub set {
 
 sub set_multi {
 }
+
 
 
 sub update {

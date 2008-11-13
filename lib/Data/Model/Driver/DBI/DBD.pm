@@ -12,5 +12,6 @@ sub new {
 
 sub fetch_last_id {}
 sub bind_param_attributes {}
+sub can_replace { 1 }
 
 1;

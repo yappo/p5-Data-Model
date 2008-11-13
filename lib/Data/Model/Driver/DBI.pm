@@ -135,11 +135,29 @@ sub get {
 
 # insert or replace
 sub set {
+    my $self = shift;
+    $self->_insert_or_replace(0, @_);
+}
+
+sub replace {
     my($self, $schema, $key, $columns, %args) = @_;
+    if ($self->dbd->can_replace) {
+        return $self->_insert_or_replace(1, $schema, $key, $columns, %args);
+    } else {
+#        $self->thx(sub {
+        $self->delete($schema, $key, +{}, %args);
+        return $self->set($schema, $key, $columns, %args);
+#        });
+    }
+}
+
+sub _insert_or_replace {
+    my($self, $is_replace, $schema, $key, $columns, %args) = @_;
+    my $select_or_replace = $is_replace ? 'REPLACE' : 'INSERT';
 
     my $table = $schema->{model};
     my $cols = [ keys %{ $columns } ];
-    my $sql = "INSERT INTO $table\n";
+    my $sql = "$select_or_replace INTO $table\n";
     $sql .= '(' . join(', ', @{ $cols }) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @{ $cols }) . ')' . "\n";
 

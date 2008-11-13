@@ -96,6 +96,14 @@ sub set {
     $data->{records}->{$record_id} = $columns;
 }
 
+sub replace {
+    my($self, $schema, $key, $columns, %args) = @_;
+}
+
+sub update {
+    my($self, $schema, $key, $columns, %args) = @_;
+}
+
 sub delete {
     my($self, $schema, $key, $columns, %args) = @_;
 
