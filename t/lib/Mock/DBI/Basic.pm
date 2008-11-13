@@ -21,6 +21,7 @@ install_model user => schema {
 install_model bookmark => schema {
     driver $dbi;
     key 'id';
+    unique 'url';
 
     column id
         => int => {
@@ -34,15 +35,17 @@ install_model bookmark_user => schema {
     my $columns = [qw/ bookmark_id user_id /];
     driver $dbi;
     key $columns;
-    columns @{ $columns };
     index 'user_id';
+
+    columns @{ $columns };
 };
 
 sub as_sqls {
     [
         "CREATE TABLE user ( id CHAR(255), name CHAR(255), PRIMARY KEY ( id ) )",
-        "CREATE TABLE bookmark ( id INTEGER NOT NULL PRIMARY KEY, url CHAR(255) )",
+        "CREATE TABLE bookmark ( id INTEGER NOT NULL PRIMARY KEY, url CHAR(255), UNIQUE (url) )",
         "CREATE TABLE bookmark_user ( bookmark_id CHAR(255), user_id CHAR(255), PRIMARY KEY ( bookmark_id, user_id ) )",
+        "CREATE INDEX user_id ON bookmark_user(user_id)",
     ];
 }
 

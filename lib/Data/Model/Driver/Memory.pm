@@ -93,15 +93,31 @@ sub set {
 
     # write data
     my $data = $self->load_data($schema);
-    $data->{records}->{$record_id} = $columns;
+    $data->{records}->{$record_id} = +{ %{ $columns } };
 }
 
 sub replace {
     my($self, $schema, $key, $columns, %args) = @_;
+    $self->delete($schema, $key, +{}, %args);
+    $self->set($schema, $key, $columns, %args);
 }
 
 sub update {
-    my($self, $schema, $key, $columns, %args) = @_;
+    my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
+
+    # fetch record id
+    my $result_id_list = $self->get_record_id_list($schema, $old_key, +{});
+    return unless $result_id_list && @{ $result_id_list };
+    return if @{ $result_id_list } != 1; # not unique key
+    my $id = $result_id_list->[0];
+
+    # reindex
+    $self->delete_memory_index($schema, $old_key, $old_columns, $id);
+    $self->set_memory_index($schema, $key, $columns, $id);
+
+    # set data
+    my $data = $self->load_data($schema);
+    $data->{records}->{$id} = +{ %{ $columns } };
 }
 
 sub delete {
@@ -138,7 +154,7 @@ sub get_record_id_list {
         $result_id_list = $self->get_memory_index($schema, 'key', undef, $key);
     } else {
         # hash
-        $columns = +{};
+        $columns ||= +{};
         if (exists $columns->{index} && ref($columns->{index}) eq 'HASH') {
             my($index, $index_key) = %{ $columns->{index} };
             $index_key = [ $index_key ] unless ref($index_key);

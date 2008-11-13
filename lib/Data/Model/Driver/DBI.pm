@@ -189,23 +189,23 @@ sub _insert_or_replace {
 
 # update
 sub update {
-    my($self, $schema, $key, $columns, %args) = @_;
+    my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
 
-    my $stmt = Data::Model::SQL->new(%{ $columns });
-    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+    my $stmt = Data::Model::SQL->new;
+    $self->add_key_to_where($stmt, $schema->{key}, $old_key);
 
     my $where_sql = $stmt->as_sql_where;
     return unless $where_sql;
 
     my @bind;
     my @set;
-    while (my($column, $value) = each %{ $columns }) {
+    for my $column (keys %{ $changed_columns }) {
         push @set, "$column = ?";
-        push @bind, $value;
+        push @bind, $columns->{$column};
     }
     push @bind, @{ $stmt->bind };
 
-    my $sql = 'UPDATE ' . $schema->{model} . ' SET ' . join(', ', @set) . $where_sql;
+    my $sql = 'UPDATE ' . $schema->{model} . ' SET ' . join(', ', @set) . ' ' . $where_sql;
     my $dbh = $self->rw_handle;
     $self->start_query($sql, \@bind);
     my $sth = $dbh->prepare_cached($sql);

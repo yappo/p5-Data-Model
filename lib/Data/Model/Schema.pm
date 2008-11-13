@@ -88,9 +88,10 @@ sub _column (@) {
 
         # setter
         my($val, $flags) = @_;
+        my $old_val = $obj->{column_values}->{$column};
         $obj->{column_values}->{$column} = $val;
         unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
-            $obj->{changed_cols}->{$column}++;
+            $obj->{changed_cols}->{$column} = $old_val;
         }
         
         return $obj->{column_values}->{$column};

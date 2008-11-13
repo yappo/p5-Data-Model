@@ -126,4 +126,79 @@ sub t_05_select_all_iterator_limit_offset : Tests(3) {
     is $i, 1;
 }
 
+sub t_06_update : Tests {
+    my($set) = $mock->set( user => 'yappo' => { name => '-' } );
+    is $set->name, '-', 'is -';
+    my($obj) = $mock->get( user => 'yappo' );
+
+    $obj->name('Kazuhiro Osawa');
+    $obj->update;
+    my($obj2) = $mock->get( user => 'yappo' );
+    is $obj2->name, 'Kazuhiro Osawa', 'is Kazuhiro Osawa';
+
+    $obj->name('Kazuhiro');
+    $mock->set($obj);
+    my($obj3) = $mock->get( user => 'yappo' );
+    is $obj3->name, 'Kazuhiro', 'is Kazuhiro';
+
+    $obj->name('Kazuhiro Osawa');
+    $mock->replace($obj);
+    my($obj4) = $mock->get( user => 'yappo' );
+    is $obj4->name, 'Kazuhiro Osawa', 'is Kazuhiro Osawa';
+
+
+    $obj->name('Osawa');
+    $mock->replace($obj);
+    my($obj5) = $mock->get( user => 'yappo' );
+    is $obj5->name, 'Osawa', 'is Osawa';
+}
+
+sub t_06_update_2ndidx : Tests {
+    my $set1 = $mock->set( bookmark_user => [qw/ 10 jyappo /] );
+    isa_ok $set1, "$mock_class\::bookmark_user";
+    my $set2 = $mock->set( bookmark_user => [qw/ 11 jyappo /] );
+    isa_ok $set2, "$mock_class\::bookmark_user";
+
+    my $row;
+    my $it = $mock->get( bookmark_user => { index => { user_id => 'jyappo' }, order => [{ bookmark_id => 'ASC' }] } );
+    $row = $it->next;
+    isa_ok $row, "$mock_class\::bookmark_user";
+    is $row->bookmark_id, 10, '10 jyappo';
+    is $row->user_id, 'jyappo', '10 jyappo';
+    $row = $it->next;
+    isa_ok $row, "$mock_class\::bookmark_user";
+    is $row->bookmark_id, 11, '11 jyappo';
+    is $row->user_id, 'jyappo', '11 jyappo';
+    ok !$it->next;
+
+    $row->user_id('iyappo');
+    $row->update;
+
+    $it = $mock->get( bookmark_user => { index => { user_id => 'jyappo' }, order => [{ bookmark_id => 'ASC' }] } );
+    $row = $it->next;
+    isa_ok $row, "$mock_class\::bookmark_user";
+    is $row->bookmark_id, 10, '10 jyappo';
+    is $row->user_id, 'jyappo', '10 jyappo';
+    ok !$it->next;
+
+    $it = $mock->get( bookmark_user => { index => { user_id => 'iyappo' }, order => [{ bookmark_id => 'ASC' }] } );
+    $row = $it->next;
+    isa_ok $row, "$mock_class\::bookmark_user";
+    is $row->bookmark_id, 11, '11 iyappo';
+    is $row->user_id, 'iyappo', '11 iyappo';
+    ok !$it->next;
+}
+
+sub t_07_replace : Tests {
+    my $set1  = $mock->set( user => 'yappologs' => { name => 'blog' } );
+    is $set1->name, 'blog', 'is blog';
+    my($obj1) = $mock->get( user => 'yappologs' );
+    is $obj1->name, 'blog', 'is blog';
+
+    my $set2  = $mock->replace( user => 'yappologs' => { name => "yappo's blog" } );
+    is $set2->name, "yappo's blog", "is yappo's blog";
+    my($obj2) = $mock->get( user => 'yappologs' );
+    is $obj2->name, "yappo's blog", "is yappo's blog";
+}
+
 1;

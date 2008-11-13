@@ -132,7 +132,7 @@ sub get {
         while (my $data = $iterator->()) {
             my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
-                $obj = $schema->{class}->new($data);
+                $obj = $schema->{class}->new($self, $data);
                 $obj->call_trigger('post_load'); # inflate
             }
             push @objs, $obj;
@@ -145,7 +145,7 @@ sub get {
         %{ $iterator_options },
         wrapper => sub {
             return shift if $schema->{options}->{bare_row};
-            my $obj = $schema->{class}->new(shift);
+            my $obj = $schema->{class}->new($self, shift);
             $obj->call_trigger('post_load'); # inflate 
             $obj;
         },
@@ -218,7 +218,7 @@ sub _insert_or_replace {
     return unless $result;
 
     unless ($schema->{options}->{bare_row}) {
-        my $obj = $schema->{class}->new($result);
+        my $obj = $schema->{class}->new($self, $result);
         $obj->call_trigger('post_load'); # inflate
         return $obj;
     }
@@ -238,18 +238,24 @@ sub update {
     return unless ref($self) eq $klass;
     my $schema = $self->get_schema($model);
     return unless $schema;
-    return unless @{ $schema->{key} } > 0;
+    return unless @{ $schema->{key} } > 0; # not has key
+    return unless scalar(%{ $row->{changed_cols} });
 
     my $columns = +{};
     for my $name (keys %{ $schema->{column} }) {
         $columns->{$name} = $row->$name;
     }
-    my $key_array = $self->get_key_array_by_hash($schema, $columns);
 
-    # update された column のみ $columns に入れる
+    my $changed_columns = $row->{changed_cols};
+    my $old_columns     = +{ %{ $columns }, %{ $changed_columns } };
+
+    my $key_array     = $self->get_key_array_by_hash($schema, $columns);
+    my $old_key_array = $self->get_key_array_by_hash($schema, $old_columns);
+
     # $columns deflate
 
-    my $result = $schema->{driver}->update( $schema, $key_array, $columns, %args);
+    my $result = $schema->{driver}->update( $schema, $old_key_array, $key_array, $old_columns, $columns, $changed_columns, %args);
+    $row->{changed_cols} = +{};
     return unless $result;
 
     $row;
