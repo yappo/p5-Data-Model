@@ -88,9 +88,10 @@ sub fetch {
     $columns->{from} ||= [];
     unshift @{ $columns->{from} }, $schema->{model};
 
+    my $index_query = delete $columns->{index};
     my $stmt = Data::Model::SQL->new(%{ $columns });
     $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
-    $self->add_index_to_where($schema, $stmt, $columns->{index}) if exists $columns->{index};
+    $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
     my $sql = $stmt->as_sql;
 
     my @bind;
@@ -221,8 +222,10 @@ sub delete {
     my($self, $schema, $key, $columns, %args) = @_;
 
     $columns->{from} = [ $schema->{model} ];
+    my $index_query = delete $columns->{index};
     my $stmt = Data::Model::SQL->new(%{ $columns });
     $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+    $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
 
     my $sql = "DELETE " . $stmt->as_sql;
     my $dbh = $self->rw_handle;
