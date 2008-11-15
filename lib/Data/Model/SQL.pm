@@ -36,6 +36,29 @@ sub new {
         $self->$name( {} ) unless $self->$name && ref $self->$name eq 'HASH';
     }
 
+    # ここで select, join, where クエリ 等を%args から構築する
+
+=pod
+
+  Data::Model::SQL->new(
+      where => +[
+          foo => [ -and => 'foo', 'bar', 'baz'],
+          bar => 'baz',
+          baz => +{ '!=' => 2 },
+      ],
+      order => [
+          +{ foo => 'ASC' },
+      ],
+      joins => [
+          foo => [
+              { inner => { 'baz b1' => 'foo.baz_id = b1.baz_id AND b1.quux_id = 1' }}
+          ],
+      ],
+      group => [qw/ foo bar /],
+  );
+
+=cut
+
     $self;
 }
 

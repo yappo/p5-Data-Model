@@ -261,6 +261,9 @@ sub update {
     $row;
 }
 
+#direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
+sub direct_update {
+}
 
 =head2 delete
 
