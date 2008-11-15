@@ -10,6 +10,7 @@ requires 'Class::Trigger';
 tests 't/*.t t/*/*.t';
 author_tests 'xt';
 
+build_requires 'Test::Class';
 build_requires 'Test::More';
 build_requires 'Path::Class';
 
