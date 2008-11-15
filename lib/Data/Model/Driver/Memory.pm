@@ -59,6 +59,12 @@ sub generate_record_id {
     ++($data->{record_id});
 }
 
+sub generate_auto_increment {
+    my($self, $schema) = @_;
+    my $data = $self->load_data($schema);
+    ++($data->{seq});
+}
+
 ## get, set, delete
 
 sub get {
@@ -87,9 +93,14 @@ sub set {
     # record_id
     my $record_id = $self->generate_record_id($schema);
 
+    # auto_increment
+    if ($self->_set_auto_increment($schema, $columns, sub { $self->generate_auto_increment($schema) })) {
+        # remake $key
+        $key = $schema->{schema_obj}->get_key_array_by_hash($schema, $columns);
+    }
+
     # write to index, key and unique
     $self->set_memory_index($schema, $key, $columns, $record_id);
-
 
     # write data
     my $data = $self->load_data($schema);

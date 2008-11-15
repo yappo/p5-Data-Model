@@ -176,14 +176,7 @@ sub _insert_or_replace {
     $self->end_query($sth);
 
     # set autoincrement key
-    if (my @keys = @{ $schema->{key} }) {
-        for my $column (@keys) {
-            if (exists $schema->{column}->{$column}->{options}->{auto_increment} && 
-                    $schema->{column}->{$column}->{options}->{auto_increment}) {
-                $columns->{$column} = $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth );
-            }
-        }
-    }
+    $self->_set_auto_increment($schema, $columns, sub { $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth ) });
 
     $columns;
 }

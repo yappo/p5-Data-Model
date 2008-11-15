@@ -31,6 +31,20 @@ sub _generate_result_iterator {
     };
 }
 
+sub _set_auto_increment {
+    my($self, $schema, $columns, $code) = @_;
+    my $count = 0;
+    if (my @keys = @{ $schema->{key} }) {
+        for my $column (@keys) {
+            if (exists $schema->{column}->{$column}->{options}->{auto_increment} && 
+                    $schema->{column}->{$column}->{options}->{auto_increment}) {
+                $columns->{$column} = $code->();
+                $count++;
+            }
+        }
+    }
+    $count;
+}
 
 sub get {}
 sub set {}

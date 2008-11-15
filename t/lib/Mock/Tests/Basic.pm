@@ -202,6 +202,43 @@ sub t_07_replace : Tests {
 }
 
 sub t_08_autoincrement : Tests {
+    my $set1 = $mock->set( bookmark => { url => 'url1' });
+    is $set1->id, 1, 'set id1';
+    is $set1->url, 'url1';
+
+    my $set2 = $mock->set( bookmark => { url => 'url2' });
+    is $set2->id, 2, 'set id2';
+    is $set2->url, 'url2';
+
+    my $set3 = $mock->set( bookmark => { url => 'url3' });
+    is $set3->id, 3, 'set id3';
+    is $set3->url, 'url3';
+
+
+    my($key1) = $mock->get( bookmark => 1 );
+    is $key1->id, 1, 'key id1';
+    is $key1->url, 'url1';
+
+    my($key2) = $mock->get( bookmark => 2 );
+    is $key2->id, 2, 'key id2';
+    is $key2->url, 'url2';
+
+    my($key3) = $mock->get( bookmark => 3 );
+    is $key3->id, 3, 'key id3';
+    is $key3->url, 'url3';
+
+
+    my($idx1) = $mock->get( bookmark => { index => { url => 'url1' } } );
+    is $idx1->id, 1, 'idx id1';
+    is $idx1->url, 'url1';
+
+    my($idx2) = $mock->get( bookmark => { index => { url => 'url2' } } );
+    is $idx2->id, 2, 'idx id2';
+    is $idx2->url, 'url2';
+
+    my($idx3) = $mock->get( bookmark => { index => { url => 'url3' } } );
+    is $idx3->id, 3, 'idx id3';
+    is $idx3->url, 'url3';
 }
 
 1;
