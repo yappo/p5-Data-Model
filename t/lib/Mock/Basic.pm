@@ -1,25 +1,17 @@
-package Mock::DBI::Basic;
+package Mock::Basic;
 use strict;
 use warnings;
 use base 'Data::Model';
 use Data::Model::Schema;
-use Data::Model::Driver::DBI;
-
-
-my $dbi = Data::Model::Driver::DBI->new(
-    dsn => 'dbi:SQLite:dbname=' . $main::DBFILE,
-    username => 'username',
-    password => 'password',
-);
 
 install_model user => schema {
-    driver $dbi;
+    driver $main::DRIVER;
     key 'id';
     columns qw/id name/;
 };
 
 install_model bookmark => schema {
-    driver $dbi;
+    driver $main::DRIVER;
     key 'id';
     unique 'url';
 
@@ -33,7 +25,7 @@ install_model bookmark => schema {
 
 install_model bookmark_user => schema {
     my $columns = [qw/ bookmark_id user_id /];
-    driver $dbi;
+    driver $main::DRIVER;
     key $columns;
     index 'user_id';
 

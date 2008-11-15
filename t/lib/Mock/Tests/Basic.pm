@@ -201,4 +201,7 @@ sub t_07_replace : Tests {
     is $obj2->name, "yappo's blog", "is yappo's blog";
 }
 
+sub t_08_autoincrement : Tests {
+}
+
 1;
