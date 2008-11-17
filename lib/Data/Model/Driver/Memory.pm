@@ -87,6 +87,20 @@ sub set {
     # initilaize
 
     # check unique
+    if (@{ $schema->{key} } && grep { defined $_ } @{ $key }) {
+        my $result_id_list = $self->get_record_id_list($schema, $key, +{});
+        die 'not unique columns' if @{ $result_id_list };
+    }
+    if (scalar(%{ $schema->{unique} })) {
+        while (my($unique_name, $unique_columns) = each %{ $schema->{unique} }) {
+            my $index = [];
+            for my $column (@{ $unique_columns }) {
+                push @{ $index }, $columns->{$column};
+            }
+            my $result_id_list = $self->get_record_id_list($schema, undef, +{ index => { $unique_name => $ index } });
+            die 'not unique columns' if @{ $result_id_list };
+        }
+    }
 
     # delete old record
 
