@@ -11,7 +11,7 @@ sub get {
     my $schema = shift;
     my $obj = $schema->{schema_obj};
 
-    my $method = 'get_' . $schema->{model};
+    my $method = 'get_' . $schema->model;
     my @ret = $obj->$method($schema, @_);
     $ret[1] = +{};
     if (ref($ret[0]) eq 'CODE') {
@@ -27,7 +27,7 @@ sub set {
     my $self   = shift;
     my $schema = shift;
     my $obj = $schema->{schema_obj};
-    my $method = 'set_' . $schema->{model};
+    my $method = 'set_' . $schema->model;
     return $obj->$method($schema, @_);
 }
 
@@ -35,7 +35,7 @@ sub delete {
     my $self   = shift;
     my $schema = shift;
     my $obj = $schema->{schema_obj};
-    my $method = 'delete_' . $schema->{model};
+    my $method = 'delete_' . $schema->model;
     return $obj->$method($schema, @_);
 }
 

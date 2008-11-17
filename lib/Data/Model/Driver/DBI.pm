@@ -69,8 +69,8 @@ sub add_index_to_where {
     return unless my($index, $index_key) = (%{ $index_obj });
     $index_key = [ $index_key ] unless ref($index_key) eq 'ARRAY';
     for my $index_type (qw/ unique index /) {
-        if (exists $schema->{$index_type}->{$index}) {
-            $self->add_key_to_where($stmt, $schema->{$index_type}->{$index}, $index_key);
+        if (exists $schema->$index_type->{$index}) {
+            $self->add_key_to_where($stmt, $schema->$index_type->{$index}, $index_key);
             last;
         }
     }
@@ -81,16 +81,13 @@ sub fetch {
 
     $columns = +{} unless $columns;
 
-    $columns->{select} ||= [
-        keys %{ $schema->{column} },
-    ];
-
-    $columns->{from} ||= [];
-    unshift @{ $columns->{from} }, $schema->{model};
+    $columns->{select} ||= [ $schema->column_names ];
+    $columns->{from}   ||= [];
+    unshift @{ $columns->{from} }, $schema->model;
 
     my $index_query = delete $columns->{index};
     my $stmt = Data::Model::SQL->new(%{ $columns });
-    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+    $self->add_key_to_where($stmt, $schema->key, $key) if $key;
     $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
     my $sql = $stmt->as_sql;
 
@@ -156,7 +153,7 @@ sub _insert_or_replace {
     my($self, $is_replace, $schema, $key, $columns, %args) = @_;
     my $select_or_replace = $is_replace ? 'REPLACE' : 'INSERT';
 
-    my $table = $schema->{model};
+    my $table = $schema->model;
     my $cols = [ keys %{ $columns } ];
     my $sql = "$select_or_replace INTO $table\n";
     $sql .= '(' . join(', ', @{ $cols }) . ')' . "\n" .
@@ -167,7 +164,7 @@ sub _insert_or_replace {
     my $sth = $dbh->prepare_cached($sql);
     my $i = 1;
     while (my($col, $val) = each %{ $columns }) {
-        my $type = $schema->{columns}->{$col}->{type} || 'char';
+        my $type = $schema->column_type($col);
         my $attr = $self->dbd->bind_param_attributes($type, $columns, $col);
         $sth->bind_param($i++, $val, $attr);
     }
@@ -186,7 +183,7 @@ sub update {
     my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
 
     my $stmt = Data::Model::SQL->new;
-    $self->add_key_to_where($stmt, $schema->{key}, $old_key);
+    $self->add_key_to_where($stmt, $schema->key, $old_key);
 
     my $where_sql = $stmt->as_sql_where;
     return unless $where_sql;
@@ -199,7 +196,7 @@ sub update {
     }
     push @bind, @{ $stmt->bind };
 
-    my $sql = 'UPDATE ' . $schema->{model} . ' SET ' . join(', ', @set) . ' ' . $where_sql;
+    my $sql = 'UPDATE ' . $schema->model . ' SET ' . join(', ', @set) . ' ' . $where_sql;
     my $dbh = $self->rw_handle;
     $self->start_query($sql, \@bind);
     my $sth = $dbh->prepare_cached($sql);
@@ -214,10 +211,10 @@ sub update {
 sub delete {
     my($self, $schema, $key, $columns, %args) = @_;
 
-    $columns->{from} = [ $schema->{model} ];
+    $columns->{from} = [ $schema->model ];
     my $index_query = delete $columns->{index};
     my $stmt = Data::Model::SQL->new(%{ $columns });
-    $self->add_key_to_where($stmt, $schema->{key}, $key) if $key;
+    $self->add_key_to_where($stmt, $schema->key, $key) if $key;
     $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
 
     my $sql = "DELETE " . $stmt->as_sql;

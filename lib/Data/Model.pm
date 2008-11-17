@@ -20,9 +20,6 @@ sub __properties { +{} }
 
 sub new {
     my $class = shift;
-    if (ref($class) && @_ == 1){ 
-        
-    }
     bless {
         schema_class => $class,
     }, $class;
@@ -44,33 +41,6 @@ sub get_driver {
     my($self, $model) = @_;
     $self->get_schema($model)->{driver};
 }
-
-sub get_key_array_by_hash {
-    my($self, $schema, $hash) = @_;
-    my @keys;
-    for my $key (@{ $schema->{key} }) {
-        push @keys, $hash->{$key};
-    }
-    \@keys;
-}
-
-sub get_columns_hash_by_key_array_and_hash {
-    my($self, $schema, $hash, $array) = @_;
-    my $ret = {};
-
-    # by column
-    for my $column (keys %{ $schema->{column} }) {
-        $ret->{$column} = $hash->{$column};
-    }
-
-    # by key
-    my $key = $schema->{key};
-    $key = [ $key ] unless ref($key) eq 'ARRAY';
-    @{ $ret }{@{ $key }} = @{ $array };
-
-    $ret;
-}
-
 
 ## get / set / delete
 
@@ -188,7 +158,7 @@ sub _insert_or_replace {
     if (ref($_[0]) eq 'HASH') {
         ## ->set( modelname => { key => value, ... } );
         $columns = shift;
-        $key_array = $self->get_key_array_by_hash($schema, $columns);
+        $key_array = $schema->get_key_array_by_hash($columns);
     } elsif (ref($_[0]) eq 'ARRAY') {
         ## ->set( modelname => [ keys ] => { key => value, ... } );
         $key_array = shift;
@@ -205,9 +175,9 @@ sub _insert_or_replace {
     } elsif (ref($_[0]) eq 'HASH') {
         ## get hash columns data
         my $hash = shift;
-        $columns = $self->get_columns_hash_by_key_array_and_hash($schema, $hash, $key_array);
+        $columns = $schema->get_columns_hash_by_key_array_and_hash($hash, $key_array);
     } else {
-        $columns = $self->get_columns_hash_by_key_array_and_hash($schema, {}, $key_array);
+        $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
     }
 
     # $columns deflate
@@ -249,8 +219,8 @@ sub update {
     my $changed_columns = $row->{changed_cols};
     my $old_columns     = +{ %{ $columns }, %{ $changed_columns } };
 
-    my $key_array     = $self->get_key_array_by_hash($schema, $columns);
-    my $old_key_array = $self->get_key_array_by_hash($schema, $old_columns);
+    my $key_array     = $schema->get_key_array_by_hash($columns);
+    my $old_key_array = $schema->get_key_array_by_hash($old_columns);
 
     # $columns deflate
 

@@ -26,22 +26,22 @@ sub _load_data {
 
 sub load_data {
     my($self, $schema) = @_;
-    $self->{models}->{$schema->{model}}->{data} ||= $self->_load_data($schema->{model}, 'data');
+    $self->{models}->{$schema->model}->{data} ||= $self->_load_data($schema->model, 'data');
 }
 
 sub load_key {
     my($self, $schema) = @_;
-    $self->{models}->{$schema->{model}}->{key} ||= $self->_load_data($schema->{model}, 'key');
+    $self->{models}->{$schema->model}->{key} ||= $self->_load_data($schema->model, 'key');
 }
 
 sub load_index {
     my($self, $schema, $name) = @_;
-    $self->{models}->{$schema->{model}}->{index}->{$name} ||= $self->_load_data($schema->{model}, 'index', $name);
+    $self->{models}->{$schema->model}->{index}->{$name} ||= $self->_load_data($schema->model, 'index', $name);
 }
 
 sub load_unique {
     my($self, $schema, $name) = @_;
-    $self->{models}->{$schema->{model}}->{unique}->{$name} ||= $self->_load_data($schema->{model}, 'unique', $name);
+    $self->{models}->{$schema->model}->{unique}->{$name} ||= $self->_load_data($schema->model, 'unique', $name);
 }
 
 sub new {
@@ -87,12 +87,12 @@ sub set {
     # initilaize
 
     # check unique
-    if (@{ $schema->{key} } && grep { defined $_ } @{ $key }) {
+    if (@{ $schema->key } && grep { defined $_ } @{ $key }) {
         my $result_id_list = $self->get_record_id_list($schema, $key, +{});
         die 'not unique columns' if @{ $result_id_list };
     }
-    if (scalar(%{ $schema->{unique} })) {
-        while (my($unique_name, $unique_columns) = each %{ $schema->{unique} }) {
+    if (scalar(%{ $schema->unique })) {
+        while (my($unique_name, $unique_columns) = each %{ $schema->unique }) {
             my $index = [];
             for my $column (@{ $unique_columns }) {
                 push @{ $index }, $columns->{$column};
@@ -110,7 +110,7 @@ sub set {
     # auto_increment
     if ($self->_set_auto_increment($schema, $columns, sub { $self->generate_auto_increment($schema) })) {
         # remake $key
-        $key = $schema->{schema_obj}->get_key_array_by_hash($schema, $columns);
+        $key = $schema->get_key_array_by_hash($columns);
     }
 
     # write to index, key and unique
@@ -184,7 +184,7 @@ sub get_record_id_list {
             my($index, $index_key) = %{ $columns->{index} };
             $index_key = [ $index_key ] unless ref($index_key);
             for my $index_type (qw/ unique index /) {
-                if (exists $schema->{$index_type}->{$index}) {
+                if (exists $schema->$index_type->{$index}) {
                     $result_id_list = $self->get_memory_index($schema, $index_type, $index, $index_key);
                     last;
                 }
@@ -201,7 +201,7 @@ sub get_record_id_list {
 
 sub get_memory_index {
     my($self, $schema, $index_type, $index, $key) = @_;
-    my $columns = $index_type eq 'key' ? $schema->{key} : $schema->{$index_type}->{$index};
+    my $columns = $index_type eq 'key' ? $schema->key : $schema->$index_type->{$index};
 
     my $method   = "load_$index_type";
     my $key_hash = $self->$method($schema, $index);
@@ -217,10 +217,10 @@ sub set_memory_index {
     $self->_set_memory_index($schema, 'key', undef, $key, $id);
 
     for my $index_type (qw/ unique index /) {
-        for my $index (keys %{ $schema->{$index_type} }) {
+        for my $index (keys %{ $schema->$index_type }) {
             my @index_key = map {
                 $columns->{$_}
-            } @{ $schema->{$index_type}->{$index} };
+            } @{ $schema->$index_type->{$index} };
             $self->_set_memory_index($schema, $index_type, $index, [ @index_key ], $id);
         }
     }
@@ -228,7 +228,7 @@ sub set_memory_index {
 
 sub _set_memory_index {
     my($self, $schema, $index_type, $index, $key, $id) = @_;
-    my $columns = $index_type eq 'key' ? $schema->{key} : $schema->{$index_type}->{$index};
+    my $columns = $index_type eq 'key' ? $schema->key : $schema->{$index_type}->{$index};
 
     my $method   = "load_$index_type";
     my $key_hash = $self->$method($schema, $index);
@@ -259,10 +259,10 @@ sub delete_memory_index {
     $self->_delete_memory_index($schema, 'key', undef, $key, $id);
 
     for my $index_type (qw/ unique index /) {
-        for my $index (keys %{ $schema->{$index_type} }) {
+        for my $index (keys %{ $schema->$index_type }) {
             my @index_key = map {
                 $columns->{$_}
-            } @{ $schema->{$index_type}->{$index} };
+            } @{ $schema->$index_type->{$index} };
             $self->_delete_memory_index($schema, $index_type, $index, [ @index_key ], $id);
         }
     }
@@ -270,7 +270,7 @@ sub delete_memory_index {
 
 sub _delete_memory_index {
     my($self, $schema, $index_type, $index, $key, $id) = @_;
-    my $columns = $index_type eq 'key' ? $schema->{key} : $schema->{$index_type}->{$index};
+    my $columns = $index_type eq 'key' ? $schema->key : $schema->{$index_type}->{$index};
 
     my $method   = "load_$index_type";
     my $key_hash = $self->$method($schema, $index);
@@ -325,7 +325,7 @@ sub sort {
         push @{ $sort_data }, +{
             column => $column,
             vec    => uc($vec),
-            int    => !!($schema->{column}->{$column}->{type} =~ /int/i),
+            int    => !!($schema->column_type($column) =~ /int/i),
         };
     }
 

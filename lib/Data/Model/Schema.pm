@@ -4,6 +4,7 @@ use warnings;
 
 use Carp ();
 use Data::Model::Row;
+use Data::Model::Schema::Properties;
 
 sub import {
     my($class, %args) = @_;
@@ -31,10 +32,7 @@ sub install_model ($$;%) {
 
     my $pkg = "$caller\::$name";
 
-    no strict 'refs';
-    @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
-
-    my $schema = $caller->__properties->{schema}->{$name} = +{
+    my $schema = $caller->__properties->{schema}->{$name} = Data::Model::Schema::Properties->new(
         driver       => undef,
         schema_class => $caller,
         model        => $name,
@@ -45,19 +43,43 @@ sub install_model ($$;%) {
         key          => undef,
         triggers     => {},
         options      => +{},
-    };
+    );
 
     $caller->__properties->{__process_tmp}->{name} = $name;
     $CALLER = $caller;
     $schema_code->();
+    unless ($schema->options->{bare_row}) {
+        no strict 'refs';
+        @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
+        _install_columns_to_class($schema);
+    }
     $CALLER = undef;
 
-    if (exists $schema->{driver} && $schema->{driver}) {
-        $schema->{driver}->init_model($name, $schema);
+    if ($schema->driver) {
+        $schema->driver->init_model($name, $schema);
     }
 }
 sub schema (&) { shift }
 
+sub _install_columns_to_class {
+    my $schema = shift;
+    while (my($column, $args) = each %{ $schema->column }) {
+        no strict 'refs';
+        *{ $schema->class . "::$column" } = sub {
+            my $obj = shift;
+            # getter
+            return $obj->{column_values}->{$column} unless @_;
+            # setter
+            my($val, $flags) = @_;
+            my $old_val = $obj->{column_values}->{$column};
+            $obj->{column_values}->{$column} = $val;
+            unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
+                $obj->{changed_cols}->{$column} = $old_val;
+            }
+            return $obj->{column_values}->{$column};
+        };
+    }
+}
 
 sub _get_model_schema {
     if ($CALLER) {
@@ -75,76 +97,46 @@ sub _get_model_schema {
 sub driver ($;%) {
     my($name, $schema) = _get_model_schema;
     my($driver, %args) = @_;
-    $schema->{driver} = $driver;
+    $schema->driver($driver);
 }
 
 sub _column (@) {
     my($schema, $column, $type, $options) = @_;
-    no strict 'refs';
-    *{ $schema->{class} . "::$column" } = sub {
-        my $obj = shift;
-        # getter
-        return $obj->{column_values}->{$column} unless @_;
-
-        # setter
-        my($val, $flags) = @_;
-        my $old_val = $obj->{column_values}->{$column};
-        $obj->{column_values}->{$column} = $val;
-        unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
-            $obj->{changed_cols}->{$column} = $old_val;
-        }
-        
-        return $obj->{column_values}->{$column};
-    };
-
-    $schema->{column}->{$column} = +{
+    $schema->column->{$column} = +{
         type    => $type    || 'char',
         options => $options || +{},
     };
 }
 sub column ($;$;$) {
     my($name, $schema) = _get_model_schema;
-    _column $schema, @_;
+    $schema->add_column(@_);
 }
 sub columns (@) {
     my($name, $schema) = _get_model_schema;
     my @columns = @_;
     for my $column (@columns) {
-        _column $schema, $column;
+        $schema->add_column($column);
     }
 }
 
 sub key ($;%) {
     my($name, $schema) = _get_model_schema;
-    my($key, %args) = @_;
-    $schema->{key} = ref($key) eq 'ARRAY' ? $key : [ $key ];
+    $schema->add_keys(@_);
 }
 
 sub index ($;$;%) {
     my($name, $schema) = _get_model_schema;
-    my($index, $columns, %args) = @_;
-    my $key = $columns || $index;
-    $key = [ $key ] unless ref($key) eq 'ARRAY';
-    $schema->{index}->{$index} = $key;
+    $schema->add_index(@_);
 }
 
 sub unique ($;$;%) {
     my($name, $schema) = _get_model_schema;
-    my($index, $columns, %args) = @_;
-    my $key = $columns || $index;
-    $key = [ $key ] unless ref($key) eq 'ARRAY';
-    $schema->{unique}->{$index} = $key;
+    $schema->add_unique(@_);
 }
 
 sub schema_options (@) {
     my($name, $schema) = _get_model_schema;
-    if (ref($_[0]) eq 'HASH') {
-        $schema->{options} = shift;
-    } elsif (!(@_ % 2)) {
-        while (my($key, $value) = splice @_, 0, 2) {
-            $schema->{options}->{$key} = $value;
-        }
-    }
+    $schema->add_options(@_);
 }
 
 1;

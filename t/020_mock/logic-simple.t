@@ -1,11 +1,12 @@
 use t::Utils;
-use Test::More tests => 18;
+use Test::More tests => 20;
 use Mock::Logic::Simple;
 
 my $mock = Mock::Logic::Simple->new;
 
 do {
     my($ret1) = $mock->get( user => 'yappo' );
+    ok(Mock::Logic::Simple::user->can('id'));
     isa_ok $ret1, 'Mock::Logic::Simple::user';
     is $ret1->name, 'Osawa';
     
@@ -27,6 +28,7 @@ do {
 
 do {
     my($ret1) = $mock->get( barerow => 'yappo' );
+    ok(!Mock::Logic::Simple::barerow->can('id'));
     isa_ok $ret1, 'HASH';
     is $ret1->{name}, 'Osawa';
     
