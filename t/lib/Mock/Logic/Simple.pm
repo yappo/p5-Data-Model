@@ -33,4 +33,15 @@ sub delete_user {
     $key->[0] eq 'ok' ? 1 : 0;
 }
 
+install_model barerow => schema {
+    driver $logic;
+    key 'id';
+    columns qw/ id name /;
+    schema_options bare_row => 1;
+};
+
+sub get_barerow { get_user(@_) }
+sub set_barerow { set_user(@_) }
+sub delete_barerow { delete_user(@_) }
+
 1;
