@@ -4,6 +4,8 @@ use strict;
 use warnings;
 our $VERSION = '0.01';
 
+use Carp ();
+
 use Data::Model::Iterator;
 
 ## for schema methods
@@ -34,13 +36,27 @@ sub get_schema_class {
 
 sub get_schema {
     my($self, $model) = @_;
-    $self->__properties->{schema}->{$model};    
+    my $schema = $self->__properties->{schema}->{$model};
+    Carp::croak "not defined schema $model" unless $schema;
+    $schema;
 }
 
 sub get_driver {
     my($self, $model) = @_;
     $self->get_schema($model)->{driver};
 }
+
+sub set_driver {
+    my($self, $model, $driver) = @_;
+    my $schema = $self->get_schema($model);
+    my $init = (exists $schema->{driver} && $schema->{driver});
+    return unless $driver;
+    $schema->driver($driver);
+    if ($init) {
+        $driver->init_model($model, $schema);
+    }
+}
+
 
 sub schema_names {
     my $self = shift;
