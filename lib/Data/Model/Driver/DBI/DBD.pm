@@ -14,4 +14,16 @@ sub fetch_last_id {}
 sub bind_param_attributes {}
 sub can_replace { 1 }
 
+sub _as_sql_hook {
+    my $self   = shift;
+    my $c      = shift;
+    my $method = shift;
+
+    $method =~ s/^as_//;
+    if (my $code = $self->can("_as_sql_$method")) {
+        return $code->($self, $c, @_);
+    }
+    return;
+}
+
 1;

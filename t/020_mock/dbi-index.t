@@ -10,7 +10,7 @@ BEGIN {
         password => 'password',
     );
     eval "use Mock::Index"; $@ and die $@;
-    setup_sqlite( Mock::Index->as_sqls, $dbfile );
+    setup_sqlite( 'dbi:SQLite:dbname=' . $dbfile => Mock::Index->as_sqls );
 }
 
 my $mock = Mock::Index->new;

@@ -46,6 +46,8 @@ sub _set_auto_increment {
     $count;
 }
 
+sub _as_sql_hook {}
+
 sub get {}
 sub set {}
 sub delete {}

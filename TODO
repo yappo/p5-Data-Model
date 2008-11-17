@@ -3,7 +3,7 @@
 ## Data::Model::Row
 Data::Model::Cache
 ## Data::Model::SQL
-Data::Model::SQL::Create
+## Data::Model::Schema::SQL
 ## Data::Model::Schema
 #? Data::Model::Schema::ReadOnly
 Data::Model::Validate

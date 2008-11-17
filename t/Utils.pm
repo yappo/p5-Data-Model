@@ -27,16 +27,13 @@ sub temp_filename {
 }
 
 sub setup_sqlite {
-    my($sqls, $filename) = @_;
-    $filename ||= temp_filename;
-
-    my $dbh = DBI->connect('dbi:SQLite:dbname=' . $filename,
+    my($dsn, @sqls) = @_;
+    my $dbh = DBI->connect($dsn,
                            '', '', { RaiseError => 1, PrintError => 0 });
-    for my $sql (@{ $sqls }) {
+    for my $sql (@sqls) {
         $dbh->do( $sql );
     }
     $dbh->disconnect;
-    $filename;
 }
 
 

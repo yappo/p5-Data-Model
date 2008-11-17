@@ -38,9 +38,11 @@ sub install_model ($$;%) {
         model        => $name,
         class        => $pkg,
         column       => {},
+        columns      => [],
         index        => {},
         unique       => {},
-        key          => undef,
+        key          => [],
+        foreign      => [],
         triggers     => {},
         options      => +{},
     );

@@ -42,6 +42,20 @@ sub get_driver {
     $self->get_schema($model)->{driver};
 }
 
+sub schema_names {
+    my $self = shift;
+    keys %{ $self->__properties->{schema} };
+}
+
+sub as_sqls {
+    my $self = shift;
+    my @sql = ();
+    for my $model ($self->schema_names) {
+        push @sql, $self->get_schema($model)->sql->as_sql;
+    }
+    @sql;
+}
+
 ## get / set / delete
 
 sub _get_query_args {

@@ -228,6 +228,12 @@ sub delete {
     return $sth->rows;
 }
 
+# for schema
+sub _as_sql_hook {
+    my $self = shift;
+    $self->dbd->_as_sql_hook(@_);
+}
+
 
 # profile
 sub start_query {}

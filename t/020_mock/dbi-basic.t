@@ -10,7 +10,7 @@ BEGIN {
         password => 'password',
     );
     eval "use Mock::Basic"; $@ and die $@;
-    setup_sqlite( Mock::Basic->as_sqls, $dbfile );
+    setup_sqlite( 'dbi:SQLite:dbname=' . $dbfile => Mock::Basic->as_sqls );
 }
 
 my $mock = Mock::Basic->new;

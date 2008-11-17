@@ -3,7 +3,15 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
+use Data::Model::Schema::SQL;
+
 __PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options /);
+
+our @RESERVED = qw(
+    update save new
+    add_trigger call_trigger remove_trigger
+);
+
 
 sub new {
     my($class, %args) = @_;
@@ -31,6 +39,9 @@ BEGIN {
 
 sub add_column {
     my($self, $column, $type, $options) = @_;
+    Carp::croak "Column can't be called '$column': reserved name" 
+            if grep { lc $_ eq lc $column } @RESERVED;
+    push @{ $self->{columns} }, $column;
     $self->{column}->{$column} = +{
         type    => $type    || 'char',
         options => $options || +{},
@@ -52,7 +63,7 @@ sub add_options {
 
 sub column_names {
     my $self = shift;
-    keys %{ $self->{column} };
+    @{ $self->{columns} };
 }
 
 sub column_type {
@@ -91,5 +102,12 @@ sub get_columns_hash_by_key_array_and_hash {
 
     $ret;
 }
+
+
+sub sql {
+    my $self = shift;
+    $self->{sql} ||= Data::Model::Schema::SQL->new($self);
+}
+
 
 1;

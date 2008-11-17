@@ -32,13 +32,4 @@ install_model multi_index => schema {
     columns @columns;
 };
 
-sub as_sqls {
-    [
-        "CREATE TABLE multi_keys ( key1 CHAR(255), key2 CHAR(255), key3 CHAR(255), PRIMARY KEY(key1, key2, key3) )",
-        "CREATE TABLE multi_unique ( key INTEGER NOT NULL PRIMARY KEY, unq1 CHAR(255), unq2 CHAR(255), unq3 CHAR(255), UNIQUE (unq1, unq2, unq3) )",
-        "CREATE TABLE multi_index ( key INTEGER NOT NULL PRIMARY KEY, idx1 CHAR(255), idx2 CHAR(255), idx3 CHAR(255) )",
-        "CREATE INDEX idx ON multi_index(idx1, idx2, idx3)",
-    ];
-}
-
 1;
