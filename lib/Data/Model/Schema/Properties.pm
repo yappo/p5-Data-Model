@@ -41,7 +41,7 @@ BEGIN {
 sub add_column {
     my $self = shift;
     my($column, $type, $options) = @_;
-    return $self->add_column_suger(@_) if $column =~ /^[^\.+]+\.[^\.+]+$/;
+    return $self->add_column_sugar(@_) if $column =~ /^[^\.+]+\.[^\.+]+$/;
     Carp::croak "Column can't be called '$column': reserved name" 
             if grep { lc $_ eq lc $column } @RESERVED;
 
@@ -52,14 +52,14 @@ sub add_column {
     };
 }
 
-sub add_column_suger {
+sub add_column_sugar {
     my $self   = shift;
     my $name   = shift;
-    my $suger = $Data::Model::Schema::COLUMN_SUGER;
+    my $sugar = $Data::Model::Schema::COLUMN_SUGAR;
     Carp::croak "Undefined column of '$name'" 
-        unless exists $suger->{$name} && $suger->{$name};
+        unless exists $sugar->{$name} && $sugar->{$name};
 
-    my $conf = $suger->{$name};
+    my $conf = $sugar->{$name};
     my %clone = (
         type    => $conf->{type},
         options => +{ %{ $conf->{options} } },

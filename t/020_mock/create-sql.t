@@ -12,7 +12,7 @@ BEGIN {
     );
     use_ok('Mock::Basic');
     use_ok('Mock::Index');
-    use_ok('Mock::ColumnSuger');
+    use_ok('Mock::ColumnSugar');
 }
 
 
@@ -71,7 +71,7 @@ is($multi_index[0], "CREATE TABLE multi_index (
 is($multi_index[1], "CREATE INDEX idx ON multi_index (idx1,idx2,idx3)");
 
 
-$mock = Mock::ColumnSuger->new;
+$mock = Mock::ColumnSugar->new;
 
 my @author = $mock->get_schema('author')->sql->as_sql;
 is($author[0], "CREATE TABLE author (

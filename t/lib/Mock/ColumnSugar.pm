@@ -1,36 +1,36 @@
-package Mock::ColumnSuger;
+package Mock::ColumnSugar;
 use strict;
 use warnings;
 use base 'Data::Model';
 use Data::Model::Schema;
 
-column_suger 'author.id'
+column_sugar 'author.id'
     => 'int' => +{
         unsigned => 1,
         require  => 1,
     };
-column_suger 'author.name'
+column_sugar 'author.name'
     => 'varchar' => +{
         size    => 128,
         require => 1,
     };
 
-column_suger 'book.id'
+column_sugar 'book.id'
     => 'int' => +{
         unsigned => 1,
         require  => 1,
     };
-column_suger 'book.title'
+column_sugar 'book.title'
     => 'varchar' => +{
         size    => 255,
         require => 1,
     };
-column_suger 'book.description'
+column_sugar 'book.description'
     => 'text' => +{
         require => 1,
         default => 'not yet writing'
     };
-column_suger 'book.recommend'
+column_sugar 'book.recommend'
     => 'text';
 
 
