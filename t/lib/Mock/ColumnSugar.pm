@@ -2,7 +2,7 @@ package Mock::ColumnSugar;
 use strict;
 use warnings;
 use base 'Data::Model';
-use Data::Model::Schema;
+use Data::Model::Schema sugar => 'column_sugar';
 
 column_sugar 'author.id'
     => 'int' => +{

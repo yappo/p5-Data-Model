@@ -6,9 +6,14 @@ use Carp ();
 use Data::Model::Row;
 use Data::Model::Schema::Properties;
 
+my  $SUGAR_MAP    = +{};
+our $COLUMN_SUGAR = +{};
+
 sub import {
     my($class, %args) = @_;
     my $caller = caller;
+    $SUGAR_MAP->{$caller} = $args{sugar} || 'default';
+    $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}} ||= +{};
 
     no strict 'refs';
     for my $name (qw/ driver install_model schema column columns key index unique schema_options column_sugar /) {
@@ -135,16 +140,22 @@ sub schema_options (@) {
 }
 
 
-our $COLUMN_SUGAR = +{};
 sub column_sugar (@) {
     my($column, $type, $options) = @_;
     Carp::croak "usage: add_column_sugar 'table_name.column_name' => type => { args };"
         unless $column =~ /^[^\.+]+\.[^\.+]+$/;
-    
-    $COLUMN_SUGAR->{$column} = +{
+
+    my $caller = caller;
+    $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}} ||= +{};
+    $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}}->{$column} = +{
         type    => $type    || 'char',
         options => $options || +{},
     };
+}
+
+sub get_column_sugar {
+    my($class, $schema) = @_;
+    $COLUMN_SUGAR->{$SUGAR_MAP->{$schema->{schema_class}}};
 }
 
 1;

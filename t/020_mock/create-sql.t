@@ -1,7 +1,7 @@
 use t::Utils;
 use Mock::Tests::Basic;
 use Data::Model::Driver::DBI;
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 BEGIN {
     my $dbfile = temp_filename;
@@ -13,6 +13,7 @@ BEGIN {
     use_ok('Mock::Basic');
     use_ok('Mock::Index');
     use_ok('Mock::ColumnSugar');
+    use_ok('Mock::ColumnSugar2');
 }
 
 
@@ -89,3 +90,12 @@ is($book[0], "CREATE TABLE book (
     recommend       TEXT           
 )");
 is($book[1], "CREATE INDEX author_id ON book (author_id)");
+
+
+$mock = Mock::ColumnSugar2->new;
+my @author2 = $mock->get_schema('author')->sql->as_sql;
+is($author2[0], "CREATE TABLE author (
+    id              CHAR(32)        NOT NULL,
+    name            VARCHAR(128)    NOT NULL,
+    PRIMARY KEY (id)
+)");

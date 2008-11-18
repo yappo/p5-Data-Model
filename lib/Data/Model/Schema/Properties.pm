@@ -55,7 +55,7 @@ sub add_column {
 sub add_column_sugar {
     my $self   = shift;
     my $name   = shift;
-    my $sugar = $Data::Model::Schema::COLUMN_SUGAR;
+    my $sugar = Data::Model::Schema->get_column_sugar($self);
     Carp::croak "Undefined column of '$name'" 
         unless exists $sugar->{$name} && $sugar->{$name};
 
