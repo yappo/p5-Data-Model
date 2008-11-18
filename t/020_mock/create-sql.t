@@ -83,7 +83,7 @@ my @book = $mock->get_schema('book')->sql->as_sql;
 is($book[0], "CREATE TABLE book (
     id              INTEGER         NOT NULL PRIMARY KEY,
     author_id       INT             UNSIGNED NOT NULL,
-    sub_author_id   INT             UNSIGNED NOT NULL,
+    sub_author_id   INT             UNSIGNED,
     title           VARCHAR(255)    NOT NULL,
     description     TEXT            NOT NULL DEFAULT 'not yet writing',
     recommend       TEXT           

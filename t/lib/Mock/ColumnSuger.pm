@@ -4,34 +4,35 @@ use warnings;
 use base 'Data::Model';
 use Data::Model::Schema;
 
-add_column_suger 'author.id'
+column_suger 'author.id'
     => 'int' => +{
         unsigned => 1,
         require  => 1,
     };
-add_column_suger 'author.name'
+column_suger 'author.name'
     => 'varchar' => +{
         size    => 128,
         require => 1,
     };
 
-add_column_suger 'book.id'
+column_suger 'book.id'
     => 'int' => +{
         unsigned => 1,
         require  => 1,
     };
-add_column_suger 'book.title'
+column_suger 'book.title'
     => 'varchar' => +{
         size    => 255,
         require => 1,
     };
-add_column_suger 'book.description'
+column_suger 'book.description'
     => 'text' => +{
         require => 1,
         default => 'not yet writing'
     };
-add_column_suger 'book.recommend'
+column_suger 'book.recommend'
     => 'text';
+
 
 install_model author => schema {
     driver $main::DRIVER;
@@ -46,9 +47,9 @@ install_model book => schema {
     key 'id';
     index 'author_id';
 
-    column 'book.id' => { auto_increment => 1 };
+    column 'book.id'   => { auto_increment => 1 };
     column 'author.id';
-    column 'author.id' => 'sub_author_id';
+    column 'author.id' => 'sub_author_id' => { require => 0 };
     column 'book.title';
     column 'book.description';
     column 'book.recommend';
