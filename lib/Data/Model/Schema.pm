@@ -11,7 +11,7 @@ sub import {
     my $caller = caller;
 
     no strict 'refs';
-    for my $name (qw/ driver install_model schema column columns key index unique schema_options /) {
+    for my $name (qw/ driver install_model schema column columns key index unique schema_options add_column_suger /) {
         *{"$caller\::$name"} = \&$name;
     }
 
@@ -102,13 +102,6 @@ sub driver ($;%) {
     $schema->driver($driver);
 }
 
-sub _column (@) {
-    my($schema, $column, $type, $options) = @_;
-    $schema->column->{$column} = +{
-        type    => $type    || 'char',
-        options => $options || +{},
-    };
-}
 sub column ($;$;$) {
     my($name, $schema) = _get_model_schema;
     $schema->add_column(@_);
@@ -139,6 +132,19 @@ sub unique ($;$;%) {
 sub schema_options (@) {
     my($name, $schema) = _get_model_schema;
     $schema->add_options(@_);
+}
+
+
+our $COLUMN_SUGER = +{};
+sub add_column_suger (@) {
+    my($column, $type, $options) = @_;
+    Carp::croak "usage: add_column_suger 'table_name.column_name' => type => { args };"
+        unless $column =~ /^[^\.+]+\.[^\.+]+$/;
+    
+    $COLUMN_SUGER->{$column} = +{
+        type    => $type    || 'char',
+        options => $options || +{},
+    };
 }
 
 1;

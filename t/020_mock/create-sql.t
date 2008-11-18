@@ -1,7 +1,7 @@
 use t::Utils;
 use Mock::Tests::Basic;
 use Data::Model::Driver::DBI;
-use Test::More tests => 8;
+use Test::More tests => 14;
 
 BEGIN {
     my $dbfile = temp_filename;
@@ -10,8 +10,9 @@ BEGIN {
         username => 'username',
         password => 'password',
     );
-    eval "use Mock::Basic"; $@ and die $@;
-    eval "use Mock::Index"; $@ and die $@;
+    use_ok('Mock::Basic');
+    use_ok('Mock::Index');
+    use_ok('Mock::ColumnSuger');
 }
 
 
@@ -68,3 +69,23 @@ is($multi_index[0], "CREATE TABLE multi_index (
     idx3            CHAR(255)      
 )");
 is($multi_index[1], "CREATE INDEX idx ON multi_index (idx1,idx2,idx3)");
+
+
+$mock = Mock::ColumnSuger->new;
+
+my @author = $mock->get_schema('author')->sql->as_sql;
+is($author[0], "CREATE TABLE author (
+    id              INTEGER         NOT NULL PRIMARY KEY,
+    name            VARCHAR(128)    NOT NULL
+)");
+
+my @book = $mock->get_schema('book')->sql->as_sql;
+is($book[0], "CREATE TABLE book (
+    id              INTEGER         NOT NULL PRIMARY KEY,
+    author_id       INT             UNSIGNED NOT NULL,
+    sub_author_id   INT             UNSIGNED NOT NULL,
+    title           VARCHAR(255)    NOT NULL,
+    description     TEXT            NOT NULL DEFAULT 'not yet writing',
+    recommend       TEXT           
+)");
+is($book[1], "CREATE INDEX author_id ON book (author_id)");

@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
+use Data::Model::Schema;
 use Data::Model::Schema::SQL;
 
 __PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options /);
@@ -38,14 +39,45 @@ BEGIN {
 }
 
 sub add_column {
-    my($self, $column, $type, $options) = @_;
+    my $self = shift;
+    my($column, $type, $options) = @_;
+    return $self->add_column_suger(@_) if $column =~ /^[^\.+]+\.[^\.+]+$/;
     Carp::croak "Column can't be called '$column': reserved name" 
             if grep { lc $_ eq lc $column } @RESERVED;
+
     push @{ $self->{columns} }, $column;
     $self->{column}->{$column} = +{
         type    => $type    || 'char',
         options => $options || +{},
     };
+}
+
+sub add_column_suger {
+    my $self   = shift;
+    my $name   = shift;
+    my $suger = $Data::Model::Schema::COLUMN_SUGER;
+    Carp::croak "Undefined column of '$name'" 
+        unless exists $suger->{$name} && $suger->{$name};
+
+    my $conf = $suger->{$name};
+    my %clone = (
+        type    => $conf->{type},
+        options => +{ %{ $conf->{options} } },
+    );
+    my $column;
+    if (@_ == 0 || ref($_[0])) {
+        my $model;
+        ($model, $column) = split /\./, $name;
+        unless ($self->{model} eq $model) {
+            $column = join '_', $model, $column;
+        }
+    } else {
+        $column = shift;
+    }
+    if (@_ && ref($_[0]) eq 'HASH') {
+        $clone{options} = +{ %{ $clone{options} }, %{ ( shift ) } } 
+    }
+    $self->add_column($column, $clone{type}, $clone{options});
 }
 
 sub add_options {
