@@ -21,12 +21,12 @@ sub as_column_type {
     my($self, $column, $args) = @_;
     my $type = uc($args->{type});
 
-    my $size = $args->{size} || 0;
+    my $size = $args->{options}->{size} || 0;
     $size = 0 unless $size =~ /^\d+$/;
     if ($type =~ m/int/i) {
         $type .= "($size)" if $size;
     } elsif ($type =~ m/(?:real|float|double|numeric|decimal)/i) {
-        my $decimals = $args->{decimals} || 0;
+        my $decimals = $args->{options}->{decimals} || 0;
         $decimals = 0 unless $decimals =~ /^\d+$/;
         if ($size && $decimals) {
             $type .= "($size,$decimals)";
