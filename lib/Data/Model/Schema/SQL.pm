@@ -37,7 +37,7 @@ sub as_column_type {
         $size ||= 255;
         $type .= "($size)";;
     }
-
+    $type;
 }
 
 sub as_type_attributes {
