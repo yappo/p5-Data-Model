@@ -314,8 +314,13 @@ sub _mk_term {
     } elsif (ref($val) eq 'HASH') {
         $col = $m->($col) if $m = $self->column_mutator;
         my($op, $v) = (%{ $val });
-        $term = "$col $op ?";
-        push @bind, $v;
+        if ((uc($op) eq 'IN' || uc($op) eq 'NOT IN') && ref($v) eq 'ARRAY') {
+            $term = "$col $op (".join(',', ('?') x scalar @$v).')';
+            @bind = @$v;
+        } else {
+            $term = "$col $op ?";
+            push @bind, $v;
+        }
     } elsif (ref($val) eq 'SCALAR') {
         $col = $m->($col) if $m = $self->column_mutator;
         $term = "$col $$val";

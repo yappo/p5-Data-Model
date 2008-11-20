@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Data::Model::SQL;
-use Test::More tests => 95;
+use Test::More tests => 103;
 
 sub ns { Data::Model::SQL->new }
 
@@ -167,6 +167,20 @@ is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
 is($stmt->bind->[3], 'boo');
+
+$stmt = ns();
+$stmt->add_where(foo => { 'IN' => [ 'baz', 'boo' ] });
+is($stmt->as_sql_where, "WHERE (foo IN (?,?))\n");
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 'baz');
+is($stmt->bind->[1], 'boo');
+
+$stmt = ns();
+$stmt->add_where(foo => { 'NOT IN' => [ 'baz', 'boo' ] });
+is($stmt->as_sql_where, "WHERE (foo NOT IN (?,?))\n");
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 'baz');
+is($stmt->bind->[1], 'boo');
 
 $stmt = ns();
 $stmt->add_where(foo => [ -and => 'foo', 'bar', [ -and => 'baz', 'boo' ] ]);
