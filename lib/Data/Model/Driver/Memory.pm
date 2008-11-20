@@ -190,9 +190,9 @@ sub get_record_id_list {
                 }
             }
         } else {
-            my $data = $self->load_key($schema);
+            my $data = $self->load_data($schema);
             $result_id_list = [
-                values %{ $data->{key} }
+                sort { $a <=> $b } keys %{ $data->{records} }
             ];
         }
     }
@@ -310,9 +310,148 @@ sub get_result_list {
     return $self->limit($schema, $query, $self->sort($schema, $query, $self->grep($schema, $query, $results)));
 }
 
+## grep
+sub _grep_merge_and {
+    my($self, $l, $r) = @_;
+    return [] unless @{ $l } && @{ $r };
+    if ($l->[0]->[0] > $r->[0]->[0]) {
+        my $t = $l;
+        $l = $r;
+        $r = $t;
+    }
+
+    my @results;
+    my $ridx = 0;
+    my $rmax = @{ $r };
+    for my $lrow (@{ $l }) {
+        my $lid = $lrow->[0];
+        while ( $ridx < $rmax) {
+            my $rid = $r->[$ridx]->[0];
+            if ($rid == $lid) {
+                push @results, $lrow;
+                $ridx++;
+            } elsif ($rid < $lid) {
+                $ridx++;
+            } else {
+                last;
+            }
+        }
+    }
+    return \@results;
+}
+sub _grep_merge_or {
+    my($self, $l, $r) = @_;
+    return $l if @{ $l } && !@{ $r };
+    return $r if !@{ $l } && @{ $r };
+    if ($l->[0]->[0] > $r->[0]->[0]) {
+        my $t = $l;
+        $l = $r;
+        $r = $t;
+    }
+
+    my @results;
+    my $ridx = 0;
+    my $rmax = @{ $r };
+    for my $lrow (@{ $l }) {
+        my $lid = $lrow->[0];
+        while ( $ridx < $rmax) {
+            my $rid = $r->[$ridx]->[0];
+            if ($rid == $lid) {
+                $ridx++;
+                last;
+            } elsif ($rid < $lid) {
+                push @results, $r->[$ridx];
+                $ridx++;
+            } else {
+                last;
+            }
+        }
+        push @results, $lrow;
+    }
+    return \@results;
+}
+
+sub _grep_grep {
+    my($self, $col, $val, $rows) = @_;
+    my @result;
+    for my $row (@{ $rows }) {
+        my $ok = 0;
+        unless (exists $row->[1]->{$col}) {
+            next;
+        }
+        my $rval = $row->[1]->{$col};
+        if (ref($val)) {
+            if (ref($val) eq 'HASH') {
+                my($op, $value) = (%{ $val });
+                $op = uc($op);
+                if ($op eq 'LIKE') {
+                    my $is_prefix = !($value =~ s/^%//);
+                    my $is_suffix = !($value =~ s/%$//);
+                    my $meta_str  = join '.', map { quotemeta $_ } split '_', $value;
+                    $meta_str  = '^' . $meta_str if $is_prefix;
+                    $meta_str .= '$'             if $is_suffix;
+                    $ok = 1 if $rval =~ /$meta_str/;
+
+                } elsif ($op eq '=') {
+                    $ok = 1 if $rval eq $value;
+
+                } elsif ($op eq '!=') {
+                    $ok = 1 unless $rval eq $value;
+
+                } elsif ($op eq '>') {
+                    $ok = 1 if $rval > $value;
+
+                } elsif ($op eq '<') {
+                    $ok = 1 if $rval < $value;
+
+                } elsif ($op eq '>=') {
+                    $ok = 1 if $rval >= $value;
+
+                } elsif ($op eq '<=') {
+                    $ok = 1 if $rval <= $value;
+
+                } elsif (($op eq 'IN' || $op eq 'NOT IN') && ref($value) eq 'ARRAY') {
+                    for my $v (@{ $value }) {
+                        $ok = 1 if $rval eq $v;
+                    }
+                    $ok = !$ok unless $op eq 'IN';
+                }
+            }
+        } else {
+            $ok = 1 if $rval eq $val;
+        }
+        push @result, $row if $ok;
+    }
+    \@result;
+}
+sub _grep {
+    my($self, $col, $val, $rows) = @_;
+    if (lc($col) eq '-and' || lc($col) eq '-or') {
+        my $results;
+        my $ret;
+        while (my($ccol, $cval) = splice @{ $val }, 0, 2) {
+            $ret = $self->_grep( $ccol, $cval, $rows );
+            if ($results) {
+                $results = (lc($col) eq '-and') ? $self->_grep_merge_and($results, $ret) : $self->_grep_merge_or($results, $ret);
+            } else {
+                $results = $ret;
+            }
+        }
+        $results = $ret unless $results;
+        return $results;
+    } else {
+        ## xxx Need to support old range and transform behaviors.
+        Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/ || ref($col) eq 'SCALAR';
+        Carp::croak("Invalid/unsafe column value $col (unused Data::Model::SQL->_mk_term parse data)") unless !ref($val) || ref($val) eq 'HASH';
+        return $self->_grep_grep($col, $val, $rows);
+    }
+}
 sub grep {
     my($self, $schema, $query, $rows) = @_;
     return $rows unless exists $query->{where};
+    my $ret = $self->_grep( -and => $query->{where}, $rows );
+    return [] unless $ret;
+    return $ret;
 }
 
 sub sort {
