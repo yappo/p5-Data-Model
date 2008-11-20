@@ -38,6 +38,48 @@ sub new {
 
     # ここで select, join, where クエリ 等を%args から構築する
 
+    # where
+    if (exists $args{where}) {
+        my @wheres;
+        if (ref($args{where}) eq 'ARRAY') {
+            while (my($column, $value) = splice @{ $args{where} }, 0, 2) {
+                push @wheres, +[ $column, $value ];
+            }
+        } elsif (ref($args{where}) eq 'HASH') {
+            while (my($column, $value) = each %{ $args{where} }) {
+                push @wheres, +[ $column, $value ];
+            }
+        } else {
+            Carp::croak 'where requires the type of ARRAY or HASH reference';
+        }
+
+        for my $where (@wheres) {
+            $self->add_where(@{ $where });
+        }
+    }
+
+    # where_sql
+    if (exists $args{where_sql}) {
+        my @wheres;
+        if (ref($args{where_sql}) eq 'ARRAY') {
+            while (my($sql, $values) = splice @{ $args{where_sql} }, 0, 2) {
+                push @wheres, +[ $sql, $values ];
+            }
+        } elsif (ref($args{where_sql}) eq 'HASH') {
+            while (my($sql, $values) = each %{ $args{where} }) {
+                push @wheres, +[ $sql, $values ];
+            }
+        } else {
+            Carp::croak 'where_sql requires the type of ARRAY or HASH reference';
+        }
+
+        for my $where (@wheres) {
+            my($sql, $values) = @{ $where };
+            $self->add_where_sql( $sql => @{ $values });
+        }
+    }
+
+
 =pod
 
   Data::Model::SQL->new(
@@ -78,15 +120,37 @@ sub add_join {
     };
 }
 
-sub add_where {
+sub _add_where {
     my($self, $col, $val) = @_;
-    ## xxx Need to support old range and transform behaviors.
-    Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/ || ref($col) eq 'SCALAR';
-    my($term, $bind, $tcol) = $self->_mk_term($col, $val);
-    push @{ $self->{where} }, "($term)";
-    push @{ $self->{bind} }, @{ $bind };
+    if (lc($col) eq '-and' || lc($col) eq '-or') {
+        my $op = lc($col) eq '-and' ? 'AND' : 'OR';
+        my(@terms, @binds, @tcols);
+        while (my($ccol, $cval) = splice @{ $val }, 0, 2) {
+            my($term, $bind, $tcol) = $self->_add_where( $ccol => $cval );
+            push @terms, "($term)";
+            push @binds, @{ $bind };
+            push @tcols, @{ $tcol };
+        }
+        my $term = join " $op ", @terms;
+        return $term, \@binds, \@tcols;
+    } else {
+        ## xxx Need to support old range and transform behaviors.
+        Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/ || ref($col) eq 'SCALAR';
+        my($term, $bind, $tcol) = $self->_mk_term($col, $val);
+        return $term, $bind, [ $tcol => $val ];
+    }
+}
 
-    $self->where_values->{$tcol} = $val if defined $tcol;
+sub add_where {
+    my $self = shift;
+    my($term, $binds, $tcols) = $self->_add_where(@_);
+
+    push @{ $self->{where} }, "($term)";
+    push @{ $self->{bind} }, @{ $binds };
+    my @tcols = @{ $tcols };
+    while (my($tcol, $tval) = splice @tcols, 0, 2) {
+        $self->where_values->{$tcol} = $tval if defined $tcol;
+    }
 }
 
 sub add_where_sql {

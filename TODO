@@ -13,6 +13,8 @@ Data::Model::Driver::DBI::mysql
 Data::Model::Driver::DBI::sqlite
 Data::Model::Driver::Memcache
 Data::Model::Driver::Memory
+Data::Model::Driver::DBM
+Data::Model::Driver::File
 Data::Model::Driver::YAML
 
 inflate/deflate
@@ -20,3 +22,8 @@ Gearman
 TheSchwartz
 
 direct_update
+
+no key test
+where(grep) test
+
+020_mock の BEGIN の中身をまとめて Util へ

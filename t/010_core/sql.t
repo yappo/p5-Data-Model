@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Data::Model::SQL;
-use Test::More tests => 81;
+use Test::More tests => 95;
 
 sub ns { Data::Model::SQL->new }
 
@@ -241,6 +241,40 @@ HAVING (COUNT(*) = ?)
 ORDER BY foo DESC
 LIMIT 2
 SQL
+
+# recur and
+$stmt = ns();
+$stmt->from('table');
+$stmt->add_where( -and => [ foo => 1, bar => 2 ] );
+is($stmt->as_sql, "FROM table\nWHERE ((foo = ?) AND (bar = ?))\n", 'recur and');
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 1);
+is($stmt->bind->[1], 2);
+
+# recur or
+$stmt = ns();
+$stmt->from('table');
+$stmt->add_where( -or => [ foo => 1, bar => 2 ] );
+is($stmt->as_sql, "FROM table\nWHERE ((foo = ?) OR (bar = ?))\n", 'recur or');
+is(scalar @{ $stmt->bind }, 2);
+is($stmt->bind->[0], 1);
+is($stmt->bind->[1], 2);
+
+# recur and ( or and )
+$stmt = ns();
+$stmt->from('table');
+$stmt->add_where(
+    -and => [
+        -or  => [ foo => 1, bar => 2 ],
+        -and => [ baz => 3, lopnor => 4 ],
+    ]
+);
+is($stmt->as_sql, "FROM table\nWHERE (((foo = ?) OR (bar = ?)) AND ((baz = ?) AND (lopnor = ?)))\n", 'recur and ( or and )');
+is(scalar @{ $stmt->bind }, 4);
+is($stmt->bind->[0], 1);
+is($stmt->bind->[1], 2);
+is($stmt->bind->[2], 3);
+is($stmt->bind->[3], 4);
 
 # add_where_sql
 $stmt = ns();
