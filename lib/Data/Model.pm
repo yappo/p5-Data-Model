@@ -237,18 +237,18 @@ sub _get_schema_by_row {
 
     my($klass, $model) = $class =~ /^(.+)::([^:]+)$/;
     return unless ref($self) eq $klass;
-
-    my $schema = $self->get_schema($model);
-    return unless $schema;
-    return unless @{ $schema->{key} } > 0; # not has key
-
-    return $schema;
+    return $self->get_schema($model);
 }
 
 sub update {
-    my($self, $row, %args) = @_;
+    my $self = shift;
+    my $row  = shift;
+    return $self->delete_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
+
     my $schema = $self->_get_schema_by_row($row);
     return unless $schema;
+    return unless @{ $schema->{key} } > 0; # not has key
+
     return unless scalar(%{ $row->get_changed_columns });
 
     my $columns         = $row->get_columns;
@@ -260,7 +260,9 @@ sub update {
 
     # $columns deflate
 
-    my $result = $schema->{driver}->update( $schema, $old_key_array, $key_array, $old_columns, $columns, $changed_columns, %args);
+    my $result = $schema->{driver}->update(
+        $schema, $old_key_array, $key_array, $old_columns, $columns, $changed_columns, @_
+    );
     $row->{changed_cols} = +{};
     return unless $result;
 
@@ -268,8 +270,7 @@ sub update {
 }
 
 #direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
-sub direct_update {
-}
+sub direct_update {}
 
 =head2 delete
 
@@ -285,12 +286,13 @@ sub delete {
 
     my $schema = $self->_get_schema_by_row($row);
     return unless $schema;
+    return unless @{ $schema->{key} } > 0; # not has key
 
     my $columns       = $row->get_columns;
     my $key_array     = $schema->get_key_array_by_hash($columns);
 
     local $schema->{schema_obj} = $self;
-    $schema->{driver}->delete( $schema, $key_array );
+    $schema->{driver}->delete( $schema, $key_array, @_ );
 }
 
 sub delete_direct {

@@ -371,4 +371,42 @@ sub t_51_and_or : Tests {
         +{ int1 => 2, int2 => 200, char1 => 'char' },
     );
 }
+
+sub t_61_update : Tests {
+    my($get) = mock->get(
+        not_key => +{ 
+            where => [
+                int1 => 1,
+            ],
+            order => [ { int2 => 'ASC' } ],
+        }
+    );
+    isa_ok $get, mock_class."::not_key";
+    $get->char1('update');
+    my $set = $get->update;
+    ok !$set;
+}
+
+sub t_62_delete : Tests {
+    my($get) = mock->get(
+        not_key => +{ 
+            where => [
+                int1 => 1,
+            ],
+            order => [ { int2 => 'ASC' } ],
+        }
+    );
+    isa_ok $get, mock_class."::not_key";
+    ok(!$get->delete);
+    ($get) = mock->get(
+        not_key => +{ 
+            where => [
+                int1 => 1,
+            ],
+            order => [ { int2 => 'ASC' } ],
+        }
+    );
+    isa_ok $get, mock_class."::not_key";
+}
+
 1;
