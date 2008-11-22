@@ -229,24 +229,30 @@ sub set_multi {
 }
 
 
+sub _get_schema_by_row {
+    my($self, $row) = @_;
 
-sub update {
-    my($self, $row, %args) = @_;
     my $class = ref($row);
     return unless $class;
+
     my($klass, $model) = $class =~ /^(.+)::([^:]+)$/;
     return unless ref($self) eq $klass;
+
     my $schema = $self->get_schema($model);
     return unless $schema;
     return unless @{ $schema->{key} } > 0; # not has key
-    return unless scalar(%{ $row->{changed_cols} });
 
-    my $columns = +{};
-    for my $name (keys %{ $schema->{column} }) {
-        $columns->{$name} = $row->$name;
-    }
+    return $schema;
+}
 
-    my $changed_columns = $row->{changed_cols};
+sub update {
+    my($self, $row, %args) = @_;
+    my $schema = $self->_get_schema_by_row($row);
+    return unless $schema;
+    return unless scalar(%{ $row->get_changed_columns });
+
+    my $columns         = $row->get_columns;
+    my $changed_columns = $row->get_changed_columns;
     my $old_columns     = +{ %{ $columns }, %{ $changed_columns } };
 
     my $key_array     = $schema->get_key_array_by_hash($columns);
@@ -273,6 +279,21 @@ sub direct_update {
 =cut
 
 sub delete {
+    my $self = shift;
+    my $row  = shift;
+    return $self->delete_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
+
+    my $schema = $self->_get_schema_by_row($row);
+    return unless $schema;
+
+    my $columns       = $row->get_columns;
+    my $key_array     = $schema->get_key_array_by_hash($columns);
+
+    local $schema->{schema_obj} = $self;
+    $schema->{driver}->delete( $schema, $key_array );
+}
+
+sub delete_direct {
     my $self   = shift;
     my $model  = shift;
     my $schema = $self->get_schema($model);

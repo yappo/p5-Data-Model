@@ -234,4 +234,15 @@ sub t_08_autoincrement : Tests {
     is $idx3->url, 'url3';
 }
 
+sub t_09_get_delete : Tests {
+    my $set = mock->set( user => 'select-delete', { name => 'Kazuhiro Osawa' } );
+    isa_ok $set, mock_class."::user";
+
+    my($get) = mock->get( user => 'select-delete' );
+    isa_ok $get, mock_class."::user";
+    ok($get->delete, 'delete by row');
+
+    ok(!mock->get( user => 'select-delete' ));
+}
+
 1;
