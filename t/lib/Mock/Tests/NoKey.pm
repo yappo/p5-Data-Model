@@ -378,7 +378,6 @@ sub t_61_update : Tests {
             where => [
                 int1 => 1,
             ],
-            order => [ { int2 => 'ASC' } ],
         }
     );
     isa_ok $get, mock_class."::not_key";
@@ -393,7 +392,6 @@ sub t_62_delete : Tests {
             where => [
                 int1 => 1,
             ],
-            order => [ { int2 => 'ASC' } ],
         }
     );
     isa_ok $get, mock_class."::not_key";
@@ -403,7 +401,6 @@ sub t_62_delete : Tests {
             where => [
                 int1 => 1,
             ],
-            order => [ { int2 => 'ASC' } ],
         }
     );
     isa_ok $get, mock_class."::not_key";
