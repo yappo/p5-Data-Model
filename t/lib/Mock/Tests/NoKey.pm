@@ -312,6 +312,24 @@ sub t_09_in : Tests {
     );
 }
 
+sub t_10_get_all : Tests {
+    my $it = mock->get(
+        'not_key',
+        +{
+            where => [ int1 => +{ '!=' => 100 } ],
+            order => [ { int1 => 'ASC' }, { int2 => 'ASC' } ],
+        }
+    );
+    ok $it, 'get';
+    _check_iterator($it,
+        +{ int1 => 1, int2 => 100, char1 => 'char' },
+        +{ int1 => 1, int2 => 100, char1 => 'char' },
+        +{ int1 => 1, int2 => 101, char1 => 'check' },
+        +{ int1 => 2, int2 => 200, char1 => 'char' },
+        +{ int1 => 3, int2 => 200, char1 => 'lock' },
+    );
+}
+
 sub t_50_and : Tests {
     my $it = mock->get(
         not_key => +{ 
