@@ -406,4 +406,48 @@ sub t_62_delete : Tests {
     isa_ok $get, mock_class."::not_key";
 }
 
+sub t_71_direct_update : Tests {
+
+    my $set1 = mock->set( not_key => { int1 => 99, int2 => 999, char1 => 'kyu' } );
+    isa_ok $set1, mock_class."::not_key";
+    is $set1->int1, 99;
+    is $set1->int2, 999;
+    is $set1->char1, 'kyu';
+
+    ok mock->update_direct(
+        not_key => +{
+            where => [
+                char1 => 'kyu',
+            ],
+        },
+        +{
+            int1  => 100,
+            int2  => 1000,
+            char1 => 'sen',
+        },
+    );
+
+    my $it = mock->get(
+        'not_key',
+        +{
+            where => [ int1 => +{ '!=' => 100 } ],
+            order => [ { int1 => 'ASC' }, { int2 => 'ASC' } ],
+        }
+    );
+    ok $it, 'get';
+    _check_iterator($it,
+        +{ int1 => 1, int2 => 100, char1 => 'char' },
+        +{ int1 => 1, int2 => 100, char1 => 'char' },
+        +{ int1 => 1, int2 => 101, char1 => 'check' },
+        +{ int1 => 2, int2 => 200, char1 => 'char' },
+        +{ int1 => 3, int2 => 200, char1 => 'lock' },
+    );
+
+    my($get1) = mock->get( not_key => { where => [ int1 => 100 ] } );
+    isa_ok $get1, mock_class."::not_key";
+    is $get1->int1, 100;
+    is $get1->int2, 1000;
+    is $get1->char1, 'sen';
+}
+
 1;

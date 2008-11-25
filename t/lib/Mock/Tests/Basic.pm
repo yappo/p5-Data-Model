@@ -245,4 +245,84 @@ sub t_09_get_delete : Tests {
     ok(!mock->get( user => 'select-delete' ));
 }
 
+sub t_10_direct_update : Tests {
+    my $set1 = mock->set( user => 'direct_update-1', { name => 'direct_update 1' } );
+    isa_ok $set1, mock_class."::user";
+    my $set2 = mock->set( user => 'direct_update-2', { name => 'direct_update 2' } );
+    isa_ok $set2, mock_class."::user";
+
+    my($get1) = mock->get( user => 'direct_update-1' );
+    isa_ok $get1, mock_class."::user";
+    is $get1->id, 'direct_update-1';
+    is $get1->name, 'direct_update 1';
+    my($get2) = mock->get( user => 'direct_update-2' );
+    isa_ok $get2, mock_class."::user";
+    is $get2->id, 'direct_update-2';
+    is $get2->name, 'direct_update 2';
+
+    ok mock->update(
+        user => 'direct_update-1',
+        undef, +{
+            name => 'updated direct_update 1',
+        },
+    ), 'update 1';
+    my($get3) = mock->get( user => 'direct_update-1' );
+    isa_ok $get3, mock_class."::user";
+    is $get3->id, 'direct_update-1';
+    is $get3->name, 'updated direct_update 1';
+
+    ok mock->update(
+        user => ['direct_update-1'],
+        undef, +{
+            name => 'updated 2 direct_update 1',
+        },
+    ), 'update 2';
+    my($get4) = mock->get( user => 'direct_update-1' );
+    isa_ok $get4, mock_class."::user";
+    is $get4->id, 'direct_update-1';
+    is $get4->name, 'updated 2 direct_update 1';
+
+    my($get5) = mock->get( user => 'direct_update-2' );
+    isa_ok $get5, mock_class."::user";
+    is $get5->id, 'direct_update-2';
+    is $get5->name, 'direct_update 2';
+
+
+    ok mock->update(
+        user => +{
+            where => [
+                name => { LIKE => '%2' },
+            ],
+        }, +{
+            name => 'updated direct_update 2',
+        },
+    ), 'update 3';
+    my($get6) = mock->get( user => 'direct_update-1' );
+    isa_ok $get6, mock_class."::user";
+    is $get6->id, 'direct_update-1';
+    is $get6->name, 'updated 2 direct_update 1';
+    my($get7) = mock->get( user => 'direct_update-2' );
+    isa_ok $get7, mock_class."::user";
+    is $get7->id, 'direct_update-2';
+    is $get7->name, 'updated direct_update 2';
+
+
+    ok mock->update(
+        user => ['direct_update-1'],
+        undef, +{
+            id   => 'direct_update-3',
+            name => 'direct_update 3',
+        },
+    ), 'update 4';
+    ok(!mock->get( user => 'direct_update-1' ));
+    my($get8) = mock->get( user => 'direct_update-3' );
+    isa_ok $get8, mock_class."::user";
+    is $get8->id, 'direct_update-3';
+    is $get8->name, 'direct_update 3';
+    my($get9) = mock->get( user => 'direct_update-2' );
+    isa_ok $get9, mock_class."::user";
+    is $get9->id, 'direct_update-2';
+    is $get9->name, 'updated direct_update 2';
+}
+
 1;

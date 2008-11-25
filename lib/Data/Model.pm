@@ -107,7 +107,7 @@ sub _get_query_args {
     return [ $key_array, $query, @_ ];
 }
 
-=head2 delete
+=head2 get
 
   $model->get( model_name => 'key' );
   $model->get( model_name => [qw/ key1 key2 /] );
@@ -155,7 +155,7 @@ sub get {
 sub get_multi {
 }
 
-=head2 delete
+=head2 set
 
   $model->set( model_name => 'key' );
   $model->set( model_name => [qw/ key1 key2 /] );
@@ -243,7 +243,7 @@ sub _get_schema_by_row {
 sub update {
     my $self = shift;
     my $row  = shift;
-    return $self->delete_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
+    return $self->update_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
 
     my $schema = $self->_get_schema_by_row($row);
     return unless $schema;
@@ -269,8 +269,28 @@ sub update {
     $row;
 }
 
+=head2 update_direct
+
+  $model->update_direct( model_name => 'key', +{ querys }, +{ update columns } );
+  $model->update_direct( model_name => [qw/ key1 key2 /], +{ querys }, +{ update columns } );
+  $model->update_direct( model_name => +{ querys }, +{ update columns } );
+
+=cut
+
 #direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
-sub direct_update {}
+sub update_direct {
+    my $self   = shift;
+    my $model  = shift;
+
+    my $schema = $self->get_schema($model);
+    return unless $schema;
+
+    my $query = _get_query_args($schema, @_);
+    return unless $query;
+
+    local $schema->{schema_obj} = $self;
+    $schema->{driver}->update_direct( $schema, @{ $query } );
+}
 
 =head2 delete
 

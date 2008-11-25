@@ -179,14 +179,8 @@ sub _insert_or_replace {
 }
 
 # update
-sub update {
-    my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
-
-    my $stmt = Data::Model::SQL->new;
-    $self->add_key_to_where($stmt, $schema->key, $old_key);
-
-    my $where_sql = $stmt->as_sql_where;
-    return unless $where_sql;
+sub _update {
+    my($self, $schema, $changed_columns, $columns, $where_sql, $pre_bind) = @_;
 
     my @bind;
     my @set;
@@ -194,7 +188,7 @@ sub update {
         push @set, "$column = ?";
         push @bind, $columns->{$column};
     }
-    push @bind, @{ $stmt->bind };
+    push @bind, @{ $pre_bind };
 
     my $sql = 'UPDATE ' . $schema->model . ' SET ' . join(', ', @set) . ' ' . $where_sql;
     my $dbh = $self->rw_handle;
@@ -205,6 +199,32 @@ sub update {
     $self->end_query($sth);
 
     return $sth->rows;
+}
+
+sub update {
+    my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
+
+    my $stmt = Data::Model::SQL->new;
+    $self->add_key_to_where($stmt, $schema->key, $old_key);
+
+    my $where_sql = $stmt->as_sql_where;
+    return unless $where_sql;
+
+    return $self->_update($schema, $changed_columns, $columns, $where_sql, $stmt->bind);
+}
+
+sub update_direct {
+    my($self, $schema, $key, $query, $columns, %args) = @_;
+
+    my $index_query = delete $columns->{index};
+    my $stmt = Data::Model::SQL->new(%{ $query });
+    $self->add_key_to_where($stmt, $schema->key, $key) if $key;
+    $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
+
+    my $where_sql = $stmt->as_sql_where;
+    return unless $where_sql;
+
+    return $self->_update($schema, $columns, $columns, $where_sql, $stmt->bind);
 }
 
 # delete

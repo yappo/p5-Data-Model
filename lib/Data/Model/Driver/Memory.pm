@@ -145,28 +145,55 @@ sub update {
     $data->{records}->{$id} = +{ %{ $columns } };
 }
 
-sub delete {
-    my($self, $schema, $key, $columns, %args) = @_;
+sub _uodate_delete_visitor {
+    my($self, $schema, $key, $query, $code) = @_;
 
     # fetch record id
-    my $result_id_list = $self->get_record_id_list($schema, $key, $columns);
+    my $result_id_list = $self->get_record_id_list($schema, $key, $query);
     return unless $result_id_list && @{ $result_id_list };
 
-    my $results = $self->get_result_list($schema, $columns, $result_id_list);
+    my $results = $self->get_result_list($schema, $query, $result_id_list);
     return unless $results && @{ $results };
 
     # delete data
     my $data = $self->load_data($schema);
-    my @deleted;
+    my @rows;
     for my $id ( map { $_->[0] } @{ $results }) {
-        # write to index, key and unique
-        $self->delete_memory_index($schema, $key, $data->{records}->{$id}, $id);
-
-        my $del = delete $data->{records}->{$id};
-        push @deleted, $del if $del;
+        my @ret = $code->($data, $id);
+        push @rows, @ret if @ret;
     }
+    return @rows ? [ @rows ] : undef;
+}
 
-    return @deleted ? [ @deleted ] : undef;
+sub update_direct {
+    my($self, $schema, $key, $query, $columns, %args) = @_;
+
+    $self->_uodate_delete_visitor(
+        $schema, $key, $query, 
+        sub {
+            my($data, $id) = @_;
+            $self->delete_memory_index($schema, $key, $data->{records}->{$id}, $id);
+            while (my($key, $val) = each %{ $columns }) {
+                $data->{records}->{$id}->{$key} = $val;
+            }
+            $key = $schema->get_key_array_by_hash($data->{records}->{$id});
+            $self->set_memory_index($schema, $key, $data->{records}->{$id}, $id);
+        }
+    );
+}
+
+
+sub delete {
+    my($self, $schema, $key, $columns, %args) = @_;
+
+    $self->_uodate_delete_visitor(
+        $schema, $key, $columns, 
+        sub {
+            my($data, $id) = @_;
+            $self->delete_memory_index($schema, $key, $data->{records}->{$id}, $id);
+            delete $data->{records}->{$id};
+        }
+    );
 }
 
 ## for memory index
