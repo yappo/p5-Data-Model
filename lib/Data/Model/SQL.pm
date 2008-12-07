@@ -50,7 +50,7 @@ sub new {
                 push @wheres, +[ $column, $value ];
             }
         } else {
-            Carp::croak 'where requires the type of ARRAY or HASH reference';
+            Carp::croak('where requires the type of ARRAY or HASH reference');
         }
 
         for my $where (@wheres) {
@@ -70,7 +70,7 @@ sub new {
                 push @wheres, +[ $sql, $values ];
             }
         } else {
-            Carp::croak 'where_sql requires the type of ARRAY or HASH reference';
+            Carp::croak('where_sql requires the type of ARRAY or HASH reference');
         }
 
         for my $where (@wheres) {
