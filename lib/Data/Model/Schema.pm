@@ -164,7 +164,7 @@ __END__
 
 target table_name => schema {
 
-    colmun field_name
+    column field_name
         => char => {
             size       => 10,
             require    => 1,
@@ -176,7 +176,7 @@ target table_name => schema {
             deflate => sub {},
         };
 
-    colmun field_name_2
+    column field_name_2
         => char => {
             inflate => 'uri',
             deflate => 'uri',
