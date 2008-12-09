@@ -21,9 +21,5 @@ inflate/deflate
 Gearman
 TheSchwartz
 
-direct_update
-
-no key test
-where(grep) test
-
-020_mock の BEGIN の中身をまとめて Util へ
+partition
+replication
