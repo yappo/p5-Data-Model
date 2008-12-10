@@ -23,3 +23,6 @@ TheSchwartz
 
 partition
 replication
+
+$schema->{class}->new($self, $columns); -> $schma->new_obj($self, $columns);
+has_inflate/has_deflate

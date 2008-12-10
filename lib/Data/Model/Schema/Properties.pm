@@ -3,10 +3,14 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
+use Class::Trigger qw( pre_insert pre_save post_save post_load pre_update pre_inflate post_inflate pre_deflate post_deflate );
+use Encode ();
+
 use Data::Model::Schema;
 use Data::Model::Schema::SQL;
 
 __PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options /);
+
 
 our @RESERVED = qw(
     update save new
@@ -51,6 +55,12 @@ sub add_column {
         options => $options || +{},
     };
 }
+sub add_utf8_column {
+    my $self = shift;
+    my($name) = @_;
+    $self->{utf8_columns}->{$name} = 1;
+    $self->add_column(@_);
+}
 
 sub add_column_sugar {
     my $self   = shift;
@@ -83,15 +93,13 @@ sub add_column_sugar {
 sub add_options {
     my $self = shift;
     if (ref($_[0]) eq 'HASH') {
-        $self->options(shift);
+        $self->{options} = shift;
     } elsif (!(@_ % 2)) {
         while (my($key, $value) = splice @_, 0, 2) {
-            $self->options->{$key} = $value;
+            $self->{options}->{$key} = $value;
         }
     }
 }
-
-
 
 sub column_names {
     my $self = shift;
@@ -107,19 +115,100 @@ sub column_options {
     $self->{column}->{$column}->{options} || +{};
 }
 
+sub setup_inflate {
+    my $self = shift;
 
+    while (my($column, $data) = each %{ $self->{column} }) {
+        my $opts = $data->{options};
+
+        my $inflate = $opts->{inflate};
+        $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate)
+            if $inflate && ref($inflate) ne 'CODE';
+        my $deflate = $opts->{deflate};
+        $opts->{deflate} = Data::Model::Schema::Inflate->get_deflate($deflate)
+            if $deflate && ref($deflate) ne 'CODE';
+    }
+}
+
+sub inflate {
+    my($self, $columns) = @_;
+    my $orig_columns;
+    if (ref($columns) eq $self->{class}) {
+        $orig_columns = $columns;
+        $columns = $columns->{column_values};
+    } elsif (ref($columns) ne 'HASH') {
+        Carp::croak "required types 'HASH' or '$self->{class}' of inflate";
+    }
+    $self->call_trigger('pre_inflate', $columns, $orig_columns);
+
+    while (my($column, $data) = each %{ $self->{column} }) {
+        next unless defined $columns->{$column};
+
+        my $opts = $data->{options};
+        my $val = $columns->{$column};
+
+        if ($self->{utf8_columns}->{$column}) {
+            my $charset = $opts->{charset} || 'utf8';
+            $val = Encode::decode($charset, $val);
+        }
+
+        $val = $opts->{inflate}->($val) if ref($opts->{inflate}) eq 'CODE';
+
+        $orig_columns->{original_cols}->{$column} ||= $orig_columns->{column_values}->{$column}
+            if $orig_columns && $columns->{$column} ne $val;
+
+        $columns->{$column} = $val;
+    }
+    $self->call_trigger('post_inflate', $columns, $orig_columns);
+}
+
+sub deflate {
+    my($self, $columns) = @_;
+    my $orig_columns;
+    if (ref($columns) eq $self->{class}) {
+        $orig_columns = $columns;
+        $columns = $columns->{column_values};
+    } elsif (ref($columns) ne 'HASH') {
+        Carp::croak "required types 'HASH' or '$self->{class}' of inflate";
+    }
+    $self->call_trigger('pre_deflate', $columns, $orig_columns);
+
+    while (my($column, $data) = each %{ $self->{column} }) {
+        next unless defined $columns->{$column};
+
+        my $opts = $data->{options};
+        my $val = $columns->{$column};
+        $val = $opts->{deflate}->($val) if ref($opts->{deflate}) eq 'CODE';
+
+        if ($self->{utf8_columns}->{$column}) {
+            my $charset = $opts->{charset} || 'utf8';
+            $val = Encode::encode($charset, $val);
+        }
+        $columns->{$column} = $val;
+    }
+    $self->call_trigger('post_deflate', $columns, $orig_columns);
+}
+
+sub set_default {}
 
 sub get_key_array_by_hash {
-    my($self, $hash) = @_;
+    my($self, $hash, $index) = @_;
+
+    my $key;
+    $key = $self->{unique}->{$index} || $self->{index}->{$index} if $index;
+    $key ||= $self->{key};
+    $key = [ $key ] unless ref($key) eq 'ARRAY';
+
     my @keys;
-    for my $key (@{ $self->{key} }) {
+    for my $key (@{ $key }) {
+        last unless defined $hash->{$key};
         push @keys, $hash->{$key};
     }
     \@keys;
 }
 
 sub get_columns_hash_by_key_array_and_hash {
-    my($self, $hash, $array) = @_;
+    my($self, $hash, $array, $index) = @_;
     my $ret = {};
 
     # by column
@@ -128,10 +217,12 @@ sub get_columns_hash_by_key_array_and_hash {
     }
 
     # by key
-    my $key = $self->{key};
+    my $key;
+    $key = $self->{unique}->{$index} || $self->{index}->{$index} if $index;
+    $key ||= $self->{key};
     $key = [ $key ] unless ref($key) eq 'ARRAY';
-    @{ $ret }{@{ $key }} = @{ $array };
 
+    @{ $ret }{@{ $key }} = @{ $array };
     $ret;
 }
 

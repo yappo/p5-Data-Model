@@ -75,6 +75,7 @@ sub as_sqls {
 ## get / set / delete
 
 sub _get_query_args {
+    my $self   = shift;
     my $schema = shift;
     return [] unless exists $_[0];
 
@@ -104,6 +105,22 @@ sub _get_query_args {
         shift;
     }
 
+    # deflate search key
+    if ($key_array) {
+        my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
+        $schema->deflate($columns);
+        $key_array = $schema->get_key_array_by_hash( $columns );
+    }
+
+    # deflate search index
+    if ($query && ref($query->{index}) eq 'HASH') {
+        my($name, $key_array) = ( %{ $query->{index} } );
+        $key_array = [ $key_array ] unless ref($key_array) eq 'ARRAY';
+        my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array, $name);
+        $schema->deflate($columns);
+        $query->{index} = { $name => $schema->get_key_array_by_hash($columns, $name) };
+    }
+
     return [ $key_array, $query, @_ ];
 }
 
@@ -122,7 +139,7 @@ sub get {
     my $schema = $self->get_schema($model);
     return unless $schema;
 
-    my $query = _get_query_args($schema, @_);
+    my $query = $self->_get_query_args($schema, @_);
     local $schema->{schema_obj} = $self;
     my($iterator, $iterator_options) = $schema->{driver}->get( $schema, @{ $query } );
     return unless $iterator;
@@ -133,7 +150,8 @@ sub get {
             my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
                 $obj = $schema->{class}->new($self, $data);
-                $obj->call_trigger('post_load'); # inflate
+                $schema->inflate($obj);
+                $schema->call_trigger('post_load', $obj);
             }
             push @objs, $obj;
         }
@@ -146,7 +164,8 @@ sub get {
         wrapper => sub {
             return shift if $schema->{options}->{bare_row};
             my $obj = $schema->{class}->new($self, shift);
-            $obj->call_trigger('post_load'); # inflate 
+            $schema->inflate($obj);
+            $schema->call_trigger('post_load', $obj);
             $obj;
         },
     );
@@ -210,7 +229,14 @@ sub _insert_or_replace {
         $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
     }
 
-    # $columns deflate
+    # deflate
+    $schema->deflate($columns);
+    $key_array = $schema->get_key_array_by_hash( $columns );
+
+    # triggers
+    $schema->call_trigger('pre_save', $columns);
+    $schema->set_default($columns); # set default
+    $schema->call_trigger('pre_insert', $columns);
 
     local $schema->{schema_obj} = $self;
     my $method = $is_replace ? 'replace' : 'set';
@@ -219,7 +245,8 @@ sub _insert_or_replace {
 
     unless ($schema->{options}->{bare_row}) {
         my $obj = $schema->{class}->new($self, $result);
-        $obj->call_trigger('post_load'); # inflate
+        $schema->inflate($obj);
+        $schema->call_trigger('post_load', $obj);
         return $obj;
     }
     return $result;
@@ -255,10 +282,15 @@ sub update {
     my $changed_columns = $row->get_changed_columns;
     my $old_columns     = +{ %{ $columns }, %{ $changed_columns } };
 
+    # deflate
+    $schema->deflate($columns);
+    $schema->deflate($old_columns);
+
+    $schema->call_trigger('pre_save', $columns);
+    $schema->call_trigger('pre_update', $columns, $old_columns);
+
     my $key_array     = $schema->get_key_array_by_hash($columns);
     my $old_key_array = $schema->get_key_array_by_hash($old_columns);
-
-    # $columns deflate
 
     my $result = $schema->{driver}->update(
         $schema, $old_key_array, $key_array, $old_columns, $columns, $changed_columns, @_
@@ -285,8 +317,12 @@ sub update_direct {
     my $schema = $self->get_schema($model);
     return unless $schema;
 
-    my $query = _get_query_args($schema, @_);
+    my $query = $self->_get_query_args($schema, @_);
     return unless $query;
+
+    $schema->deflate($query->[2]);
+    $schema->call_trigger('pre_save', $query->[2]);
+    $schema->call_trigger('pre_update', $query->[2]);
 
     local $schema->{schema_obj} = $self;
     $schema->{driver}->update_direct( $schema, @{ $query } );
@@ -321,7 +357,7 @@ sub delete_direct {
     my $schema = $self->get_schema($model);
     return unless $schema;
 
-    my $query = _get_query_args($schema, @_);
+    my $query = $self->_get_query_args($schema, @_);
     return unless $query;
 
     local $schema->{schema_obj} = $self;

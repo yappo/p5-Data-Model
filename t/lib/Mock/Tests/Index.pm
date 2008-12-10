@@ -139,10 +139,10 @@ sub t_08_multi_column_unique : Tests {
 
 sub _08_index_get_1 {
     my($row, $key, $idx1, $idx2, $idx3) = @_;
-    is $row->key,  $key;
-    is $row->idx1, $idx1;
-    is $row->idx2, $idx2;
-    is $row->idx3, $idx3;
+    is $row->key,  $key, "key: $key $idx1 $idx2 $idx3";
+    is $row->idx1, $idx1, "idx1: $key $idx1 $idx2 $idx3";
+    is $row->idx2, $idx2, "idx2: $key $idx1 $idx2 $idx3";
+    is $row->idx3, $idx3, "idx3: $key $idx1 $idx2 $idx3";
 }
 sub t_08_multi_column_index : Tests {
     my $set1 = mock->set( multi_index => { idx1 => 'a001', idx2 => 'b001', idx3 => 'c001' } );

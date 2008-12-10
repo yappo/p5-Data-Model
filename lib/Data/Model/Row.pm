@@ -2,8 +2,6 @@ package Data::Model::Row;
 use strict;
 use warnings;
 
-use Class::Trigger qw( pre_save post_save post_load );
-
 sub new {
     my($class, $model, $columns) = @_;
     $columns ||= {};
@@ -11,6 +9,7 @@ sub new {
         model         => $model,
         column_values => { %{ $columns } },
         changed_cols  => +{},
+        original_cols => +{},
     }, $class;
 }
 
@@ -24,6 +23,10 @@ sub delete {
     $self->{model}->delete($self, @_);
 }
 
+sub get_column {
+    my($self, $name) = @_;
+    $self->{column_values}->{$name};
+}
 sub get_columns {
     my $self = shift;
     my $schema = $self->{model}->_get_schema_by_row($self);
@@ -32,6 +35,11 @@ sub get_columns {
         $columns->{$name} = $self->{column_values}->{$name};
     }
     $columns;
+}
+
+sub get_original_column {
+    my($self, $name) = @_;
+    $self->{original_cols}->{$name} || $self->{column_values}->{$name};
 }
 
 sub get_changed_columns {

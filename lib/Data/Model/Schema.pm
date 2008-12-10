@@ -16,7 +16,8 @@ sub import {
     $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}} ||= +{};
 
     no strict 'refs';
-    for my $name (qw/ driver install_model schema column columns key index unique schema_options column_sugar /) {
+    for my $name (qw/ driver install_model schema column columns key index unique schema_options column_sugar
+        utf8_column utf8_columns  /) {
         *{"$caller\::$name"} = \&$name;
     }
 
@@ -49,7 +50,8 @@ sub install_model ($$;%) {
         key          => [],
         foreign      => [],
         triggers     => {},
-        options      => +{},
+        options      => {},
+        utf8_columns => {},
     );
 
     $caller->__properties->{__process_tmp}->{name} = $name;
@@ -60,6 +62,7 @@ sub install_model ($$;%) {
         @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
         _install_columns_to_class($schema);
     }
+    $schema->setup_inflate;
     $CALLER = undef;
 
     if ($schema->driver) {
@@ -118,6 +121,17 @@ sub columns (@) {
         $schema->add_column($column);
     }
 }
+sub utf8_column ($;$;$) {
+    my($name, $schema) = _get_model_schema;
+    $schema->add_utf8_column(@_);
+}
+sub utf8_columns (@) {
+    my($name, $schema) = _get_model_schema;
+    my @columns = @_;
+    for my $column (@columns) {
+        $schema->add_utf8_column($column);
+    }
+}
 
 sub key ($;%) {
     my($name, $schema) = _get_model_schema;
@@ -157,6 +171,7 @@ sub get_column_sugar {
     my($class, $schema) = @_;
     $COLUMN_SUGAR->{$SUGAR_MAP->{$schema->{schema_class}}};
 }
+
 
 1;
 
