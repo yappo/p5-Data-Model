@@ -14,6 +14,7 @@ build_requires 'Test::Class';
 build_requires 'Test::More';
 build_requires 'Path::Class';
 
+test_requires 'URI';
 
 use_test_base;
 auto_include;

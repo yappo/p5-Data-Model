@@ -5,6 +5,7 @@ use Mock::Tests;
 use Test::More;
 
 use Encode ();
+use URI;
 
 sub t_01_all_utf8 : Tests(14) {
     use utf8;
@@ -209,6 +210,40 @@ sub t_04_object_key : Tests(46) {
 
     ok mock->delete( object_key => [ Name->new( name => '沢' ) ] ), 'delete';
     ok !mock->get( object_key => [ Name->new( name => '沢' ) ] ), 'get ng';
+}
+
+sub t_05_uri : Tests(8) {
+    my $set = mock->set(
+        uri => { uri => URI->new( 'http://example.com/' ) }
+    );
+    isa_ok $set, mock_class."::uri";
+    isa_ok $set->uri, 'URI';
+    is $set->uri->host, 'example.com', 'is example.com';
+
+    my($get) = mock->get( uri => { index => { uri_idx => [ URI->new('http://example.com/') ] } } );
+    isa_ok $get, mock_class."::uri";
+    isa_ok $get->uri, 'URI';
+    is $get->uri->host, 'example.com', 'is example.com';
+    ok $get->delete, 'delete';
+
+    ok !mock->get( uri => { index => { uri_idx => [ URI->new('http://example.com/') ] } } ), 'get ng';
+}
+
+sub t_06_name_type : Tests(8) {
+    my $set = mock->set(
+        name_type => { name => Name->new( name => 'yappo' ) }
+    );
+    isa_ok $set, mock_class."::name_type";
+    isa_ok $set->name, 'Name';
+    is $set->name->name, 'yappo', 'is yappo';
+
+    my($get) = mock->get( name_type => { index => { name_idx => [ Name->new( name => 'yappo' ) ] } } );
+    isa_ok $get, mock_class."::name_type";
+    isa_ok $get->name, 'Name';
+    is $get->name->name, 'yappo', 'is yappo';
+    ok $get->delete, 'delete';
+
+    ok !mock->get( name_type => { index => { name_idx => [ Name->new( name => 'yappo' ) ] } } ), 'get ng';
 }
 
 1;

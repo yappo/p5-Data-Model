@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Data::Model';
 use Data::Model::Schema;
-use Data::Model::Schema;
+use Data::Model::Schema::Inflate;
 
 install_model all_utf8 => schema {
     driver $main::DRIVER;
@@ -82,11 +82,10 @@ install_model object_key => schema {
 };
 
 
-=pod
-
 install_model uri => schema {
     driver $main::DRIVER;
     key 'id';
+    index uri_idx => 'uri';
 
     column id
         => int => {
@@ -99,23 +98,29 @@ install_model uri => schema {
         };
 };
 
-install_model uri => schema {
+
+inflate_type NAME => {
+    inflate => sub {
+        Name->new( name => shift );
+    },
+    deflate => sub {
+        shift->name;
+    },
+};
+install_model name_type => schema {
     driver $main::DRIVER;
     key 'id';
+    index name_idx => 'name';
 
     column id
         => int => {
             auto_increment => 1,
         };
-    column uri
+    column name
         => char => {
             size    => 200,
-            inflate => 'URI',
+            inflate => 'NAME',
         };
 };
-
-=cut
-
-
 
 1;

@@ -122,8 +122,10 @@ sub setup_inflate {
         my $opts = $data->{options};
 
         my $inflate = $opts->{inflate};
-        $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate)
-            if $inflate && ref($inflate) ne 'CODE';
+        if ($inflate && ref($inflate) ne 'CODE') {
+            $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate);
+            $opts->{deflate} = $inflate;
+        }
         $self->{has_inflate} = 1 if $opts->{inflate};
 
         my $deflate = $opts->{deflate};
@@ -224,7 +226,7 @@ sub get_columns_hash_by_key_array_and_hash {
 
     # by key
     my $key;
-    $key = $self->{unique}->{$index} || $self->{index}->{$index} if $index;
+    $key = $self->{unique}->{$index} || $self->{index}->{$index} || die "Cannot find index '$index'" if $index;
     $key ||= $self->{key};
     $key = [ $key ] unless ref($key) eq 'ARRAY';
 

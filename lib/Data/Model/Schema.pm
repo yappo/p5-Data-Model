@@ -174,7 +174,6 @@ sub get_column_sugar {
     $COLUMN_SUGAR->{$SUGAR_MAP->{$schema->{schema_class}}};
 }
 
-
 1;
 
 __END__
