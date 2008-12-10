@@ -149,8 +149,8 @@ sub setup_inflate {
 }
 
 sub inflate {
+    return unless $_[0]->{has_inflate};
     my($self, $columns) = @_;
-    return unless $self->has_inflate;
     my $orig_columns;
     if (ref($columns) eq $self->{class}) {
         $orig_columns = $columns;
@@ -182,8 +182,8 @@ sub inflate {
 }
 
 sub deflate {
+    return unless $_[0]->{has_deflate};
     my($self, $columns) = @_;
-    return unless $self->has_deflate;
     my $orig_columns;
     if (ref($columns) eq $self->{class}) {
         $orig_columns = $columns;
