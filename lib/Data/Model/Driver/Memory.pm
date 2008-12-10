@@ -209,7 +209,7 @@ sub get_record_id_list {
         $columns ||= +{};
         if (exists $columns->{index} && ref($columns->{index}) eq 'HASH') {
             my($index, $index_key) = %{ $columns->{index} };
-            $index_key = [ $index_key ] unless ref($index_key);
+            $index_key = [ $index_key ] unless ref($index_key) eq 'ARRAY';
             for my $index_type (qw/ unique index /) {
                 if (exists $schema->$index_type->{$index}) {
                     $result_id_list = $self->get_memory_index($schema, $index_type, $index, $index_key);
@@ -236,7 +236,7 @@ sub get_memory_index {
 
     my $type = scalar(@{ $key }) == scalar(@{ $columns }) ? 'key' : 'prefix';
     my $result = $key_hash->{$type}->{$key_data};
-    $result ? ref($result) ? [ keys %{ $result } ] : [ $result ] : [];
+    $result ? ref($result) eq 'HASH' ? [ keys %{ $result } ] : [ $result ] : [];
 }
 
 sub set_memory_index {
