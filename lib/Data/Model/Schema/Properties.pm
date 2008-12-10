@@ -118,6 +118,9 @@ sub column_options {
 sub setup_inflate {
     my $self = shift;
 
+    $self->{inflate_columns} = [];
+    $self->{deflate_columns} = [];
+
     while (my($column, $data) = each %{ $self->{column} }) {
         my $opts = $data->{options};
 
@@ -125,21 +128,29 @@ sub setup_inflate {
         if ($inflate && ref($inflate) ne 'CODE') {
             $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate);
             $opts->{deflate} = $inflate;
+            push @{ $self->{inflate_columns} }, $column;
         }
         $self->{has_inflate} = 1 if $opts->{inflate};
 
         my $deflate = $opts->{deflate};
-        $opts->{deflate} = Data::Model::Schema::Inflate->get_deflate($deflate)
-            if $deflate && ref($deflate) ne 'CODE';
+        if ($deflate && ref($deflate) ne 'CODE') {
+            $opts->{deflate} = Data::Model::Schema::Inflate->get_deflate($deflate);
+            push @{ $self->{deflate_columns} }, $column;
+        }
         $self->{has_deflate} = 1 if $opts->{deflate};
     }
 
-    $self->{has_inflate} = $self->{has_deflate} = 1
-        if scalar(%{ $self->{utf8_columns} });
+    if (scalar(%{ $self->{utf8_columns} })) {
+        $self->{has_inflate} = $self->{has_deflate} = 1;
+        my @columns = keys %{ $self->{column} };
+        $self->{inflate_columns} = \@columns;
+        $self->{deflate_columns} = \@columns;
+    }
 }
 
 sub inflate {
     my($self, $columns) = @_;
+    return unless $self->has_inflate;
     my $orig_columns;
     if (ref($columns) eq $self->{class}) {
         $orig_columns = $columns;
@@ -149,10 +160,10 @@ sub inflate {
     }
     $self->call_trigger('pre_inflate', $columns, $orig_columns);
 
-    while (my($column, $data) = each %{ $self->{column} }) {
+    for my $column (@{ $self->{inflate_columns} }) {
         next unless defined $columns->{$column};
 
-        my $opts = $data->{options};
+        my $opts = $self->{column}->{$column}->{options};
         my $val = $columns->{$column};
 
         if ($self->{utf8_columns}->{$column}) {
@@ -172,6 +183,7 @@ sub inflate {
 
 sub deflate {
     my($self, $columns) = @_;
+    return unless $self->has_deflate;
     my $orig_columns;
     if (ref($columns) eq $self->{class}) {
         $orig_columns = $columns;
@@ -181,10 +193,10 @@ sub deflate {
     }
     $self->call_trigger('pre_deflate', $columns, $orig_columns);
 
-    while (my($column, $data) = each %{ $self->{column} }) {
+    for my $column (@{ $self->{deflate_columns} }) {
         next unless defined $columns->{$column};
 
-        my $opts = $data->{options};
+        my $opts = $self->{column}->{$column}->{options};
         my $val = $columns->{$column};
         $val = $opts->{deflate}->($val) if ref($opts->{deflate}) eq 'CODE';
 

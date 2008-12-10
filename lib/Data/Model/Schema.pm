@@ -39,21 +39,23 @@ sub install_model ($$;%) {
     my $pkg = "$caller\::$name";
 
     my $schema = $caller->__properties->{schema}->{$name} = Data::Model::Schema::Properties->new(
-        driver       => undef,
-        schema_class => $caller,
-        model        => $name,
-        class        => $pkg,
-        column       => {},
-        columns      => [],
-        index        => {},
-        unique       => {},
-        key          => [],
-        foreign      => [],
-        triggers     => {},
-        options      => {},
-        utf8_columns => {},
-        has_inflate  => 0,
-        has_deflate  => 0,
+        driver          => undef,
+        schema_class    => $caller,
+        model           => $name,
+        class           => $pkg,
+        column          => {},
+        columns         => [],
+        index           => {},
+        unique          => {},
+        key             => [],
+        foreign         => [],
+        triggers        => {},
+        options         => {},
+        utf8_columns    => {},
+        inflate_columns => [],
+        deflate_columns => [],
+        has_inflate     => 0,
+        has_deflate     => 0,
     );
 
     $caller->__properties->{__process_tmp}->{name} = $name;
