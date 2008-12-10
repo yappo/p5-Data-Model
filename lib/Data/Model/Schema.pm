@@ -52,6 +52,8 @@ sub install_model ($$;%) {
         triggers     => {},
         options      => {},
         utf8_columns => {},
+        has_inflate  => 0,
+        has_deflate  => 0,
     );
 
     $caller->__properties->{__process_tmp}->{name} = $name;

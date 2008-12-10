@@ -9,7 +9,7 @@ use Encode ();
 use Data::Model::Schema;
 use Data::Model::Schema::SQL;
 
-__PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options /);
+__PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options has_inflate has_deflate /);
 
 
 our @RESERVED = qw(
@@ -124,10 +124,16 @@ sub setup_inflate {
         my $inflate = $opts->{inflate};
         $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate)
             if $inflate && ref($inflate) ne 'CODE';
+        $self->{has_inflate} = 1 if $opts->{inflate};
+
         my $deflate = $opts->{deflate};
         $opts->{deflate} = Data::Model::Schema::Inflate->get_deflate($deflate)
             if $deflate && ref($deflate) ne 'CODE';
+        $self->{has_deflate} = 1 if $opts->{deflate};
     }
+
+    $self->{has_inflate} = $self->{has_deflate} = 1
+        if scalar(%{ $self->{utf8_columns} });
 }
 
 sub inflate {

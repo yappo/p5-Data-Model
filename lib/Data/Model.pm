@@ -106,19 +106,21 @@ sub _get_query_args {
     }
 
     # deflate search key
-    if ($key_array) {
-        my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
-        $schema->deflate($columns);
-        $key_array = $schema->get_key_array_by_hash( $columns );
-    }
+    if ($schema->has_deflate) {
+        if ($key_array) {
+            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
+            $schema->deflate($columns);
+            $key_array = $schema->get_key_array_by_hash( $columns );
+        }
 
-    # deflate search index
-    if ($query && ref($query->{index}) eq 'HASH') {
-        my($name, $key_array) = ( %{ $query->{index} } );
-        $key_array = [ $key_array ] unless ref($key_array) eq 'ARRAY';
-        my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array, $name);
-        $schema->deflate($columns);
-        $query->{index} = { $name => $schema->get_key_array_by_hash($columns, $name) };
+        # deflate search index
+        if ($query && ref($query->{index}) eq 'HASH') {
+            my($name, $key_array) = ( %{ $query->{index} } );
+            $key_array = [ $key_array ] unless ref($key_array) eq 'ARRAY';
+            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array, $name);
+            $schema->deflate($columns);
+            $query->{index} = { $name => $schema->get_key_array_by_hash($columns, $name) };
+        }
     }
 
     return [ $key_array, $query, @_ ];
@@ -150,7 +152,7 @@ sub get {
             my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
                 $obj = $schema->{class}->new($self, $data);
-                $schema->inflate($obj);
+                $schema->inflate($obj) if $schema->has_inflate;
                 $schema->call_trigger('post_load', $obj);
             }
             push @objs, $obj;
@@ -164,7 +166,7 @@ sub get {
         wrapper => sub {
             return shift if $schema->{options}->{bare_row};
             my $obj = $schema->{class}->new($self, shift);
-            $schema->inflate($obj);
+            $schema->inflate($obj) if $schema->has_inflate;
             $schema->call_trigger('post_load', $obj);
             $obj;
         },
@@ -230,7 +232,7 @@ sub _insert_or_replace {
     }
 
     # deflate
-    $schema->deflate($columns);
+    $schema->deflate($columns) if $schema->has_deflate;
     $key_array = $schema->get_key_array_by_hash( $columns );
 
     # triggers
@@ -245,7 +247,7 @@ sub _insert_or_replace {
 
     unless ($schema->{options}->{bare_row}) {
         my $obj = $schema->{class}->new($self, $result);
-        $schema->inflate($obj);
+        $schema->inflate($obj) if $schema->has_inflate;
         $schema->call_trigger('post_load', $obj);
         return $obj;
     }
@@ -282,9 +284,11 @@ sub update {
     my $changed_columns = $row->get_changed_columns;
     my $old_columns     = +{ %{ $columns }, %{ $changed_columns } };
 
-    # deflate
-    $schema->deflate($columns);
-    $schema->deflate($old_columns);
+    if ($schema->has_deflate) {
+        # deflate
+        $schema->deflate($columns);
+        $schema->deflate($old_columns);
+    }
 
     $schema->call_trigger('pre_save', $columns);
     $schema->call_trigger('pre_update', $columns, $old_columns);
@@ -320,7 +324,7 @@ sub update_direct {
     my $query = $self->_get_query_args($schema, @_);
     return unless $query;
 
-    $schema->deflate($query->[2]);
+    $schema->deflate($query->[2]) if $schema->has_deflate;
     $schema->call_trigger('pre_save', $query->[2]);
     $schema->call_trigger('pre_update', $query->[2]);
 
