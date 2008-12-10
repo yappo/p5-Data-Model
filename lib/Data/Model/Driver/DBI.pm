@@ -216,7 +216,7 @@ sub update {
 sub update_direct {
     my($self, $schema, $key, $query, $columns, %args) = @_;
 
-    my $index_query = delete $columns->{index};
+    my $index_query = delete $query->{index};
     my $stmt = Data::Model::SQL->new(%{ $query });
     $self->add_key_to_where($stmt, $schema->key, $key) if $key;
     $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
