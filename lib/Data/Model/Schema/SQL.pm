@@ -85,17 +85,18 @@ sub as_column {
 }
 
 sub as_primary_key {
-    my $self = shift;
-    return () unless @{ $self->{schema}->{key} };
-    return 'PRIMARY KEY (' . join(', ', @{ $self->{schema}->{key} }) .')';
+    my($self, $key) = @_;
+    return () unless @{ $key };
+    return 'PRIMARY KEY (' . join(', ', @{ $key }) .')';
 }
 
 sub as_unique {
-    my $self = shift;
-    return () unless ( %{ $self->{schema}->{unique} } );
+    my($self, $unique) = @_;
+    return () unless @{ $unique };
 
     my @sql = ();
-    while (my($name, $columns) = each %{ $self->{schema}->{unique} }) {
+    for my $data (@{ $unique }) {
+        my($name, $columns)  = @{ $data };
         push(@sql, 'UNIQUE ' . $name . ' (' . join(', ', @{ $columns }) . ')');
     }
     return @sql;
@@ -119,21 +120,38 @@ sub as_foreign {
     return $sql;
 }
 
-sub as_table_attributes { '' }
+sub as_table_attributes {
+    my $self = shift;
+    return '' unless ref($self->{schema}->options->{create_sql_attributes}) eq 'HASH';
+    my($ret) = $self->call_method( 'get_table_attributes', $self->{schema}->options->{create_sql_attributes} );
+    $ret ? " $ret" : '';
+}
+sub get_table_attributes {}
 
 sub as_create_table {
     my $self = shift;
+    my $schema = $self->{schema};
 
     my @values;
-    my %columns = %{ $self->{schema}->column };
-    for my $column ($self->{schema}->column_names) {
-        push @values, $self->call_method( as_column => $column, $self->{schema}->column->{$column} );
+    my %columns = %{ $schema->column };
+    for my $column ($schema->column_names) {
+        push @values, $self->call_method( as_column => $column, $schema->column->{$column} );
     }
 
-    push(@values, $self->call_method( 'as_primary_key' ));
-    push(@values, $self->call_method( 'as_unique' ));
-    push(@values, $self->call_method( 'as_foreign' ));
+    my @key    = @{ $schema->key };
+    my $unique_hash = $schema->unique;
+    my @unique = sort { $a->[0] cmp $b->[0] }
+        map { [ $_ => $unique_hash->{$_} ] }
+            keys %{ $unique_hash };
 
+    if (my $name = $schema->options->{key_as_unique}) {
+        unshift @unique, [ $name, [ @key ] ];
+        @key = ();
+    }
+
+    push(@values, $self->call_method( 'as_primary_key', \@key ));
+    push(@values, $self->call_method( 'as_unique', \@unique ));
+    push(@values, $self->call_method( 'as_foreign' ));
 
     return 'CREATE TABLE '
            . $self->{schema}->model

@@ -37,14 +37,21 @@ sub _as_sql_primary_key {
 }
 
 sub _as_sql_unique {
-    my($self, $c) = @_;
-    return () unless ( %{ $c->{schema}->{unique} } );
+    my($self, $c, $unique) = @_;
+    return () unless @{ $unique };
 
     my @sql = ();
-    while (my($name, $columns) = each %{ $c->{schema}->{unique} }) {
+    for my $data (@{ $unique }) {
+        my($name, $columns)  = @{ $data };
         push(@sql, 'UNIQUE (' . join(', ', @{ $columns }) . ')');
     }
     return @sql;
+}
+
+sub _as_sql_get_table_attributes {
+    my($self, $c, $attributes) = @_;
+    return '' unless $attributes->{SQLite};
+    return $attributes->{SQLite};
 }
 
 1;

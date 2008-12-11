@@ -1,7 +1,7 @@
 use t::Utils;
 use Mock::Tests::Basic;
 use Data::Model::Driver::DBI;
-use Test::More tests => 16;
+use Test::More tests => 19;
 
 BEGIN {
     my $dbfile = temp_filename;
@@ -14,6 +14,7 @@ BEGIN {
     use_ok('Mock::Index');
     use_ok('Mock::ColumnSugar');
     use_ok('Mock::ColumnSugar2');
+    use_ok('Mock::SchemaOptions');
 }
 
 
@@ -99,3 +100,21 @@ is($author2[0], "CREATE TABLE author (
     name            VARCHAR(128)    NOT NULL,
     PRIMARY KEY (id)
 )");
+
+
+$mock = Mock::SchemaOptions->new;
+my @unq = $mock->get_schema('unq')->sql->as_sql;
+is($unq[0], "CREATE TABLE unq (
+    id1             CHAR(255)      ,
+    id2             CHAR(255)      ,
+    UNIQUE (id1, id2),
+    UNIQUE (id2, id1)
+) TYPE=InnoDB");
+
+my @unq2 = $mock->get_schema('unq2')->sql->as_sql;
+is($unq2[0], "CREATE TABLE unq2 (
+    id1             CHAR(255)      ,
+    id2             CHAR(255)      ,
+    UNIQUE (id2, id1),
+    UNIQUE (id1, id2)
+) TYPE=InnoDB");
