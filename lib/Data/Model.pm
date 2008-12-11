@@ -151,7 +151,7 @@ sub get {
         while (my $data = $iterator->()) {
             my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
-                $obj = $schema->{class}->new($self, $data);
+                $obj = $schema->new_obj($self, $data);
                 $schema->inflate($obj) if $schema->has_inflate;
                 $schema->call_trigger('post_load', $obj);
             }
@@ -165,7 +165,7 @@ sub get {
         %{ $iterator_options },
         wrapper => sub {
             return shift if $schema->{options}->{bare_row};
-            my $obj = $schema->{class}->new($self, shift);
+            my $obj = $schema->new_obj($self, shift);
             $schema->inflate($obj) if $schema->has_inflate;
             $schema->call_trigger('post_load', $obj);
             $obj;
@@ -246,7 +246,7 @@ sub _insert_or_replace {
     return unless $result;
 
     unless ($schema->{options}->{bare_row}) {
-        my $obj = $schema->{class}->new($self, $result);
+        my $obj = $schema->new_obj($self, $result);
         $schema->inflate($obj) if $schema->has_inflate;
         $schema->call_trigger('post_load', $obj);
         return $obj;

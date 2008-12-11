@@ -23,6 +23,11 @@ sub new {
     bless { %args }, $class;
 }
 
+sub new_obj {
+    my $self = shift;
+    $self->{class}->new(@_);
+}
+
 sub add_keys {
     my($self, $key, %args) = @_;
     $self->{key} = ref($key) eq 'ARRAY' ? $key : [ $key ];

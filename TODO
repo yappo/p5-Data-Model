@@ -22,5 +22,3 @@ TheSchwartz
 
 partition
 replication
-
-$schema->{class}->new($self, $columns); -> $schma->new_obj($self, $columns);
