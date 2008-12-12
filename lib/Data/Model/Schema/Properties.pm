@@ -214,7 +214,22 @@ sub deflate {
     $self->call_trigger('post_deflate', $columns, $orig_columns);
 }
 
-sub set_default {}
+sub set_default {
+    my($self, $columns) = @_;
+
+    while (my($name, $conf) = each %{ $self->{column} }) {
+        next if exists $columns->{$name};
+        next unless exists $conf->{options};
+        next unless exists $conf->{options}->{default};
+
+        my $default = $conf->{options}->{default};
+        if (ref($default) eq 'CODE') {
+            $columns->{$name} = $default->($self, $columns);
+        } else {
+            $columns->{$name} = $default;
+        }
+    }
+}
 
 sub get_key_array_by_hash {
     my($self, $hash, $index) = @_;
@@ -238,6 +253,7 @@ sub get_columns_hash_by_key_array_and_hash {
 
     # by column
     for my $column (keys %{ $self->{column} }) {
+        next unless exists $hash->{$column};
         $ret->{$column} = $hash->{$column};
     }
 

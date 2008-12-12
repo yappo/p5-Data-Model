@@ -201,7 +201,7 @@ sub _insert_or_replace {
     return $self->update($model, @_) if ref($model) && $model->isa('Data::Model::Row');
     my $schema = $self->get_schema($model);
     return unless $schema;
-    return unless exists $_[0];
+    # return unless exists $_[0];
 
     # get key array
     my $key_array;
@@ -217,7 +217,7 @@ sub _insert_or_replace {
         ## ->set( modelname => 'key' => { key => value, ... } );
         $key_array = [ shift ];
     } else {
-        return;
+        # return;
     }
 
     # get columns
