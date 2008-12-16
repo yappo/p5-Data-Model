@@ -152,7 +152,7 @@ sub get {
             my $obj = $data;
             unless ($schema->{options}->{bare_row}) {
                 $obj = $schema->new_obj($self, $data);
-                $schema->inflate($obj) if $schema->has_inflate;
+                $schema->inflate($obj);
                 $schema->call_trigger('post_load', $obj);
             }
             push @objs, $obj;
@@ -166,7 +166,7 @@ sub get {
         wrapper => sub {
             return shift if $schema->{options}->{bare_row};
             my $obj = $schema->new_obj($self, shift);
-            $schema->inflate($obj) if $schema->has_inflate;
+            $schema->inflate($obj);
             $schema->call_trigger('post_load', $obj);
             $obj;
         },
@@ -232,7 +232,7 @@ sub _insert_or_replace {
     }
 
     # deflate
-    $schema->deflate($columns) if $schema->has_deflate;
+    $schema->deflate($columns);
     $key_array = $schema->get_key_array_by_hash( $columns );
 
     # triggers
@@ -247,7 +247,7 @@ sub _insert_or_replace {
 
     unless ($schema->{options}->{bare_row}) {
         my $obj = $schema->new_obj($self, $result);
-        $schema->inflate($obj) if $schema->has_inflate;
+        $schema->inflate($obj);
         $schema->call_trigger('post_load', $obj);
         return $obj;
     }
@@ -324,7 +324,7 @@ sub update_direct {
     my $query = $self->_get_query_args($schema, @_);
     return unless $query;
 
-    $schema->deflate($query->[2]) if $schema->has_deflate;
+    $schema->deflate($query->[2]);
     $schema->call_trigger('pre_save', $query->[2]);
     $schema->call_trigger('pre_update', $query->[2]);
 

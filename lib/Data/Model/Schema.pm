@@ -3,6 +3,8 @@ use strict;
 use warnings;
 
 use Carp ();
+use Encode ();
+
 use Data::Model::Row;
 use Data::Model::Schema::Properties;
 
@@ -17,7 +19,7 @@ sub import {
 
     no strict 'refs';
     for my $name (qw/ driver install_model schema column columns key index unique schema_options column_sugar
-        utf8_column utf8_columns  /) {
+        utf8_column utf8_columns alias_column /) {
         *{"$caller\::$name"} = \&$name;
     }
 
@@ -39,24 +41,26 @@ sub install_model ($$;%) {
     my $pkg = "$caller\::$name";
 
     my $schema = $caller->__properties->{schema}->{$name} = Data::Model::Schema::Properties->new(
-        driver          => undef,
-        schema_class    => $caller,
-        model           => $name,
-        class           => $pkg,
-        column          => {},
-        columns         => [],
-        index           => {},
-        unique          => {},
-        key             => [],
-        foreign         => [],
-        triggers        => {},
-        options         => {},
-        utf8_columns    => {},
-        inflate_columns => [],
-        deflate_columns => [],
-        has_inflate     => 0,
-        has_deflate     => 0,
-    );
+        driver                  => undef,
+        schema_class            => $caller,
+        model                   => $name,
+        class                   => $pkg,
+        column                  => {},
+        columns                 => [],
+        index                   => {},
+        unique                  => {},
+        key                     => [],
+        foreign                 => [],
+        triggers                => {},
+        options                 => {},
+        utf8_columns            => {},
+        inflate_columns         => [],
+        deflate_columns         => [],
+        has_inflate             => 0,
+        has_deflate             => 0,
+        alias_column            => {},
+        aluas_column_revers_map => {},
+);
 
     $caller->__properties->{__process_tmp}->{name} = $name;
     $CALLER = $caller;
@@ -65,6 +69,7 @@ sub install_model ($$;%) {
         no strict 'refs';
         @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
         _install_columns_to_class($schema);
+        _install_alias_columns_to_class($schema);
     }
     $schema->setup_inflate;
     $CALLER = undef;
@@ -77,21 +82,95 @@ sub schema (&) { shift }
 
 sub _install_columns_to_class {
     my $schema = shift;
+    no strict 'refs';
     while (my($column, $args) = each %{ $schema->column }) {
-        no strict 'refs';
-        *{ $schema->class . "::$column" } = sub {
-            my $obj = shift;
-            # getter
-            return $obj->{column_values}->{$column} unless @_;
-            # setter
-            my($val, $flags) = @_;
-            my $old_val = $obj->{column_values}->{$column};
-            $obj->{column_values}->{$column} = $val;
-            unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
-                $obj->{changed_cols}->{$column} = $old_val;
-            }
-            return $obj->{column_values}->{$column};
-        };
+        my $alias_list = $schema->aluas_column_revers_map->{$column};
+
+        if ($alias_list) {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{column_values}->{$column} unless @_;
+                # setter
+                my($val, $flags) = @_;
+                my $old_val = $obj->{column_values}->{$column};
+                $obj->{column_values}->{$column} = $val;
+                unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
+                    $obj->{changed_cols}->{$column} = $old_val;
+                }
+                for my $alias (@{ $alias_list }) {
+                    $schema->alias_column->{$alias}->{inflate2alias}->( $obj );
+                }
+                return $obj->{column_values}->{$column};
+            };
+        } else {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{column_values}->{$column} unless @_;
+                # setter
+                my($val, $flags) = @_;
+                my $old_val = $obj->{column_values}->{$column};
+                $obj->{column_values}->{$column} = $val;
+                unless ($flags && ref($flags) eq 'HASH' && $flags->{no_changed_flag}) {
+                    $obj->{changed_cols}->{$column} = $old_val;
+                }
+                return $obj->{column_values}->{$column};
+            };
+        }
+    }
+}
+
+sub _install_alias_columns_to_class {
+    my $schema = shift;
+    no strict 'refs';
+    while (my($column, $args) = each %{ $schema->alias_column }) {
+        my $base         = $args->{base};
+        my $deflate_code = $args->{deflate};
+        my $is_utf8      = $args->{is_utf8};
+        my $charset      = $args->{charset} || 'utf8';
+
+        if ($is_utf8 && $deflate_code) {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{alias_values}->{$column} unless @_;
+                # setter
+                $obj->{alias_values}->{$column} = $_[0];
+                $obj->$base( Encode::encode($charset, $deflate_code->( $_[0] ) ) );
+                return $_[0];
+            };
+        } elsif ($is_utf8) {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{alias_values}->{$column} unless @_;
+                # setter
+                $obj->{alias_values}->{$column} = $_[0];
+                $obj->$base( Encode::encode($charset, $_[0]) );
+                return $_[0];
+            };
+        } elsif ($deflate_code) {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{alias_values}->{$column} unless @_;
+                # setter
+                $obj->{alias_values}->{$column} = $_[0];
+                $obj->$base( $deflate_code->($_[0]) );
+                return $_[0];
+            };
+        } else {
+            *{ $schema->class . "::$column" } = sub {
+                my $obj = shift;
+                # getter
+                return $obj->{alias_values}->{$column} unless @_;
+                # setter
+                $obj->{alias_values}->{$column} = $_[0];
+                $obj->$base( $_[0] );
+                return $_[0];
+            };
+        }
     }
 }
 
@@ -135,6 +214,11 @@ sub utf8_columns (@) {
     for my $column (@columns) {
         $schema->add_utf8_column($column);
     }
+}
+
+sub alias_column {
+    my($name, $schema) = _get_model_schema;
+    $schema->add_alias_column(@_);
 }
 
 sub key ($;%) {

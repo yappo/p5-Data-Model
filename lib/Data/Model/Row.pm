@@ -8,6 +8,7 @@ sub new {
     bless {
         model         => $model,
         column_values => { %{ $columns } },
+        alias_values  => +{},
         changed_cols  => +{},
         original_cols => +{},
     }, $class;

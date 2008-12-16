@@ -7,9 +7,10 @@ use Class::Trigger qw( pre_insert pre_save post_save post_load pre_update pre_in
 use Encode ();
 
 use Data::Model::Schema;
+use Data::Model::Schema::Inflate;
 use Data::Model::Schema::SQL;
 
-__PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options has_inflate has_deflate /);
+__PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options has_inflate has_deflate alias_column aluas_column_revers_map /);
 
 
 our @RESERVED = qw(
@@ -65,6 +66,17 @@ sub add_utf8_column {
     my($name) = @_;
     $self->{utf8_columns}->{$name} = 1;
     $self->add_column(@_);
+}
+
+sub add_alias_column {
+    my $self = shift;
+    my($base_name, $alias_name, $args) = @_;
+    $self->{aluas_column_revers_map}->{$base_name} ||= [];
+    push @{ $self->{aluas_column_revers_map}->{$base_name} }, $alias_name;
+    $self->{alias_column}->{$alias_name} = +{
+        %{ $args || {} },
+        base    => $base_name,
+    };
 }
 
 sub add_column_sugar {
@@ -151,39 +163,88 @@ sub setup_inflate {
         $self->{inflate_columns} = \@columns;
         $self->{deflate_columns} = \@columns;
     }
+
+    # for alias
+    while (my($base, $list) = each %{ $self->{aluas_column_revers_map} }) {
+        for my $alias (@{ $list }) {
+            my $args    = $self->{alias_column}->{$alias};
+            my $inflate = $args->{inflate};
+
+            if ($inflate && ref($inflate) ne 'CODE') {
+                $args->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate);
+                $args->{deflate} = Data::Model::Schema::Inflate->get_deflate($inflate);
+            }
+
+            my $inflate_code = $args->{inflate};
+            my $is_utf8      = $args->{is_utf8};
+            my $charset      = $args->{charset} || 'utf8';
+
+            # make inflate2alias
+            my $code;
+
+            if ($is_utf8 && $inflate_code) {
+                $code = sub {
+                    $_[0]->{alias_values}->{$alias} = $inflate_code->( Encode::decode( $charset, $_[0]->{column_values}->{$base} ) );
+                };
+            } elsif ($is_utf8) {
+                $code = sub {
+                    $_[0]->{alias_values}->{$alias} = Encode::decode( $charset, $_[0]->{column_values}->{$base} );
+                };
+            } elsif ($inflate_code) {
+                $code = sub {
+                    $_[0]->{alias_values}->{$alias} = $inflate_code->( $_[0]->{column_values}->{$base} );
+                };
+            } else {
+                $code = sub {
+                    $_[0]->{alias_values}->{$alias} = $_[0]->{column_values}->{$base};
+                };
+            }
+            $args->{inflate2alias} = $code;
+        }
+    }
 }
 
 sub inflate {
-    return unless $_[0]->{has_inflate};
-    my($self, $columns) = @_;
-    my $orig_columns;
-    if (ref($columns) eq $self->{class}) {
-        $orig_columns = $columns;
-        $columns = $columns->{column_values};
-    } elsif (ref($columns) ne 'HASH') {
-        Carp::croak "required types 'HASH' or '$self->{class}' of inflate";
-    }
-    $self->call_trigger('pre_inflate', $columns, $orig_columns);
-
-    for my $column (@{ $self->{inflate_columns} }) {
-        next unless defined $columns->{$column};
-
-        my $opts = $self->{column}->{$column}->{options};
-        my $val = $columns->{$column};
-
-        if ($self->{utf8_columns}->{$column}) {
-            my $charset = $opts->{charset} || 'utf8';
-            $val = Encode::decode($charset, $val);
+    if  ($_[0]->{has_inflate}) {
+        my($self, $columns) = @_;
+        my $orig_columns;
+        if (ref($columns) eq $self->{class}) {
+            $orig_columns = $columns;
+            $columns = $columns->{column_values};
+        } elsif (ref($columns) ne 'HASH') {
+            Carp::croak "required types 'HASH' or '$self->{class}' of inflate";
         }
+        $self->call_trigger('pre_inflate', $columns, $orig_columns);
 
-        $val = $opts->{inflate}->($val) if ref($opts->{inflate}) eq 'CODE';
+        for my $column (@{ $self->{inflate_columns} }) {
+            next unless defined $columns->{$column};
 
-        $orig_columns->{original_cols}->{$column} ||= $orig_columns->{column_values}->{$column}
-            if $orig_columns && $columns->{$column} ne $val;
+            my $opts = $self->{column}->{$column}->{options};
+            my $val = $columns->{$column};
 
-        $columns->{$column} = $val;
+            if ($self->{utf8_columns}->{$column}) {
+                my $charset = $opts->{charset} || 'utf8';
+                $val = Encode::decode($charset, $val);
+            }
+
+            $val = $opts->{inflate}->($val) if ref($opts->{inflate}) eq 'CODE';
+
+            $orig_columns->{original_cols}->{$column} ||= $orig_columns->{column_values}->{$column}
+                if $orig_columns && $columns->{$column} ne $val;
+
+            $columns->{$column} = $val;
+        }
+        $self->call_trigger('post_inflate', $columns, $orig_columns);
     }
-    $self->call_trigger('post_inflate', $columns, $orig_columns);
+
+    # make alias data
+    my($self, $columns) = @_;
+    return unless ref($columns) eq $self->{class};
+    while (my($base, $list) = each %{ $self->{aluas_column_revers_map} }) {
+        for my $alias (@{ $list }) {
+            $self->{alias_column}->{$alias}->{inflate2alias}->( $columns );
+        }
+    }
 }
 
 sub deflate {
