@@ -104,6 +104,12 @@ sub add_column_sugar {
     if (@_ && ref($_[0]) eq 'HASH') {
         $clone{options} = +{ %{ $clone{options} }, %{ ( shift ) } } 
     }
+    if (my $alias_args = delete $clone{options}->{alias}) {
+        my $rename_map = delete $clone{options}->{alias_rename} || {};
+        while (my($alias_name, $args) = each %{ $alias_args }) {
+            $self->add_alias_column($column, $rename_map->{$alias_name} || $alias_name, $args);
+        }
+    }
     $self->add_column($column, $clone{type}, $clone{options});
 }
 
