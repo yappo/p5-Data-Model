@@ -151,16 +151,26 @@ sub setup_inflate {
         if ($inflate && ref($inflate) ne 'CODE') {
             $opts->{inflate} = Data::Model::Schema::Inflate->get_inflate($inflate);
             $opts->{deflate} = $inflate;
-            push @{ $self->{inflate_columns} }, $column;
+            $inflate = $opts->{inflate};
         }
-        $self->{has_inflate} = 1 if $opts->{inflate};
+        if (ref($inflate) eq 'CODE') {
+            push @{ $self->{inflate_columns} }, $column;
+            $self->{has_inflate} = 1;
+        } else {
+            delete $opts->{inflate};
+        }
 
         my $deflate = $opts->{deflate};
         if ($deflate && ref($deflate) ne 'CODE') {
             $opts->{deflate} = Data::Model::Schema::Inflate->get_deflate($deflate);
-            push @{ $self->{deflate_columns} }, $column;
+            $deflate = $opts->{deflate};
         }
-        $self->{has_deflate} = 1 if $opts->{deflate};
+        if (ref($deflate) eq 'CODE') {
+            push @{ $self->{deflate_columns} }, $column;
+            $self->{has_deflate} = 1;
+        } else {
+            delete $opts->{deflate};
+        }
     }
 
     if (scalar(%{ $self->{utf8_columns} })) {
