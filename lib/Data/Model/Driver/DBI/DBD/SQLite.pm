@@ -10,7 +10,7 @@ sub bind_param_attributes {
     if ($data_type) { 
         if ($data_type eq 'blob') {
             return DBI::SQL_BLOB;
-        } elsif ($data_type eq 'binchar') {
+        } elsif ($data_type eq 'binchar' || $data_type eq 'binary') {
             return DBI::SQL_BINARY;
         }
     }
