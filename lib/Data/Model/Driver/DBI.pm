@@ -185,8 +185,15 @@ sub _update {
     my @bind;
     my @set;
     for my $column (keys %{ $changed_columns }) {
-        push @set, "$column = ?";
-        push @bind, $columns->{$column};
+        my $val = $columns->{$column};
+        if (ref($val) eq 'SCALAR') {
+            push @set, "$column = " . ${ $val };
+        } elsif (!ref($val)) {
+            push @set, "$column = ?";
+            push @bind, $val;
+        } else {
+            Carp::confess 'No references other than a SCALAR reference can use a update column';
+        }
     }
     push @bind, @{ $pre_bind };
 

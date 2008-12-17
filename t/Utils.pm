@@ -14,7 +14,7 @@ sub import {
     strict->import;
     warnings->import;
 
-    for my $name (qw/ temp_filename run /) {
+    for my $name (qw/ temp_filename run setup_schema /) {
         no strict 'refs';
         *{"$caller\::$name"} = \&{$name};
     }
