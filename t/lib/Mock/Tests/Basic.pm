@@ -325,4 +325,15 @@ sub t_10_direct_update : Tests {
     is $get9->name, 'updated direct_update 2';
 }
 
+sub t_11_obj_delete : Tests {
+    my $set = mock->set( user => 'obj-delete', { name => 'Kazuhiro Osawa' } );
+    isa_ok $set, mock_class."::user";
+
+    my($get) = mock->get( user => 'obj-delete' );
+    isa_ok $get, mock_class."::user";
+    ok(mock->delete($get), 'mock->delete( $obj )');
+
+    ok(!mock->get( user => 'obj-delete' ));
+}
+
 1;
