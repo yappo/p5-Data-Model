@@ -100,4 +100,43 @@ install_model uri => schema {
 };
 
 
+use Data::Model::Schema::Inflate;
+
+# aliased key test
+inflate_type PREFIX => {
+    inflate => sub {
+        my $val = $_[0];
+        $val =~ s/^.......//;
+        $val;
+    },
+    deflate => sub { 'prefix_' . $_[0] },
+};
+
+column_sugar 'keytest.key'
+    => char => {
+        require => 1,
+        size    => 16,
+        deflate => sub {
+            ($_[0] =~ /^prefix_/) ? $_[0] : 'prefix_' . $_[0];
+        },
+        alias   => {
+            key_noprefix => {
+                inflate => 'PREFIX',
+            },
+        },
+    };
+
+column_sugar 'keytest.data'
+    => char => {
+        size => 100,
+    };
+
+install_model keytest => schema {
+    driver $main::DRIVER;
+    key 'key';
+
+    column 'keytest.key';
+    column 'keytest.data';
+};
+
 1;

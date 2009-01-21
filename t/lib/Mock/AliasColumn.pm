@@ -82,5 +82,32 @@ install_model uri => schema {
        };
 };
 
+# aliased key test
+install_model keytest => schema {
+    driver $main::DRIVER;
+    key 'key';
+
+    column key => char => {
+        require => 1,
+        size    => 16,
+        deflate => sub {
+            ($_[0] =~ /^prefix_/) ? $_[0] : 'prefix_' . $_[0];
+        },
+    };
+    alias_column key => 'key_noprefix'
+        => {
+            inflate => sub {
+                my $val = $_[0];
+                $val =~ s/^.......//;
+                $val;
+            },
+            deflate => sub { 'prefix_' . $_[0] },
+        };
+
+    column data
+        => char => {
+            size => 100,
+        };
+};
 
 1;
