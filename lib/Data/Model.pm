@@ -64,9 +64,11 @@ sub schema_names {
 }
 
 sub as_sqls {
-    my $self = shift;
+    my $self   = shift;
+    my $target = shift;
     my @sql = ();
     for my $model ($self->schema_names) {
+        next if $target && $model ne $target;
         push @sql, $self->get_schema($model)->sql->as_sql;
     }
     @sql;
