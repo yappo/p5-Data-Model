@@ -1,27 +1,36 @@
+=head1 NAME
 
-## Data::Model::Iterator
-## Data::Model::Row
-Data::Model::Cache
-## Data::Model::SQL
-## Data::Model::Schema::SQL
-## Data::Model::Schema
-#? Data::Model::Schema::ReadOnly
-Data::Model::Validate
-Data::Model::Driver
-Data::Model::Driver::DBI
-Data::Model::Driver::DBI::mysql
-Data::Model::Driver::DBI::sqlite
-Data::Model::Driver::Memcache
-Data::Model::Driver::Memory
-Data::Model::Driver::DBM
-Data::Model::Driver::File
-Data::Model::Driver::YAML
+TODO
 
-Gearman
-TheSchwartz
+=head1 WISHLIST
 
-partition
-replication
+  Data::Model::Cache
+  ? Data::Model::Schema::ReadOnly
+  Data::Model::Validate
+  Data::Model::Driver::DBI::mysql
+  Data::Model::Driver::Memcache
+  Data::Model::Driver::DBM
+  Data::Model::Driver::File
+  Data::Model::Driver::YAML
 
+  Gearman ( Data::ObjectDriver::Driver::GearmanDBI ? )
+  TheSchwartz
 
-lazy inflate/deflate ?
+  partition
+  replication
+
+  Paranoia ( by DataMapper )
+
+=head1 FIXED
+
+  Data::Model::Driver
+  Data::Model::Driver::DBI
+  Data::Model::Driver::DBI::sqlite
+  Data::Model::Driver::Memory
+  Data::Model::Iterator
+  Data::Model::Row
+  Data::Model::SQL
+  Data::Model::Schema::SQL
+  Data::Model::Schema
+
+=cut
