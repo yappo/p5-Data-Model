@@ -168,7 +168,8 @@ sub _insert_or_replace {
         my $attr = $self->dbd->bind_param_attributes($type, $columns, $col);
         $sth->bind_param($i++, $val, $attr);
     }
-    $sth->execute;
+    eval { $sth->execute; };
+    die "Failed to execute $sql : $@" if $@;
     $sth->finish;
     $self->end_query($sth);
 
