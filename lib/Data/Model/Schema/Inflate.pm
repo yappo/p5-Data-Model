@@ -14,12 +14,12 @@ sub import {
 
 my %INFLATE = (
     inflate => {
-        URI => sub { URI->new($_[0]) },
-        Hex => sub { unpack("H*", $_[0]) },
+        URI  => sub { URI->new($_[0]) },
+        Hex  => sub { unpack("H*", $_[0]) },
     },
     deflate => {
-        URI => sub { $_[0]->as_string },
-        Hex => sub { pack("H*", $_[0]) },
+        URI  => sub { $_[0]->as_string },
+        Hex  => sub { pack("H*", $_[0]) },
     },
 );
 
