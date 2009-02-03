@@ -8,22 +8,13 @@ use Carp ();
 
 sub memcached { shift->{memcached} }
 
-sub memcached_key {
-    my($self, $schema, $id) = @_;
-
-    Carp::confess 'The number of key is wrong'
-            unless scalar(@{ $id }) == scalar(@{ $schema->key });
-
-    join ':', $schema->model, ref($id) eq 'ARRAY' ? @$id : $id;
-}
-
 sub update_direct { Carp::croak("update_direct is NOT IMPLEMENTED") }
 
 sub get {
     my($self, $schema, $key, $columns, %args) = @_;
 
-    my $memcached_key = $self->memcached_key($schema, $key);
-    my $ret = $self->{memcached}->get( $memcached_key );
+    my $cache_key = $self->cache_key($schema, $key);
+    my $ret = $self->{memcached}->get( $cache_key );
     return unless $ret;
 
     return $self->_generate_result_iterator([ $ret ]), +{};
@@ -32,9 +23,9 @@ sub get {
 sub set {
     my($self, $schema, $key, $columns, %args) = @_;
 
-    my $memcached_key = $self->memcached_key($schema, $key);
-    my $ret = $self->{memcached}->add( $memcached_key, $columns );
-   return unless $ret;
+    my $cache_key = $self->cache_key($schema, $key);
+    my $ret = $self->{memcached}->add( $cache_key, $columns );
+    return unless $ret;
 
     $columns;
 }
@@ -42,8 +33,8 @@ sub set {
 sub replace {
     my($self, $schema, $key, $columns, %args) = @_;
 
-    my $memcached_key = $self->memcached_key($schema, $key);
-    my $ret = $self->{memcached}->set( $memcached_key, $columns );
+    my $cache_key = $self->cache_key($schema, $key);
+    my $ret = $self->{memcached}->set( $cache_key, $columns );
     return unless $ret;
 
     $columns;
@@ -52,14 +43,14 @@ sub replace {
 sub update {
     my($self, $schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
 
-    my $old_memcached_key = $self->memcached_key($schema, $old_key);
-    my $new_memcached_key = $self->memcached_key($schema, $key);
-    unless ($old_memcached_key eq $new_memcached_key) {
+    my $old_cache_key = $self->cache_key($schema, $old_key);
+    my $new_cache_key = $self->cache_key($schema, $key);
+    unless ($old_cache_key eq $new_cache_key) {
         my $ret = $self->delete($schema, $old_key);
         return unless $ret;
     }
 
-    my $ret = $self->{memcached}->set( $new_memcached_key, $columns );
+    my $ret = $self->{memcached}->set( $new_cache_key, $columns );
     return unless $ret;
 
     $columns;
@@ -67,10 +58,10 @@ sub update {
 
 sub delete {
     my($self, $schema, $key, $columns, %args) = @_;
-    my $memcached_key = $self->memcached_key($schema, $key);
-    my $data = $self->{memcached}->get( $memcached_key );
+    my $cache_key = $self->cache_key($schema, $key);
+    my $data = $self->{memcached}->get( $cache_key );
     return unless $data;
-    my $ret = $self->{memcached}->delete( $memcached_key );
+    my $ret = $self->{memcached}->delete( $cache_key );
     return unless $ret;
     $data;
 }

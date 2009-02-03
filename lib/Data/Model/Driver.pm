@@ -2,6 +2,8 @@ package Data::Model::Driver;
 use strict;
 use warnings;
 
+use Carp ();
+
 sub new { 
     my($class, %args) = @_;
     my $self = bless { %args }, shift;
@@ -11,6 +13,17 @@ sub new {
 
 sub init {}
 sub init_model {}
+
+
+sub cache_key {
+    my($self, $schema, $id) = @_;
+
+    Carp::confess 'The number of key is wrong'
+            unless scalar(@{ $id }) == scalar(@{ $schema->key });
+
+    join ':', $schema->model, ref($id) eq 'ARRAY' ? @$id : $id;
+}
+
 
 my $KEYSEPARATE = "\0";
 sub _generate_key_data {
