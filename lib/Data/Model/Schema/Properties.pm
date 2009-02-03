@@ -64,6 +64,10 @@ sub add_column {
 sub add_utf8_column {
     my $self = shift;
     my($name) = @_;
+
+    my($suger_model, $suger_name) = split '\.', $name;
+    $name = $suger_name if $suger_name;
+
     $self->{utf8_columns}->{$name} = 1;
     $self->add_column(@_);
 }

@@ -5,6 +5,8 @@ use base 'Data::Model';
 use Data::Model::Schema;
 use Data::Model::Schema::Inflate;
 
+column_sugar 'part_of_utf8.name' => 'char' => { size => 100 };
+
 install_model all_utf8 => schema {
     driver $main::DRIVER;
     key 'id';
@@ -25,8 +27,7 @@ install_model part_of_utf8 => schema {
             auto_increment => 1,
         };
 
-    utf8_column name
-        => char => { size => 100 };
+    utf8_column 'part_of_utf8.name';
 
     column nickname
         => char => { size => 100 };
