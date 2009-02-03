@@ -6,6 +6,8 @@ use DBI;
 use Path::Class;
 use lib Path::Class::Dir->new('t', 'lib')->stringify;
 
+use IO::Socket::INET;
+use Test::More;
 
 sub import {
     my($class, %args) = @_;
@@ -37,22 +39,46 @@ sub setup_test {
     $@ && die $@;
 
     my $mock   = "Mock::$config->{type}";
-    my $dsn    = $config->{dsn} || '';
-    if ($dsn =~ /sqlite/i) {
-        my $dbfile = temp_filename();
-        $dsn .= $dbfile;
-    }
 
-    $main::DRIVER = $driver->new(
-        dsn => $dsn,
-        username => $config->{username} || '',
-        password => $config->{password} || '',
-        %{ $config->{driver_config} },
-    );
-    eval "use $mock"; $@ and die $@;
+    my $dsn = $config->{dsn} || '';
+    if ($dsn || $config->{driver} eq 'Memory') {
+        if ($dsn =~ /sqlite/i) {
+            my $dbfile = temp_filename();
+            $dsn .= $dbfile;
+        }
 
-    if ($dsn =~ /sqlite/i) {
-        setup_schema( $dsn => $mock->as_sqls );
+        $main::DRIVER = $driver->new(
+            dsn => $dsn,
+            username => $config->{username} || '',
+            password => $config->{password} || '',
+            %{ $config->{driver_config} },
+        );
+        eval "use $mock"; $@ and die $@;
+
+        if ($dsn =~ /sqlite/i) {
+            setup_schema( $dsn => $mock->as_sqls );
+        }
+    } elsif ($config->{driver} eq 'Memcached') {
+        my $memcached_address = $ENV{TEST_MEMCACHED_ADDRESS} || 'localhost:11211';
+        my(undef, $port) = split ':', $memcached_address;
+
+        my $sock = IO::Socket::INET->new(
+            Listen    => 5,
+            LocalAddr => '127.0.0.1',
+            LocalPort => $port,
+            Proto     => 'tcp'
+        );
+        plan skip_all => 'can not running memcached server' if $sock;
+
+        eval "use Cache::Memcached::Fast";
+        plan skip_all => "Cache::Memcached::Fast required for testing memcached driver" if $@;
+
+        $main::DRIVER = $driver->new(
+            memcached => Cache::Memcached::Fast->new({ servers => [ { address => 'localhost:11211' }, ], }),
+            %{ $config->{driver_config} },
+        );
+
+        eval "use $mock"; $@ and die $@;
     }
 
     $RUN_CODE = sub {
