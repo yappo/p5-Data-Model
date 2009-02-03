@@ -58,6 +58,21 @@ sub t_005_shimple_update_key : Tests {
     is $get2->name, 'NAME is Yappo', 'name ok';
 }
 
+sub t_006_shimple_replace : Tests {
+    my($ret) = mock->replace( simple => 'ID' => { name => 'replaichament' } );
+    is $ret->id, 'ID', 'id ok';
+    is $ret->name, 'replaichament', 'name ok';
+
+    my($get) = mock->get( simple => 'ID' );
+    is $get->id, 'ID', 'id ok';
+    is $get->name, 'replaichament', 'name ok';
+}
+
+sub t_007_shimple_duble_insert : Tests {
+    my($ret) = mock->set( simple => 'ID' => { name => 're-insert' } );
+    ok(!$ret, 'set fail');
+}
+
 sub t_101_multi_keys_set : Tests {
     eval {
         mock->set( multi_keys => 'id1' );

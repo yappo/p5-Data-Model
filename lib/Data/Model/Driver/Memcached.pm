@@ -23,24 +23,30 @@ sub get {
     my($self, $schema, $key, $columns, %args) = @_;
 
     my $memcached_key = $self->memcached_key($schema, $key);
-    my $data = $self->{memcached}->get( $memcached_key );
-    return unless $data;
+    my $ret = $self->{memcached}->get( $memcached_key );
+    return unless $ret;
 
-    return $self->_generate_result_iterator([ $data ]), +{};
+    return $self->_generate_result_iterator([ $ret ]), +{};
 }
 
 sub set {
     my($self, $schema, $key, $columns, %args) = @_;
 
     my $memcached_key = $self->memcached_key($schema, $key);
-    $self->{memcached}->set( $memcached_key, $columns );
+    my $ret = $self->{memcached}->add( $memcached_key, $columns );
+   return unless $ret;
 
     $columns;
 }
 
 sub replace {
     my($self, $schema, $key, $columns, %args) = @_;
-    $self->set($schema, $key, $columns, %args);
+
+    my $memcached_key = $self->memcached_key($schema, $key);
+    my $ret = $self->{memcached}->set( $memcached_key, $columns );
+    return unless $ret;
+
+    $columns;
 }
 
 sub update {
@@ -48,9 +54,15 @@ sub update {
 
     my $old_memcached_key = $self->memcached_key($schema, $old_key);
     my $new_memcached_key = $self->memcached_key($schema, $key);
-    $self->delete($schema, $old_key) unless $old_memcached_key eq $new_memcached_key;
+    unless ($old_memcached_key eq $new_memcached_key) {
+        my $ret = $self->delete($schema, $old_key);
+        return unless $ret;
+    }
 
-    $self->set($schema, $key, $columns, %args);
+    my $ret = $self->{memcached}->set( $new_memcached_key, $columns );
+    return unless $ret;
+
+    $columns;
 }
 
 sub delete {
@@ -58,7 +70,8 @@ sub delete {
     my $memcached_key = $self->memcached_key($schema, $key);
     my $data = $self->{memcached}->get( $memcached_key );
     return unless $data;
-    return unless $self->{memcached}->delete( $memcached_key );
+    my $ret = $self->{memcached}->delete( $memcached_key );
+    return unless $ret;
     $data;
 }
 
