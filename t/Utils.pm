@@ -39,6 +39,11 @@ sub setup_test {
     $@ && die $@;
 
     my $mock   = "Mock::$config->{type}";
+    $RUN_CODE = sub {
+        my $mock = $mock->new;
+        $test->set_mock($mock);
+        $test->runtests;
+    };
 
     my $dsn = $config->{dsn} || '';
     if ($dsn || $config->{driver} eq 'Memory') {
@@ -59,33 +64,61 @@ sub setup_test {
             setup_schema( $dsn => $mock->as_sqls );
         }
     } elsif ($config->{driver} eq 'Memcached') {
-        my $memcached_address = $ENV{TEST_MEMCACHED_ADDRESS} || 'localhost:11211';
-        my(undef, $port) = split ':', $memcached_address;
-
-        my $sock = IO::Socket::INET->new(
-            Listen    => 5,
-            LocalAddr => '127.0.0.1',
-            LocalPort => $port,
-            Proto     => 'tcp'
-        );
-        plan skip_all => 'can not running memcached server' if $sock;
+        my $memcached_address = $ENV{TEST_MEMCACHED_ADDRESS};
+        my $memcached_bin     = $ENV{TEST_MEMCACHED_BIN};
 
         eval "use Cache::Memcached::Fast";
         plan skip_all => "Cache::Memcached::Fast required for testing memcached driver" if $@;
 
-        $main::DRIVER = $driver->new(
-            memcached => Cache::Memcached::Fast->new({ servers => [ { address => 'localhost:11211' }, ], }),
-            %{ $config->{driver_config} },
-        );
+        if ($memcached_bin && -x $memcached_bin) {
 
-        eval "use $mock"; $@ and die $@;
+            eval "use Test::TCP";
+            plan skip_all => "Test::TCP required for testing memcached driver" if $@;
+
+            my $port = empty_port();
+            $main::DRIVER = $driver->new(
+                memcached => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:$port" }, ], }),
+                %{ $config->{driver_config} },
+            );
+
+            eval "use $mock"; $@ and die $@;
+
+            my $run = $RUN_CODE;
+            $RUN_CODE = sub {
+                test_tcp(
+                    client => sub {
+                        $run->();
+                    },
+                    server => sub {
+                        exec $memcached_bin, '-p', $port;
+                    },
+                    port => $port,
+                );
+            };
+
+        } elsif ($memcached_address) {
+
+            my(undef, $port) = split ':', $memcached_address;
+            my $sock = IO::Socket::INET->new(
+                Listen    => 5,
+                LocalAddr => '127.0.0.1',
+                LocalPort => $port,
+                Proto     => 'tcp'
+            );
+            plan skip_all => 'can not running memcached server' if $sock;
+
+            $main::DRIVER = $driver->new(
+                memcached => Cache::Memcached::Fast->new({ servers => [ { address => ($memcached_address || 'localhost:11211') }, ], }),
+                %{ $config->{driver_config} },
+            );
+
+            eval "use $mock"; $@ and die $@;
+
+        } else {
+            plan skip_all => "Set TEST_MEMCACHED_ADDRESS or TEST_MEMCACHED_BIN environment variable to run this test";
+        }
+
     }
-
-    $RUN_CODE = sub {
-        my $mock = $mock->new;
-        $test->set_mock($mock);
-        $test->runtests;
-    };
 }
 
 sub run {
