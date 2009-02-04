@@ -360,9 +360,20 @@ sub t_13_lookup_multi : Tests {
     isa_ok $lookup_rev[1], mock_class."::user";
     is $lookup_rev[1]->id, 'yappologs', 'id is yappologs';
     is $lookup_rev[1]->name, "yappo's blog", "name is yappo's blog";
+
+    @lookup = mock->lookup_multi( user => [ 'yappo', 'hoge', 'yappologs' ] );
+
+    ok !$lookup[1], 'null';
+    isa_ok $lookup[0], mock_class."::user";
+    is $lookup[0]->id, 'yappo', 'id is yappo';
+    is $lookup[0]->name, 'Osawa', 'name is Osawa';
+    isa_ok $lookup[2], mock_class."::user";
+    is $lookup[2]->id, 'yappologs', 'id is yappologs';
+    is $lookup[2]->name, "yappo's blog", "name is yappo's blog";
+
 }
 
-sub t_14_prepere : Test {
+sub t_14_prepere : Tests {
     ok(mock->set( bookmark_user => [qw/ 101 yappo /] ));
     ok(mock->set( bookmark_user => [qw/ 102 osawa /] ));
     ok(mock->set( bookmark_user => [qw/ 103 kazuhiro /] ));
@@ -407,6 +418,15 @@ sub t_16_lookup_multi_multikey : Tests {
     isa_ok $lookup[1], mock_class."::bookmark_user";
     is $lookup[1]->bookmark_id, 103, 'id';
     is $lookup[1]->user_id, 'kazuhiro', 'user_id';
+
+    @lookup = mock->lookup_multi( bookmark_user => [ [qw/ 102 osawa /], [qw/ 1 s /], [qw/ 103 kazuhiro /] ] );
+    ok !$lookup[1], 'null';
+    isa_ok $lookup[0], mock_class."::bookmark_user";
+    is $lookup[0]->bookmark_id, 102, 'id';
+    is $lookup[0]->user_id, 'osawa', 'user_id';
+    isa_ok $lookup[2], mock_class."::bookmark_user";
+    is $lookup[2]->bookmark_id, 103, 'id';
+    is $lookup[2]->user_id, 'kazuhiro', 'user_id';
 }
 
 1;
