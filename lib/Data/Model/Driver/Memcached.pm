@@ -10,6 +10,28 @@ sub memcached { shift->{memcached} }
 
 sub update_direct { Carp::croak("update_direct is NOT IMPLEMENTED") }
 
+sub lookup {
+    my($self, $schema, $key) = @_;
+    my $cache_key = $self->cache_key($schema, $key);
+    my $ret = $self->{memcached}->get( $cache_key );
+    return unless $ret;
+    return $ret;
+}
+
+sub lookup_multi {
+    my($self, $schema, $keys) = @_;
+    my @cache_keys = map { $self->cache_key($schema, $_) } @{ $keys };
+    my $ret = $self->{memcached}->get_multi( @cache_keys );
+    return unless $ret;
+
+    my %resultlist;
+    while (my($id, $data) = each %{ $ret }) {
+        my $key = $schema->get_key_array_by_hash($data);
+        $resultlist{join "\0", @{ $key }} = +{ %{ $data } };
+    }
+    return \%resultlist;
+}
+
 sub get {
     my($self, $schema, $key, $columns, %args) = @_;
 

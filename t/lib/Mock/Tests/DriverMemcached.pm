@@ -73,6 +73,34 @@ sub t_007_shimple_duble_insert : Tests {
     ok(!$ret, 'set fail');
 }
 
+sub t_008_prepere : Tests {
+    ok(mock->set( simple => 101 => { name => 'yappo' } ));
+    ok(mock->set( simple => 102 => { name => 'osawa' } ));
+    ok(mock->set( simple => 103 => { name => 'kazuhiro' } ));
+}
+
+sub t_009_lookup : Tests {
+    my $lookup = mock->lookup( simple => 102 );
+    isa_ok $lookup, mock_class."::simple";
+    is $lookup->id, 102, 'id';
+    is $lookup->name, 'osawa', 'name';
+}
+
+sub t_010_lookup_multi : Tests {
+    my @lookup = mock->lookup_multi( simple => [ 103, 101, 102 ] );
+
+    isa_ok $lookup[0], mock_class."::simple";
+    is $lookup[0]->id, 103, 'id';
+    is $lookup[0]->name, 'kazuhiro', 'name';
+    isa_ok $lookup[1], mock_class."::simple";
+    is $lookup[1]->id, 101, 'id';
+    is $lookup[1]->name, 'yappo', 'name';
+    isa_ok $lookup[2], mock_class."::simple";
+    is $lookup[2]->id, 102, 'id';
+    is $lookup[2]->name, 'osawa', 'name';
+}
+
+
 sub t_101_multi_keys_set : Tests {
     eval {
         mock->set( multi_keys => 'id1' );
@@ -105,6 +133,31 @@ sub t_102_multi_keys_get : Tests {
     is $get1->key1, 'id1', 'key1';
     is $get1->key2, 'id2', 'key2';
     is $get1->key3, 'id3', 'key3';
+}
+
+sub t_103_prepere : Tests {
+    ok(mock->set( multi_keys => [qw/ k1 k2 k3 /] ));
+    ok(mock->set( multi_keys => [qw/ e1 e2 e3 /] ));
+}
+
+sub t_104_lookup : Tests {
+    my $lookup = mock->lookup( multi_keys => [qw/ k1 k2 k3/] );
+    ok($lookup, 'set ok');
+    is $lookup->key1, 'k1', 'key1';
+    is $lookup->key2, 'k2', 'key2';
+    is $lookup->key3, 'k3', 'key3';
+}
+
+sub t_105_lookup_multi : Tests {
+    my @lookup = mock->lookup_multi( multi_keys => [ [qw/ e1 e2 e3 /], [qw/ a s d /], [qw/ k1 k2 k3/] ] );
+    ok($lookup[0], 'set ok');
+    is $lookup[0]->key1, 'e1', 'key1';
+    is $lookup[0]->key2, 'e2', 'key2';
+    is $lookup[0]->key3, 'e3', 'key3';
+    ok($lookup[2], 'set ok');
+    is $lookup[2]->key1, 'k1', 'key1';
+    is $lookup[2]->key2, 'k2', 'key2';
+    is $lookup[2]->key3, 'k3', 'key3';
 }
 
 sub t_201_multi_keys_columns_set : Tests {
