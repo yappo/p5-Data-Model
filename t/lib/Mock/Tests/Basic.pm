@@ -362,4 +362,51 @@ sub t_13_lookup_multi : Tests {
     is $lookup_rev[1]->name, "yappo's blog", "name is yappo's blog";
 }
 
+sub t_14_prepere : Test {
+    ok(mock->set( bookmark_user => [qw/ 101 yappo /] ));
+    ok(mock->set( bookmark_user => [qw/ 102 osawa /] ));
+    ok(mock->set( bookmark_user => [qw/ 103 kazuhiro /] ));
+}
+
+sub t_15_lookup_multikey : Tests {
+    eval { mock->lookup( bookmark_user => 'yappo' ) };
+    like $@, qr/The number of key is wrong at /;
+
+    my $lookup;
+    $lookup = mock->lookup( bookmark_user => [qw/ 101 yappo /] );
+    isa_ok $lookup, mock_class."::bookmark_user";
+    is $lookup->bookmark_id, 101, 'id';
+    is $lookup->user_id, 'yappo', 'user_id';
+
+    $lookup = mock->lookup( bookmark_user => [qw/ 102 osawa /] );
+    isa_ok $lookup, mock_class."::bookmark_user";
+    is $lookup->bookmark_id, 102, 'id';
+    is $lookup->user_id, 'osawa', 'user_id';
+
+    $lookup = mock->lookup( bookmark_user => [qw/ 103 kazuhiro /] );
+    isa_ok $lookup, mock_class."::bookmark_user";
+    is $lookup->bookmark_id, 103, 'id';
+    is $lookup->user_id, 'kazuhiro', 'user_id';
+}
+
+sub t_16_lookup_multi_multikey : Tests {
+    eval { mock->lookup_multi( bookmark_user => 'yappo' ) };
+    like $@, qr/The number of key is wrong at /;
+    eval { mock->lookup_multi( bookmark_user => ['yappo'] ) };
+    like $@, qr/The number of key is wrong at /;
+
+    my($lookup) = mock->lookup_multi( bookmark_user => [ [qw/ 101 yappo /] ]);
+    isa_ok $lookup, mock_class."::bookmark_user";
+    is $lookup->bookmark_id, 101, 'id';
+    is $lookup->user_id, 'yappo', 'user_id';
+
+    my @lookup = mock->lookup_multi( bookmark_user => [ [qw/ 102 osawa /], [qw/ 103 kazuhiro /] ] );
+    isa_ok $lookup[0], mock_class."::bookmark_user";
+    is $lookup[0]->bookmark_id, 102, 'id';
+    is $lookup[0]->user_id, 'osawa', 'user_id';
+    isa_ok $lookup[1], mock_class."::bookmark_user";
+    is $lookup[1]->bookmark_id, 103, 'id';
+    is $lookup[1]->user_id, 'kazuhiro', 'user_id';
+}
+
 1;
