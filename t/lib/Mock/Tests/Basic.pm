@@ -343,4 +343,23 @@ sub t_12_lookup : Tests {
     is $lookup->name, 'Osawa', 'name is Osawa';
 }
 
+sub t_13_lookup_multi : Tests {
+    my @lookup = mock->lookup_multi( user => [ 'yappo', 'yappologs' ] );
+
+    isa_ok $lookup[0], mock_class."::user";
+    is $lookup[0]->id, 'yappo', 'id is yappo';
+    is $lookup[0]->name, 'Osawa', 'name is Osawa';
+    isa_ok $lookup[1], mock_class."::user";
+    is $lookup[1]->id, 'yappologs', 'id is yappologs';
+    is $lookup[1]->name, "yappo's blog", "name is yappo's blog";
+
+    my @lookup_rev = mock->lookup_multi( user => [ 'yappo', 'yappologs' ] );
+    isa_ok $lookup_rev[0], mock_class."::user";
+    is $lookup_rev[0]->id, 'yappo', 'id is yappo';
+    is $lookup_rev[0]->name, 'Osawa', 'name is Osawa';
+    isa_ok $lookup_rev[1], mock_class."::user";
+    is $lookup_rev[1]->id, 'yappologs', 'id is yappologs';
+    is $lookup_rev[1]->name, "yappo's blog", "name is yappo's blog";
+}
+
 1;

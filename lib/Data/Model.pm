@@ -133,8 +133,12 @@ sub lookup {
     my $schema = $self->get_schema($model);
     return unless $schema;
 
-    my $query = $self->_get_query_args($schema, $id);
-    my $data = $schema->{driver}->lookup( $schema, $query->[0] );
+    $id = [ $id ] unless ref($id) eq 'ARRAY';
+
+    Carp::confess 'The number of key is wrong'
+            unless scalar(@{ $id }) == scalar(@{ $schema->key });
+
+    my $data = $schema->{driver}->lookup( $schema, $id );
     return unless $data;
 
     my $obj = $data;
@@ -144,6 +148,37 @@ sub lookup {
         $schema->call_trigger('post_load', $obj);
     }
     return $obj;
+}
+
+sub lookup_multi {
+    my($self, $model, $ids) = @_;
+    my $schema = $self->get_schema($model);
+    return unless $schema;
+
+    my @id_list = map {
+        ref($_) eq 'ARRAY' ? $_ : [ $_ ]
+    } ref($ids) eq 'ARRAY' ? @{ $ids } : ( $ids );
+
+    my $id_size = scalar(@{ $schema->key });
+    for my $id (@id_list) {
+        Carp::confess 'The number of key is wrong'
+                unless scalar(@{ $id }) == $id_size;
+    }
+
+    my $results = $schema->{driver}->lookup_multi( $schema, \@id_list );
+    return unless $results && ref($results) eq 'HASH';
+
+    while (my($id, $data) = each %{ $results }) {
+        my $obj = $data;
+        unless ($schema->{options}->{bare_row}) {
+            $obj = $schema->new_obj($self, $data);
+            $schema->inflate($obj);
+            $schema->call_trigger('post_load', $obj);
+        }
+        $results->{$id} = $obj;
+    }
+
+    map { $results->{join("\0", @{ $_ })} } @id_list;
 }
 
 =head2 get

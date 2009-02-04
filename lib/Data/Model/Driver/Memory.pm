@@ -87,6 +87,18 @@ sub lookup {
     $results->[0];
 }
 
+sub lookup_multi {
+    my($self, $schema, $ids) = @_;
+
+    my %resultlist;
+    for my $id (@{ $ids }) {
+        my $key = join "\0", @{ $id };
+        my $results = $self->fetch($schema, $id);
+        next unless $results;        
+        $resultlist{$key} = $results->[0];
+    }
+    \%resultlist;
+}
 
 sub get {
     my $self = shift;

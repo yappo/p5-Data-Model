@@ -5,7 +5,6 @@ use base 'Data::Model::Driver';
 
 use Carp ();
 use DBI;
-use Data::Dumper;
 
 use Data::Model::SQL;
 use Data::Model::Driver::DBI::DBD;
@@ -107,16 +106,43 @@ sub fetch {
 }
 
 sub lookup {
-    my($self, $schema, $key, %args) = @_;
+    my($self, $schema, $id, %args) = @_;
 
     my $rec = +{};
-    my $sth = $self->fetch($rec, $schema, $key, {}, %args);
+    my $sth = $self->fetch($rec, $schema, $id, {}, %args);
 
     my $rv = $sth->fetch;
     $sth->finish;
     $self->end_query($sth);
     return unless $rv;
     return $rec;
+}
+
+sub lookup_multi {
+    my($self, $schema, $ids, %args) = @_;
+
+    my @keys = @{ $schema->key };
+    my @queries;
+    for my $id (@{ $ids }) {
+        my %query;
+        @query{@keys} = @{ $id };
+        push @queries, '-and' => [ %query ];
+    }
+
+    my $rec = +{};
+    $args{no_cached_prepare} = 1;
+    my $sth = $self->fetch($rec, $schema,undef, { where => [ -or => \@queries ] }, %args);
+
+    my %resultlist;
+    while ($sth->fetch) {
+        my $key = $schema->get_key_array_by_hash($rec);
+        $resultlist{join "\0", @{ $key }} = +{ %{ $rec } };
+    }
+
+    $sth->finish;
+    $self->end_query($sth);
+
+    \%resultlist;
 }
 
 sub get {
