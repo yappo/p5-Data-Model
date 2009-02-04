@@ -61,6 +61,8 @@ sub _set_auto_increment {
 
 sub _as_sql_hook {}
 
+sub lookup {}
+sub lookup_multi {}
 sub get {}
 sub set {}
 sub delete {}

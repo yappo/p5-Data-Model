@@ -67,7 +67,7 @@ sub generate_auto_increment {
 
 ## get, set, delete
 
-sub get {
+sub fetch {
     my($self, $schema, $key, $columns, %args) = @_;
 
     # fetch record id
@@ -78,6 +78,20 @@ sub get {
     return unless $results && @{ $results };
 
     $results = [ map { $_->[1] } @{ $results } ];
+}
+
+
+sub lookup {
+    my $self = shift;
+    my $results = $self->fetch(@_);
+    $results->[0];
+}
+
+
+sub get {
+    my $self = shift;
+    my $results = $self->fetch(@_);
+    return unless $results;
     return $self->_generate_result_iterator($results), +{};
 }
 

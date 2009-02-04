@@ -336,4 +336,11 @@ sub t_11_obj_delete : Tests {
     ok(!mock->get( user => 'obj-delete' ));
 }
 
+sub t_12_lookup : Tests {
+    my $lookup = mock->lookup( user => 'yappo' );
+    isa_ok $lookup, mock_class."::user";
+    is $lookup->id, 'yappo', 'id is yappo';
+    is $lookup->name, 'Osawa', 'name is Osawa';
+}
+
 1;

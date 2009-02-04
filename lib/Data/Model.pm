@@ -128,6 +128,24 @@ sub _get_query_args {
     return [ $key_array, $query, @_ ];
 }
 
+sub lookup {
+    my($self, $model, $id) = @_;
+    my $schema = $self->get_schema($model);
+    return unless $schema;
+
+    my $query = $self->_get_query_args($schema, $id);
+    my $data = $schema->{driver}->lookup( $schema, $query->[0] );
+    return unless $data;
+
+    my $obj = $data;
+    unless ($schema->{options}->{bare_row}) {
+        $obj = $schema->new_obj($self, $data);
+        $schema->inflate($obj);
+        $schema->call_trigger('post_load', $obj);
+    }
+    return $obj;
+}
+
 =head2 get
 
   $model->get( model_name => 'key' );

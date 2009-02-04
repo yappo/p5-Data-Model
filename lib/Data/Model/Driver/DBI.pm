@@ -106,6 +106,18 @@ sub fetch {
     $sth;
 }
 
+sub lookup {
+    my($self, $schema, $key, %args) = @_;
+
+    my $rec = +{};
+    my $sth = $self->fetch($rec, $schema, $key, {}, %args);
+
+    my $rv = $sth->fetch;
+    $sth->finish;
+    $self->end_query($sth);
+    return unless $rv;
+    return $rec;
+}
 
 sub get {
     my($self, $schema, $key, $columns, %args) = @_;
