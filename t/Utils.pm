@@ -26,6 +26,19 @@ sub import {
     }
 }
 
+my $CACHE_CLASS;
+sub _make_driver_instance {
+    my $class = shift;
+    my $driver = $class->new( @_ );
+
+    if ($CACHE_CLASS) {
+        $driver = $CACHE_CLASS->new(
+            fallback => $driver
+        );
+    }
+    $driver;
+}
+
 my $RUN_CODE = sub {};
 sub setup_test {
     my($class, $caller, $config) = @_;
@@ -45,6 +58,12 @@ sub setup_test {
         $test->runtests;
     };
 
+    if (my $cache = $config->{cache}) {
+        # use cache
+        $CACHE_CLASS = "Data::Model::Driver::Cache::$cache";
+        eval "use $CACHE_CLASS"; $@ and die $@;
+    }
+
     my $dsn = $config->{dsn} || '';
     if ($dsn || $config->{driver} eq 'Memory') {
         if ($dsn =~ /sqlite/i) {
@@ -52,7 +71,8 @@ sub setup_test {
             $dsn .= $dbfile;
         }
 
-        $main::DRIVER = $driver->new(
+        $main::DRIVER = _make_driver_instance(
+            $driver,
             dsn => $dsn,
             username => $config->{username} || '',
             password => $config->{password} || '',
@@ -76,7 +96,8 @@ sub setup_test {
             plan skip_all => "Test::TCP required for testing memcached driver" if $@;
 
             my $port = empty_port();
-            $main::DRIVER = $driver->new(
+            $main::DRIVER = _make_driver_instance(
+                $driver,
                 memcached => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:$port" }, ], }),
                 %{ $config->{driver_config} },
             );
@@ -107,7 +128,8 @@ sub setup_test {
             );
             plan skip_all => 'can not running memcached server' if $sock;
 
-            $main::DRIVER = $driver->new(
+            $main::DRIVER = _make_driver_instance(
+                $driver,
                 memcached => Cache::Memcached::Fast->new({ servers => [ { address => ($memcached_address || 'localhost:11211') }, ], }),
                 %{ $config->{driver_config} },
             );
