@@ -41,6 +41,25 @@ sub get_schema {
     $schema;
 }
 
+sub clear_all_drivers {
+    my $self = shift;
+    for my $model ($self->schema_names) {
+        $self->set_driver($model, undef);
+    }
+}
+
+sub get_base_driver {
+    shift->__properties->{base_driver};
+}
+
+sub set_base_driver {
+    my($self, $driver) = @_;
+    $self->__properties->{base_driver} = $driver;
+    for my $model ($self->schema_names) {
+        $self->set_driver($model, $driver) unless $self->get_driver($model);
+    }
+}
+
 sub get_driver {
     my($self, $model) = @_;
     $self->get_schema($model)->{driver};
@@ -49,10 +68,12 @@ sub get_driver {
 sub set_driver {
     my($self, $model, $driver) = @_;
     my $schema = $self->get_schema($model);
-    my $init = (exists $schema->{driver} && $schema->{driver});
-    return unless $driver;
+    my $old = (exists $schema->{driver} && $schema->{driver});
+    if ($old) {
+#        $old->init_model($model, $schema);
+    }
     $schema->driver($driver);
-    if ($init) {
+    if ($driver) {
         $driver->init_model($model, $schema);
     }
 }

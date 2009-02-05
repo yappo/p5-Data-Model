@@ -18,12 +18,13 @@ sub import {
     $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}} ||= +{};
 
     no strict 'refs';
-    for my $name (qw/ driver install_model schema column columns key index unique schema_options column_sugar
+    for my $name (qw/ base_driver driver install_model schema column columns key index unique schema_options column_sugar
         utf8_column utf8_columns alias_column /) {
         *{"$caller\::$name"} = \&$name;
     }
 
     my $__properties = +{
+        base_driver  => undef,
         schema       => +{},
         __process_tmp => +{
             class => $caller,
@@ -41,7 +42,7 @@ sub install_model ($$;%) {
     my $pkg = "$caller\::$name";
 
     my $schema = $caller->__properties->{schema}->{$name} = Data::Model::Schema::Properties->new(
-        driver                  => undef,
+        driver                  => $caller->__properties->{base_driver},
         schema_class            => $caller,
         model                   => $name,
         class                   => $pkg,
@@ -186,6 +187,12 @@ sub _get_model_schema {
     $method =~ s/.+:://;
     local $Carp::CarpLevel = 2;
     Carp::croak "'$method' method is target internal only";
+}
+
+sub base_driver ($) {
+    my $caller = caller;
+    return unless $caller->can('__properties');
+    $caller->__properties->{base_driver} = shift;
 }
 
 sub driver ($;%) {
