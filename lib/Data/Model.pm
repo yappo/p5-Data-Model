@@ -191,7 +191,7 @@ sub lookup_multi {
 
     while (my($id, $data) = each %{ $results }) {
         my $obj = $data;
-        unless ($schema->{options}->{bare_row}) {
+        unless ($schema->{options}->{bare_row} || !$obj) {
             $obj = $schema->new_obj($self, $data);
             $schema->inflate($obj);
             $schema->call_trigger('post_load', $obj);
