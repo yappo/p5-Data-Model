@@ -256,15 +256,6 @@ sub inflate {
         }
         $self->call_trigger('post_inflate', $columns, $orig_columns);
     }
-
-    # make alias data
-    my($self, $columns) = @_;
-    return unless ref($columns) eq $self->{class};
-    while (my($base, $list) = each %{ $self->{aluas_column_revers_map} }) {
-        for my $alias (@{ $list }) {
-            $self->{alias_column}->{$alias}->{inflate2alias}->( $columns );
-        }
-    }
 }
 
 sub deflate {

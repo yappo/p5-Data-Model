@@ -66,13 +66,13 @@ sub install_model ($$;%) {
     $caller->__properties->{__process_tmp}->{name} = $name;
     $CALLER = $caller;
     $schema_code->();
+    $schema->setup_inflate;
     unless ($schema->options->{bare_row}) {
         no strict 'refs';
         @{"$pkg\::ISA"} = ( 'Data::Model::Row' );
         _install_columns_to_class($schema);
         _install_alias_columns_to_class($schema);
     }
-    $schema->setup_inflate;
     $CALLER = undef;
     delete $caller->__properties->{__process_tmp};
 
@@ -101,7 +101,7 @@ sub _install_columns_to_class {
                     $obj->{changed_cols}->{$column} = $old_val;
                 }
                 for my $alias (@{ $alias_list }) {
-                    $schema->alias_column->{$alias}->{inflate2alias}->( $obj );
+                    delete $obj->{alias_values}->{$alias};
                 }
                 return $obj->{column_values}->{$column};
             };
@@ -127,16 +127,17 @@ sub _install_alias_columns_to_class {
     my $schema = shift;
     no strict 'refs';
     while (my($column, $args) = each %{ $schema->alias_column }) {
-        my $base         = $args->{base};
-        my $deflate_code = $args->{deflate};
-        my $is_utf8      = $args->{is_utf8};
-        my $charset      = $args->{charset} || 'utf8';
+        my $base          = $args->{base};
+        my $deflate_code  = $args->{deflate};
+        my $is_utf8       = $args->{is_utf8};
+        my $charset       = $args->{charset} || 'utf8';
+        my $inflate2alias = $args->{inflate2alias};
 
         if ($is_utf8 && $deflate_code) {
             *{ $schema->class . "::$column" } = sub {
                 my $obj = shift;
                 # getter
-                return $obj->{alias_values}->{$column} unless @_;
+                return $obj->{alias_values}->{$column} ||= $inflate2alias->($obj) unless @_;
                 # setter
                 $obj->{alias_values}->{$column} = $_[0];
                 $obj->$base( Encode::encode($charset, $deflate_code->( $_[0] ) ) );
@@ -146,7 +147,7 @@ sub _install_alias_columns_to_class {
             *{ $schema->class . "::$column" } = sub {
                 my $obj = shift;
                 # getter
-                return $obj->{alias_values}->{$column} unless @_;
+                return $obj->{alias_values}->{$column} ||= $inflate2alias->($obj) unless @_;
                 # setter
                 $obj->{alias_values}->{$column} = $_[0];
                 $obj->$base( Encode::encode($charset, $_[0]) );
@@ -156,7 +157,7 @@ sub _install_alias_columns_to_class {
             *{ $schema->class . "::$column" } = sub {
                 my $obj = shift;
                 # getter
-                return $obj->{alias_values}->{$column} unless @_;
+                return $obj->{alias_values}->{$column} ||= $inflate2alias->($obj) unless @_;
                 # setter
                 $obj->{alias_values}->{$column} = $_[0];
                 $obj->$base( $deflate_code->($_[0]) );
@@ -166,7 +167,7 @@ sub _install_alias_columns_to_class {
             *{ $schema->class . "::$column" } = sub {
                 my $obj = shift;
                 # getter
-                return $obj->{alias_values}->{$column} unless @_;
+                return $obj->{alias_values}->{$column} ||= $inflate2alias->($obj) unless @_;
                 # setter
                 $obj->{alias_values}->{$column} = $_[0];
                 $obj->$base( $_[0] );
