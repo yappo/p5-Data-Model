@@ -3,9 +3,6 @@ use strict;
 use warnings;
 use base 'Data::Model::Driver';
 
-sub init {}
-sub init_model {}
-
 sub get {
     my $self   = shift;
     my $schema = shift;
