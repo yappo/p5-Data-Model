@@ -31,7 +31,7 @@ sub new {
 
 sub get_schema_class {
     my($self, $model) = @_;
-    ref($self) . '::' . $model;
+    (ref($self) || $self) . '::' . $model;
 }
 
 sub get_schema {
@@ -341,7 +341,7 @@ sub _get_schema_by_row {
     return unless $class;
 
     my($klass, $model) = $class =~ /^(.+)::([^:]+)$/;
-    return unless ref($self) eq $klass;
+    return unless (ref($self) || $self) eq $klass;
     return $self->get_schema($model);
 }
 
