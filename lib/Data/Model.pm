@@ -70,11 +70,11 @@ sub set_driver {
     my $schema = $self->get_schema($model);
     my $old = (exists $schema->{driver} && $schema->{driver});
     if ($old) {
-#        $old->init_model($model, $schema);
+        $old->detach_model($model, $schema);
     }
     $schema->driver($driver);
     if ($driver) {
-        $driver->init_model($model, $schema);
+        $driver->attach_model($model, $schema);
     }
 }
 

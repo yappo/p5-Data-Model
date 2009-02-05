@@ -12,8 +12,8 @@ sub new {
 }
 
 sub init {}
-sub init_model {}
-
+sub attach_model {}
+sub detach_model {}
 
 sub cache_key {
     my($self, $schema, $id) = @_;
