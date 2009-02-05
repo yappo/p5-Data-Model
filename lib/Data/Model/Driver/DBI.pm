@@ -131,7 +131,7 @@ sub lookup_multi {
 
     my $rec = +{};
     $args{no_cached_prepare} = 1;
-    my $sth = $self->fetch($rec, $schema,undef, { where => [ -or => \@queries ] }, %args);
+    my $sth = $self->fetch($rec, $schema, undef, { where => [ -or => \@queries ] }, %args);
 
     my %resultlist;
     while ($sth->fetch) {
