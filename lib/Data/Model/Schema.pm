@@ -77,7 +77,7 @@ sub install_model ($$;%) {
     delete $caller->__properties->{__process_tmp};
 
     if ($schema->driver) {
-        $schema->driver->init_model($name, $schema);
+        $schema->driver->attach_model($name, $schema);
     }
 }
 sub schema (&) { shift }
