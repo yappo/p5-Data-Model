@@ -60,7 +60,7 @@ sub install_model ($$;%) {
         has_deflate             => 0,
         alias_column            => {},
         aluas_column_revers_map => {},
-);
+    );
 
     $caller->__properties->{__process_tmp}->{name} = $name;
     $CALLER = $caller;
@@ -73,6 +73,7 @@ sub install_model ($$;%) {
     }
     $schema->setup_inflate;
     $CALLER = undef;
+    delete $caller->__properties->{__process_tmp};
 
     if ($schema->driver) {
         $schema->driver->init_model($name, $schema);
