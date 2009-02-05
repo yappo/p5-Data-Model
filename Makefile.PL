@@ -5,6 +5,7 @@ all_from 'lib/Data/Model.pm';
 # requires '';
 requires 'Carp';
 requires 'Class::Trigger';
+requires 'Storable';
 # DBI
 
 tests 't/*.t t/*/*.t';

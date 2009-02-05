@@ -187,7 +187,7 @@ sub lookup_multi {
     }
 
     my $results = $schema->{driver}->lookup_multi( $schema, \@id_list );
-    return unless $results && ref($results) eq 'HASH';
+    return (undef) x scalar(@id_list) unless $results && ref($results) eq 'HASH';
 
     while (my($id, $data) = each %{ $results }) {
         my $obj = $data;

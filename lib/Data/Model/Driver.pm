@@ -67,6 +67,7 @@ sub get {}
 sub set {}
 sub delete {}
 sub update {}
+sub replace {}
 
 sub get_multi {}
 sub set_multi {}
