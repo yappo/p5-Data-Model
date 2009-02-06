@@ -156,6 +156,11 @@ sub lookup {
 
     $id = [ $id ] unless ref($id) eq 'ARRAY';
 
+    # deflating
+    my $id_hash = $schema->get_columns_hash_by_key_array_and_hash(+{}, $id);
+    $schema->deflate($id_hash);
+    $id = $schema->get_key_array_by_hash( $id_hash );
+
     Carp::confess 'The number of key is wrong'
             unless scalar(@{ $id }) == scalar(@{ $schema->key });
 
@@ -176,14 +181,21 @@ sub lookup_multi {
     my $schema = $self->get_schema($model);
     return unless $schema;
 
-    my @id_list = map {
-        ref($_) eq 'ARRAY' ? $_ : [ $_ ]
-    } ref($ids) eq 'ARRAY' ? @{ $ids } : ( $ids );
-
+    $ids = [ $ids ] unless ref($ids) eq 'ARRAY';
     my $id_size = scalar(@{ $schema->key });
-    for my $id (@id_list) {
+    my @id_list;
+    for my $id (@{ $ids }) {
+        $id = [ $id ] unless ref($id) eq 'ARRAY';
+
         Carp::confess 'The number of key is wrong'
                 unless scalar(@{ $id }) == $id_size;
+
+        # deflating
+        my $id_hash = $schema->get_columns_hash_by_key_array_and_hash(+{}, $id);
+        $schema->deflate($id_hash);
+        $id = $schema->get_key_array_by_hash( $id_hash );
+
+        push @id_list, $id;
     }
 
     my $results = $schema->{driver}->lookup_multi( $schema, \@id_list );
