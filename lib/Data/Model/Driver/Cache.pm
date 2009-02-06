@@ -86,7 +86,7 @@ sub lookup_multi {
     $results;
 }
 
-# key 指定の検索でないならキャッシュ処理しない
+# key 指定の検索でないならキャッシュ処理しない (未実装)
 sub get {
     my $self = shift;
     return $self->{fallback}->get(@_);
@@ -108,8 +108,10 @@ sub replace {
     my $self = shift;
     my($schema, $key, $columns, %args) = @_;
 
-    my $cache_key = $self->cache_key($schema, $key);
-    return unless $self->remove_from_cache($cache_key);
+    if (scalar(@{ $key }) == scalar(@{ $schema->key })) {
+        my $cache_key = $self->cache_key($schema, $key);
+        return unless $self->remove_from_cache($cache_key);
+    }
     $self->{fallback}->replace(@_);
 }
 
@@ -121,8 +123,10 @@ sub update {
     my $self = shift;
     my($schema, $old_key, $key, $old_columns, $columns, $changed_columns, %args) = @_;
 
-    my $cache_key = $self->cache_key($schema, $old_key);
-    return unless $self->remove_from_cache($cache_key);
+    if (scalar(@{ $old_key }) == scalar(@{ $schema->key })) {
+        my $cache_key = $self->cache_key($schema, $old_key);
+        return unless $self->remove_from_cache($cache_key);
+    }
 
    $self->{fallback}->update(@_);
 }
@@ -151,7 +155,7 @@ sub update_direct {
     my $self = shift;
     my($schema, $key, $query, $columns, %args) = @_;
 
-    if ($key && !$columns) {
+    if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
         return unless $self->remove_from_cache($cache_key);
     } else {
@@ -164,7 +168,7 @@ sub delete {
     my $self = shift;
     my($schema, $key, $columns, %args) = @_;
 
-    if ($key && !$columns) {
+    if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
         return unless $self->remove_from_cache($cache_key);
     } else {
