@@ -19,7 +19,7 @@ sub import {
 
     no strict 'refs';
     for my $name (qw/ base_driver driver install_model schema column columns key index unique schema_options column_sugar
-        utf8_column utf8_columns alias_column /) {
+        utf8_column utf8_columns alias_column add_method /) {
         *{"$caller\::$name"} = \&$name;
     }
 
@@ -248,6 +248,13 @@ sub unique ($;$;%) {
 sub schema_options (@) {
     my($name, $schema) = _get_model_schema;
     $schema->add_options(@_);
+}
+
+sub add_method {
+    my($name, $schema) = _get_model_schema;
+    my($method, $code) = @_;
+    no strict 'refs';
+    *{$schema->class."::$method"} = $code;
 }
 
 
