@@ -1,14 +1,18 @@
 use t::Utils;
 use Mock::Tests::Basic;
 use Data::Model::Driver::DBI;
-use Test::More tests => 30;
+use Test::More;
+
+BEGIN {
+    plan skip_all => "Set TEST_MYSQL environment variable to run this test"
+        unless $ENV{TEST_MYSQL};
+    plan tests => 27;
+};
 
 BEGIN {
     my $dbfile = temp_filename;
     our $DRIVER = Data::Model::Driver::DBI->new(
-        dsn => 'dbi:SQLite:dbname=' . $dbfile,
-        username => 'username',
-        password => 'password',
+        dsn => 'dbi:mysql:database=test',
     );
     use_ok('Mock::Basic');
     use_ok('Mock::Index');
@@ -31,19 +35,20 @@ is($user[0], "CREATE TABLE user (
 my @bookmark = $mock->get_schema('bookmark')->sql->as_sql;
 is scalar(@bookmark), 1;
 is($bookmark[0], "CREATE TABLE bookmark (
-    id              INTEGER         NOT NULL PRIMARY KEY,
+    id              INT             AUTO_INCREMENT,
     url             CHAR(255)      ,
-    UNIQUE (url)
+    PRIMARY KEY (id),
+    UNIQUE url (url)
 )");
 
 my @bookmark_user = $mock->get_schema('bookmark_user')->sql->as_sql;
-is scalar(@bookmark_user), 2;
+is scalar(@bookmark_user), 1;
 is($bookmark_user[0], "CREATE TABLE bookmark_user (
     bookmark_id     CHAR(100)      ,
     user_id         CHAR(100)      ,
-    PRIMARY KEY (bookmark_id, user_id)
+    PRIMARY KEY (bookmark_id, user_id),
+    INDEX user_id (user_id)
 )");
-is($bookmark_user[1], "CREATE INDEX user_id ON bookmark_user (user_id)");
 
 
 
@@ -61,22 +66,24 @@ is($multi_keys[0], "CREATE TABLE multi_keys (
 my @multi_unique = $mock->get_schema('multi_unique')->sql->as_sql;
 is scalar(@multi_unique), 1;
 is($multi_unique[0], "CREATE TABLE multi_unique (
-    c_key           INTEGER         NOT NULL PRIMARY KEY,
+    c_key           INT             AUTO_INCREMENT,
     unq1            CHAR(255)      ,
     unq2            CHAR(255)      ,
     unq3            CHAR(255)      ,
-    UNIQUE (unq1, unq2, unq3)
+    PRIMARY KEY (c_key),
+    UNIQUE unq (unq1, unq2, unq3)
 )");
 
 my @multi_index = $mock->get_schema('multi_index')->sql->as_sql;
-is scalar(@multi_index), 2;
+is scalar(@multi_index), 1;
 is($multi_index[0], "CREATE TABLE multi_index (
-    c_key           INTEGER         NOT NULL PRIMARY KEY,
+    c_key           INT             AUTO_INCREMENT,
     idx1            CHAR(255)      ,
     idx2            CHAR(255)      ,
-    idx3            CHAR(255)      
+    idx3            CHAR(255)      ,
+    PRIMARY KEY (c_key),
+    INDEX idx (idx1, idx2, idx3)
 )");
-is($multi_index[1], "CREATE INDEX idx ON multi_index (idx1, idx2, idx3)");
 
 
 $mock = Mock::ColumnSugar->new;
@@ -84,21 +91,23 @@ $mock = Mock::ColumnSugar->new;
 my @author = $mock->get_schema('author')->sql->as_sql;
 is scalar(@author), 1;
 is($author[0], "CREATE TABLE author (
-    id              INTEGER         NOT NULL PRIMARY KEY,
-    name            VARCHAR(128)    NOT NULL
+    id              INT             UNSIGNED NOT NULL AUTO_INCREMENT,
+    name            VARCHAR(128)    NOT NULL,
+    PRIMARY KEY (id)
 )");
 
 my @book = $mock->get_schema('book')->sql->as_sql;
-is scalar(@book), 2;
+is scalar(@book), 1;
 is($book[0], "CREATE TABLE book (
-    id              INTEGER         NOT NULL PRIMARY KEY,
+    id              INT             UNSIGNED NOT NULL AUTO_INCREMENT,
     author_id       INT             UNSIGNED NOT NULL,
     sub_author_id   INT             UNSIGNED,
     title           VARCHAR(255)    NOT NULL,
     description     TEXT            NOT NULL DEFAULT 'not yet writing',
-    recommend       TEXT           
+    recommend       TEXT           ,
+    PRIMARY KEY (id),
+    INDEX author_id (author_id)
 )");
-is($book[1], "CREATE INDEX author_id ON book (author_id)");
 
 
 $mock = Mock::ColumnSugar2->new;
@@ -117,15 +126,15 @@ is scalar(@unq), 1;
 is($unq[0], "CREATE TABLE unq (
     id1             CHAR(255)      ,
     id2             CHAR(255)      ,
-    UNIQUE (id1, id2),
-    UNIQUE (id2, id1)
-)");
+    UNIQUE unq_1 (id1, id2),
+    UNIQUE unq_2 (id2, id1)
+) TYPE=InnoDB");
 
 my @unq2 = $mock->get_schema('unq2')->sql->as_sql;
 is scalar(@unq2), 1;
 is($unq2[0], "CREATE TABLE unq2 (
     id1             CHAR(255)      ,
     id2             CHAR(255)      ,
-    UNIQUE (id2, id1),
-    UNIQUE (id1, id2)
-)");
+    UNIQUE unq_2 (id2, id1),
+    UNIQUE unq_1 (id1, id2)
+) TYPE=InnoDB");

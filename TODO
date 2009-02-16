@@ -7,7 +7,6 @@ TODO
   Data::Model::Cache
   ? Data::Model::Schema::ReadOnly
   Data::Model::Validate
-  Data::Model::Driver::DBI::mysql
   Data::Model::Driver::DBM
   Data::Model::Driver::File
   Data::Model::Driver::YAML
@@ -33,5 +32,6 @@ TODO
   Data::Model::Schema
 
   Data::Model::Driver::Memcache ?
+  Data::Model::Driver::DBI::mysql ?
 
 =cut
