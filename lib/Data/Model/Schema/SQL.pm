@@ -149,8 +149,14 @@ sub as_create_table {
         @key = ();
     }
 
+    my $index_hash = $schema->index;
+    my @index = sort { $a->[0] cmp $b->[0] }
+        map { [ $_ => $index_hash->{$_} ] }
+            keys %{ $index_hash };
+
     push(@values, $self->call_method( 'as_primary_key', \@key ));
     push(@values, $self->call_method( 'as_unique', \@unique ));
+    push(@values, $self->call_method( 'as_inner_index', \@index ));
     push(@values, $self->call_method( 'as_foreign' ));
 
     return 'CREATE TABLE '
@@ -158,6 +164,10 @@ sub as_create_table {
            . " (\n    " . join(",\n    ", grep { $_ } @values) . "\n)"
            . $self->as_table_attributes,
     ;
+}
+
+sub as_inner_index {
+    ();
 }
 
 sub as_index {
@@ -169,7 +179,7 @@ sub as_index {
                 . ' INDEX '
                 . $name
                 . ' ON ' . $self->{schema}->model
-                . ' (' . join(',', @{ $columns } ) . ')'
+                . ' (' . join(', ', @{ $columns } ) . ')'
         );
     }
     return @sql;
@@ -177,7 +187,9 @@ sub as_index {
 
 sub as_create_indexes {
     my $self = shift;
-    $self->call_method( 'as_index' );
+    my @ret = $self->call_method( 'as_index' );
+    return () unless $ret[0];
+    return @ret;
 }
 
 
