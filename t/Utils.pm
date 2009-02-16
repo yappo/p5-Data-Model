@@ -40,6 +40,7 @@ sub _make_driver_instance {
 }
 
 my $RUN_CODE = sub {};
+my $CLEANUP_CODE = sub {};
 sub setup_test {
     my($class, $caller, $config) = @_;
 
@@ -65,6 +66,13 @@ sub setup_test {
     }
 
     my $dsn = $config->{dsn} || '';
+    if ($dsn =~ /mysql/) {
+        plan skip_all => "Set TEST_MYSQL environment variable to run this test"
+            unless $ENV{TEST_MYSQL};
+        eval "use DBD::mysql";
+        plan skip_all => "DBD::mysql required for testing DBI mysql driver" if $@;
+    }
+
     if ($dsn || $config->{driver} eq 'Memory') {
         if ($dsn =~ /sqlite/i) {
             my $dbfile = temp_filename();
@@ -80,7 +88,17 @@ sub setup_test {
         );
         eval "use $mock"; $@ and die $@;
 
-        if ($dsn =~ /sqlite/i) {
+        if ($dsn =~ /mysql/i) {
+            $CLEANUP_CODE = sub {
+                my $dbh = DBI->connect($dsn,
+                                       '', '', { RaiseError => 1, PrintError => 0 });
+                for my $table ($mock->schema_names) {
+                    eval { $dbh->do( "DROP TABLE $table" ) };
+                }
+            };
+            $CLEANUP_CODE->();
+        }
+        if ($dsn =~ /sqlite|mysql/i) {
             setup_schema( $dsn => $mock->as_sqls );
         }
     } elsif ($config->{driver} eq 'Memcached') {
@@ -109,6 +127,7 @@ sub setup_test {
                 test_tcp(
                     client => sub {
                         $run->();
+                        $CLEANUP_CODE->();
                     },
                     server => sub {
                         exec $memcached_bin, '-p', $port;
@@ -145,6 +164,7 @@ sub setup_test {
 
 sub run {
     $RUN_CODE->();
+    $CLEANUP_CODE->();
 }
 
 sub temp_filename {

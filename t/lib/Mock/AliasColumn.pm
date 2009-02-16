@@ -85,16 +85,16 @@ install_model uri => schema {
 # aliased key test
 install_model keytest => schema {
     driver $main::DRIVER;
-    key 'key';
+    key 'c_key';
 
-    column key => char => {
+    column c_key => char => {
         require => 1,
         size    => 16,
         deflate => sub {
             ($_[0] =~ /^prefix_/) ? $_[0] : 'prefix_' . $_[0];
         },
     };
-    alias_column key => 'key_noprefix'
+    alias_column c_key => 'key_noprefix'
         => {
             inflate => sub {
                 my $val = $_[0];

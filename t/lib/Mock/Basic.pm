@@ -24,12 +24,18 @@ install_model bookmark => schema {
 };
 
 install_model bookmark_user => schema {
-    my $columns = [qw/ bookmark_id user_id /];
     driver $main::DRIVER;
-    key $columns;
+    key [qw/ bookmark_id user_id /];
     index 'user_id';
 
-    columns @{ $columns };
+    column bookmark_id
+        => char => {
+            size => 100,
+        };
+    column user_id
+        => char => {
+            size => 100,
+        };
 };
 
 1;

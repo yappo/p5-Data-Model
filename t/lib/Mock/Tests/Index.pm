@@ -71,7 +71,7 @@ sub t_08_multi_column_primary_key : Tests {
 
 sub _08_unique_get_1 {
     my($row, $key, $unq1, $unq2, $unq3) = @_;
-    is $row->key,  $key;
+    is $row->c_key,  $key;
     is $row->unq1, $unq1;
     is $row->unq2, $unq2;
     is $row->unq3, $unq3;
@@ -139,7 +139,7 @@ sub t_08_multi_column_unique : Tests {
 
 sub _08_index_get_1 {
     my($row, $key, $idx1, $idx2, $idx3) = @_;
-    is $row->key,  $key, "key: $key $idx1 $idx2 $idx3";
+    is $row->c_key,  $key, "key: $key $idx1 $idx2 $idx3";
     is $row->idx1, $idx1, "idx1: $key $idx1 $idx2 $idx3";
     is $row->idx2, $idx2, "idx2: $key $idx1 $idx2 $idx3";
     is $row->idx3, $idx3, "idx3: $key $idx1 $idx2 $idx3";

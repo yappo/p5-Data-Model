@@ -36,8 +36,8 @@ is($bookmark[0], "CREATE TABLE bookmark (
 
 my @bookmark_user = $mock->get_schema('bookmark_user')->sql->as_sql;
 is($bookmark_user[0], "CREATE TABLE bookmark_user (
-    bookmark_id     CHAR(255)      ,
-    user_id         CHAR(255)      ,
+    bookmark_id     CHAR(100)      ,
+    user_id         CHAR(100)      ,
     PRIMARY KEY (bookmark_id, user_id)
 )");
 is($bookmark_user[1], "CREATE INDEX user_id ON bookmark_user (user_id)");
@@ -56,7 +56,7 @@ is($multi_keys[0], "CREATE TABLE multi_keys (
 
 my @multi_unique = $mock->get_schema('multi_unique')->sql->as_sql;
 is($multi_unique[0], "CREATE TABLE multi_unique (
-    key             INTEGER         NOT NULL PRIMARY KEY,
+    c_key           INTEGER         NOT NULL PRIMARY KEY,
     unq1            CHAR(255)      ,
     unq2            CHAR(255)      ,
     unq3            CHAR(255)      ,
@@ -65,7 +65,7 @@ is($multi_unique[0], "CREATE TABLE multi_unique (
 
 my @multi_index = $mock->get_schema('multi_index')->sql->as_sql;
 is($multi_index[0], "CREATE TABLE multi_index (
-    key             INTEGER         NOT NULL PRIMARY KEY,
+    c_key           INTEGER         NOT NULL PRIMARY KEY,
     idx1            CHAR(255)      ,
     idx2            CHAR(255)      ,
     idx3            CHAR(255)      
