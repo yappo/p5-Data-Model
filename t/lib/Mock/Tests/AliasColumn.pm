@@ -182,7 +182,7 @@ sub t_04_keytest : Tests(29) {
             { data => 'data1' },
         );
         isa_ok $set, mock_class."::keytest", 'normal';
-        is $set->key, 'prefix_1';
+        is $set->c_key, 'prefix_1';
         is $set->key_noprefix, '1';
         is $set->data, 'data1';
     }
@@ -193,7 +193,7 @@ sub t_04_keytest : Tests(29) {
             { data => 'data2' },
         );
         isa_ok $set, mock_class."::keytest", 'use deflate';
-        is $set->key, 'prefix_2';
+        is $set->c_key, 'prefix_2';
         is $set->key_noprefix, '2';
         is $set->data, 'data2';
     }
@@ -204,13 +204,13 @@ sub t_04_keytest : Tests(29) {
             { data => 'data3' },
         );
         isa_ok $set, mock_class."::keytest", 'use deflate';
-        is $set->key, 'prefix_3';
+        is $set->c_key, 'prefix_3';
         is $set->key_noprefix, '3';
         is $set->data, 'data3';
 
         my($get) = mock->get( keytest => 3 );
         isa_ok $get, mock_class."::keytest", 'get keytest 3';
-        is $get->key, 'prefix_3';
+        is $get->c_key, 'prefix_3';
         is $get->key_noprefix, '3';
         is $get->data, 'data3';
 
@@ -222,7 +222,7 @@ sub t_04_keytest : Tests(29) {
 
         my($get3) = mock->get( keytest => 4 );
         isa_ok $get3, mock_class."::keytest", 'get keytest 3 -> 4';
-        is $get3->key, 'prefix_4';
+        is $get3->c_key, 'prefix_4';
         is $get3->key_noprefix, '4';
         is $get3->data, 'data3';
 
@@ -235,7 +235,7 @@ sub t_04_keytest : Tests(29) {
     {
         my($get) = mock->get( keytest => 2 );
         isa_ok $get, mock_class."::keytest", 'get keytest 2';
-        is $get->key, 'prefix_2';
+        is $get->c_key, 'prefix_2';
         is $get->key_noprefix, '2';
         is $get->data, 'data2';
 

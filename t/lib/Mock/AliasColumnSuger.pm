@@ -112,7 +112,7 @@ inflate_type PREFIX => {
     deflate => sub { 'prefix_' . $_[0] },
 };
 
-column_sugar 'keytest.key'
+column_sugar 'keytest.c_key'
     => char => {
         require => 1,
         size    => 16,
@@ -133,9 +133,9 @@ column_sugar 'keytest.data'
 
 install_model keytest => schema {
     driver $main::DRIVER;
-    key 'key';
+    key 'c_key';
 
-    column 'keytest.key';
+    column 'keytest.c_key';
     column 'keytest.data';
 };
 
