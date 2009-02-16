@@ -13,12 +13,12 @@ install_model tbl => schema {
             auto_increment => 1,
         };
 
-    column int1
+    column c_int1
         => int => {
             default => 10,
         };
 
-    column char1
+    column c_char1
         => char => {
             default => 'foo',
         };
