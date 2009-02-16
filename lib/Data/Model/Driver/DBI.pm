@@ -114,6 +114,7 @@ sub lookup {
     my $rv = $sth->fetch;
     $sth->finish;
     $self->end_query($sth);
+    undef $sth;
     return unless $rv;
     return $rec;
 }
@@ -141,6 +142,7 @@ sub lookup_multi {
 
     $sth->finish;
     $self->end_query($sth);
+    undef $sth;
 
     \%resultlist;
 }
@@ -153,10 +155,12 @@ sub get {
 
     my $i = 0;
     my $iterator = sub {
+        return unless $sth;
         return $rec if $i++ eq 1;
         unless ($sth->fetch) {
             $sth->finish;
             $self->end_query($sth);
+            undef $sth;
             return;
         }
         $rec;
@@ -165,7 +169,7 @@ sub get {
     # pre load
     return unless $iterator->();
     return $iterator, +{
-        end => sub { $sth->finish; $self->end_query($sth) },
+        end => sub { if ($sth) { $sth->finish; $self->end_query($sth); undef $sth; } },
     };
 }
 
@@ -214,6 +218,7 @@ sub _insert_or_replace {
     # set autoincrement key
     $self->_set_auto_increment($schema, $columns, sub { $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth ) });
 
+    undef $sth;
     $columns;
 }
 
@@ -244,7 +249,15 @@ sub _update {
     $sth->finish;
     $self->end_query($sth);
 
-    return $sth->rows;
+    if (wantarray) {
+        my @ret = $sth->rows;
+        undef $sth;
+        return @ret;
+    } else {
+        my $ret = $sth->rows;
+        undef $sth;
+        return $ret;
+    }
 }
 
 sub update {
@@ -291,7 +304,15 @@ sub delete {
     $sth->finish;
     $self->end_query($sth);
 
-    return $sth->rows;
+    if (wantarray) {
+        my @ret = $sth->rows;
+        undef $sth;
+        return @ret;
+    } else {
+        my $ret = $sth->rows;
+        undef $sth;
+        return $ret;
+    }
 }
 
 # for schema
