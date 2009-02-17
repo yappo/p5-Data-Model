@@ -30,5 +30,14 @@ install_model unq2 => schema {
     };
 };
 
-1;
+install_model in_bin => schema {
+    driver $main::DRIVER;
 
+    column name
+        => binary => {
+            size => 64,
+        };
+};
+
+
+1;
