@@ -21,9 +21,12 @@ sub _as_sql_index { '' }
 
 sub _as_sql_column_type {
     my($self, $c, $column, $args) = @_;
-    if (uc($args->{type}) eq 'BINARY') {
-        $args->{type}              = 'CHAR';
-        $args->{options}->{binary} = 1;
+    my $type = uc($args->{type});
+    if ($type eq 'BINARY' || $type eq 'VARBINARY') {
+        $args->{options}->{binary} = 0;
+        my $size = $args->{options}->{size} || 0;
+        $size = 0 unless $size =~ /^\d+$/;
+        return "$type($size)";
     }
     return;
 }

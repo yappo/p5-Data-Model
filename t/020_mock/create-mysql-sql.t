@@ -142,5 +142,5 @@ is($unq2[0], "CREATE TABLE unq2 (
 my @in_bin = $mock->get_schema('in_bin')->sql->as_sql;
 is scalar(@in_bin), 1;
 is($in_bin[0], "CREATE TABLE in_bin (
-    name            CHAR(64)        BINARY
+    name            BINARY(64)     
 )");
