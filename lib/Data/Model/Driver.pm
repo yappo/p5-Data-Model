@@ -15,13 +15,15 @@ sub init {}
 sub attach_model {}
 sub detach_model {}
 
+sub cache_key_prefix { shift->{cache_key_prefix} }
+
 sub cache_key {
     my($self, $schema, $id) = @_;
 
     Carp::confess 'The number of key is wrong'
             unless scalar(@{ $id }) == scalar(@{ $schema->key });
 
-    join ':', $schema->model, ref($id) eq 'ARRAY' ? @$id : $id;
+    join ':', ($self->cache_key_prefix ? $self->cache_prefix : ()), $schema->model, ref($id) eq 'ARRAY' ? @$id : $id;
 }
 
 
