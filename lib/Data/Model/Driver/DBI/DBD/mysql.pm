@@ -26,4 +26,3 @@ sub _as_sql_get_table_attributes {
 }
 
 1;
-
