@@ -19,6 +19,15 @@ sub _as_sql_inner_index {
 
 sub _as_sql_index { '' }
 
+sub _as_sql_column_type {
+    my($self, $c, $column, $args) = @_;
+    if (uc($args->{type}) eq 'BINARY') {
+        $args->{type}              = 'CHAR';
+        $args->{options}->{binary} = 1;
+    }
+    return;
+}
+
 sub _as_sql_get_table_attributes {
     my($self, $c, $attributes) = @_;
     return '' unless $attributes->{mysql};
