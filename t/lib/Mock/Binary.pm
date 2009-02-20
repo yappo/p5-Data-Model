@@ -18,4 +18,14 @@ install_model model => schema {
         };
 };
 
+install_model model_bin_id => schema {
+    driver $main::DRIVER;
+    key 'id';
+
+    column id
+        => binary => {
+            size => 8,
+        };
+};
+
 1;

@@ -28,5 +28,25 @@ sub t_02_get : Tests(4) {
     is bytes::length($get->data), 8, 'length';
 }
 
+sub t_11_set_bin_id : Tests(3) {
+    my $bin = pack 'C*', @list; 
+    my $set = mock->set( model_bin_id => $bin );
+    isa_ok $set, mock_class."::model_bin_id";
+    is $set->id, $bin, 'id';
+
+    use bytes;
+    is bytes::length($set->id), 8, 'length';
+}
+
+sub t_12_get : Tests(3) {
+    my $bin = pack 'C*', @list;
+    my($get) = mock->get( model_bin_id => $bin );
+    isa_ok $get, mock_class."::model_bin_id";
+    is $get->id, $bin, 'id';
+
+    use bytes;
+    is bytes::length($get->id), 8, 'length';
+}
+
 1;
 
