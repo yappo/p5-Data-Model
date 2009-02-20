@@ -75,6 +75,17 @@ sub add_index_to_where {
     }
 }
 
+sub bind_params {
+    my($self, $schema, $columns, $sth) = @_;
+    my $i = 1;
+    for my $column (@{ $columns }) {
+        my($col, $val) = @{ $column };
+        my $type = $schema->column_type($col);
+        my $attr = $self->dbd->bind_param_attributes($type, $columns, $col);
+        $sth->bind_param($i++, $val, $attr);
+    }
+}
+
 sub fetch {
     my($self, $rec, $schema, $key, $columns, %args) = @_;
 
@@ -197,6 +208,9 @@ sub _insert_or_replace {
 
     my $table = $schema->model;
     my $cols = [ keys %{ $columns } ];
+    my @column_list = map {
+        [ $_ => $columns->{$_} ]
+    } @{ $cols };
     my $sql = "$select_or_replace INTO $table\n";
     $sql .= '(' . join(', ', @{ $cols }) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @{ $cols }) . ')' . "\n";
@@ -204,12 +218,7 @@ sub _insert_or_replace {
     my $dbh = $self->rw_handle;
     $self->start_query($sql, $columns);
     my $sth = $dbh->prepare_cached($sql);
-    my $i = 1;
-    while (my($col, $val) = each %{ $columns }) {
-        my $type = $schema->column_type($col);
-        my $attr = $self->dbd->bind_param_attributes($type, $columns, $col);
-        $sth->bind_param($i++, $val, $attr);
-    }
+    $self->bind_params($schema, \@column_list, $sth);
     eval { $sth->execute; };
     die "Failed to execute $sql : $@" if $@;
     $sth->finish;
