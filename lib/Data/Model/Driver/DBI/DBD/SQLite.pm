@@ -10,8 +10,6 @@ sub bind_param_attributes {
     if ($data_type) { 
         if ($data_type =~ /blob/i || $data_type =~ /bin/i) {
             return DBI::SQL_BLOB;
-        } elsif ($data_type eq 'binchar' || $data_type eq 'binary') {
-            return DBI::SQL_BINARY;
         }
     }
     return;
