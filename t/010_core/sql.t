@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Data::Model::SQL;
-use Test::More tests => 103;
+use Test::More tests => 159;
 
 sub ns { Data::Model::SQL->new }
 
@@ -110,86 +110,123 @@ $stmt->limit("  15g");  ## Non-numerics should cause an error
 $stmt = ns(); $stmt->add_where(foo => 'bar');
 is($stmt->as_sql_where, "WHERE (foo = ?)\n");
 is(scalar @{ $stmt->bind }, 1);
+is(scalar @{ $stmt->bind_column }, 1);
 is($stmt->bind->[0], 'bar');
+is($stmt->bind_column->[0], 'foo');
 
 $stmt = ns(); $stmt->add_where(foo => [ 'bar', 'baz' ]);
 is($stmt->as_sql_where, "WHERE (foo IN (?,?))\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
 
 $stmt = ns(); $stmt->add_where(foo => { '!=' => 'bar' });
 is($stmt->as_sql_where, "WHERE (foo != ?)\n");
 is(scalar @{ $stmt->bind }, 1);
+is(scalar @{ $stmt->bind_column }, 1);
 is($stmt->bind->[0], 'bar');
+is($stmt->bind_column->[0], 'foo');
 
 $stmt = ns(); $stmt->add_where(foo => \'IS NOT NULL');
 is($stmt->as_sql_where, "WHERE (foo IS NOT NULL)\n");
 is(scalar @{ $stmt->bind }, 0);
+is(scalar @{ $stmt->bind_column }, 0);
 
 $stmt = ns();
 $stmt->add_where(foo => 'bar');
 $stmt->add_where(baz => 'quux');
 is($stmt->as_sql_where, "WHERE (foo = ?) AND (baz = ?)\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'quux');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'baz');
 
 $stmt = ns();
 $stmt->add_where(foo => [ { '>' => 'bar' },
                           { '<' => 'baz' } ]);
 is($stmt->as_sql_where, "WHERE ((foo > ?) OR (foo < ?))\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => [ -and => { '>' => 'bar' },
                                   { '<' => 'baz' } ]);
 is($stmt->as_sql_where, "WHERE ((foo > ?) AND (foo < ?))\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'bar');
 is($stmt->bind->[1], 'baz');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => [ -and => 'foo', 'bar', 'baz']);
 is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND (foo = ?))\n");
 is(scalar @{ $stmt->bind }, 3);
+is(scalar @{ $stmt->bind_column }, 3);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
+is($stmt->bind_column->[2], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => [ -and => 'foo', 'bar', [ 'baz', 'boo' ] ]);
 is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND (foo IN (?,?)))\n");
 is(scalar @{ $stmt->bind }, 4);
+is(scalar @{ $stmt->bind_column }, 4);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
 is($stmt->bind->[3], 'boo');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
+is($stmt->bind_column->[2], 'foo');
+is($stmt->bind_column->[3], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => { 'IN' => [ 'baz', 'boo' ] });
 is($stmt->as_sql_where, "WHERE (foo IN (?,?))\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'baz');
 is($stmt->bind->[1], 'boo');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => { 'NOT IN' => [ 'baz', 'boo' ] });
 is($stmt->as_sql_where, "WHERE (foo NOT IN (?,?))\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 'baz');
 is($stmt->bind->[1], 'boo');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
 
 $stmt = ns();
 $stmt->add_where(foo => [ -and => 'foo', 'bar', [ -and => 'baz', 'boo' ] ]);
 is($stmt->as_sql_where, "WHERE ((foo = ?) AND (foo = ?) AND ((foo = ?) AND (foo = ?)))\n");
 is(scalar @{ $stmt->bind }, 4);
+is(scalar @{ $stmt->bind_column }, 4);
 is($stmt->bind->[0], 'foo');
 is($stmt->bind->[1], 'bar');
 is($stmt->bind->[2], 'baz');
 is($stmt->bind->[3], 'boo');
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'foo');
+is($stmt->bind_column->[2], 'foo');
+is($stmt->bind_column->[3], 'foo');
 
 ## fulltext search syntax for mysql 
 # MATCH(col1, col2, col3) AGAINST('W.... query' IN BOOLEAN MODE)
@@ -197,6 +234,7 @@ $stmt = ns();
 $stmt->add_where(\"MATCH(col1, col2, col3) AGAINST('W query' IN BOOLEAN MODE)");
 is($stmt->as_sql_where, "WHERE (MATCH(col1, col2, col3) AGAINST('W query' IN BOOLEAN MODE))\n");
 is(scalar @{ $stmt->bind }, 0);
+is(scalar @{ $stmt->bind_column }, 0);
 
 ## regression bug. modified parameters
 my %terms = ( foo => [-and => 'foo', 'bar', 'baz']);
@@ -262,8 +300,11 @@ $stmt->from('table');
 $stmt->add_where( -and => [ foo => 1, bar => 2 ] );
 is($stmt->as_sql, "FROM table\nWHERE ((foo = ?) AND (bar = ?))\n", 'recur and');
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 1);
 is($stmt->bind->[1], 2);
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'bar');
 
 # recur or
 $stmt = ns();
@@ -271,8 +312,11 @@ $stmt->from('table');
 $stmt->add_where( -or => [ foo => 1, bar => 2 ] );
 is($stmt->as_sql, "FROM table\nWHERE ((foo = ?) OR (bar = ?))\n", 'recur or');
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 1);
 is($stmt->bind->[1], 2);
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'bar');
 
 # recur and ( or and )
 $stmt = ns();
@@ -285,10 +329,15 @@ $stmt->add_where(
 );
 is($stmt->as_sql, "FROM table\nWHERE (((foo = ?) OR (bar = ?)) AND ((baz = ?) AND (lopnor = ?)))\n", 'recur and ( or and )');
 is(scalar @{ $stmt->bind }, 4);
+is(scalar @{ $stmt->bind_column }, 4);
 is($stmt->bind->[0], 1);
 is($stmt->bind->[1], 2);
 is($stmt->bind->[2], 3);
 is($stmt->bind->[3], 4);
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'bar');
+is($stmt->bind_column->[2], 'baz');
+is($stmt->bind_column->[3], 'lopnor');
 
 # add_where_sql
 $stmt = ns();
@@ -296,15 +345,22 @@ $stmt->from('table');
 $stmt->add_where_sql('%s = ? AND %s = ?', foo => '1', bar => '2');
 is($stmt->as_sql, "FROM table\nWHERE (foo = ? AND bar = ?)\n");
 is(scalar @{ $stmt->bind }, 2);
+is(scalar @{ $stmt->bind_column }, 2);
 is($stmt->bind->[0], 1);
 is($stmt->bind->[1], 2);
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'bar');
 
 $stmt = ns();
 $stmt->from('table');
 $stmt->add_where_sql('(%s = ? AND %s = ?) OR (baz = ?)', foo => '1', bar => '2', baz => 3);
 is($stmt->as_sql, "FROM table\nWHERE ((foo = ? AND bar = ?) OR (baz = ?))\n");
 is(scalar @{ $stmt->bind }, 3);
+is(scalar @{ $stmt->bind_column }, 3);
 is($stmt->bind->[0], 1);
 is($stmt->bind->[1], 2);
 is($stmt->bind->[2], 3);
+is($stmt->bind_column->[0], 'foo');
+is($stmt->bind_column->[1], 'bar');
+is($stmt->bind_column->[2], 'baz');
 

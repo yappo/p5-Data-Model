@@ -135,7 +135,8 @@ sub column_names {
 
 sub column_type {
     my($self, $column) = @_;
-    $self->{column}->{$column}->{type} || 'char';
+    return 'char' unless $column && $self->{column}->{$column} && $self->{column}->{$column}->{type};
+    $self->{column}->{$column}->{type};
 }
 sub column_options {
     my($self, $column) = @_;

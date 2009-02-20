@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
-__PACKAGE__->mk_accessors(qw/ select where having bind limit offset select_map select_map_reverse column_mutator where_values /);
+__PACKAGE__->mk_accessors(qw/ select where having bind bind_column limit offset select_map select_map_reverse column_mutator where_values /);
 
 
 for my $name (qw/ from joins /) {
@@ -27,7 +27,7 @@ for my $name (qw/ group order /) {
 sub new {
     my($class, %args) = @_;
     my $self = bless { %args }, $class;
-    for my $name (qw/ select from joins bind group order where /) {
+    for my $name (qw/ select from joins bind bind_column group order where /) {
         unless ($self->$name && ref $self->$name eq 'ARRAY') {
             $self->$name ? $self->$name([ $self->$name ]) : $self->$name([]);;
         }
@@ -124,29 +124,32 @@ sub _add_where {
     my($self, $col, $val) = @_;
     if (lc($col) eq '-and' || lc($col) eq '-or') {
         my $op = lc($col) eq '-and' ? 'AND' : 'OR';
-        my(@terms, @binds, @tcols);
+        my(@terms, @binds, @bind_columns, @tcols);
         while (my($ccol, $cval) = splice @{ $val }, 0, 2) {
-            my($term, $bind, $tcol) = $self->_add_where( $ccol => $cval );
+            my($term, $bind, $bind_column, $tcol) = $self->_add_where( $ccol => $cval );
             push @terms, "($term)";
             push @binds, @{ $bind };
+            push @bind_columns, @{ $bind_column };
             push @tcols, @{ $tcol };
         }
         my $term = join " $op ", @terms;
-        return $term, \@binds, \@tcols;
+        return $term, \@binds, \@bind_columns, \@tcols;
     } else {
         ## xxx Need to support old range and transform behaviors.
         Carp::croak("Invalid/unsafe column name $col") unless $col =~ /^[\w\.]+$/ || ref($col) eq 'SCALAR';
         my($term, $bind, $tcol) = $self->_mk_term($col, $val);
-        return $term, $bind, [ $tcol => $val ];
+        my @bind_column = (($tcol) x scalar(@$bind));
+        return $term, $bind, \@bind_column, [ $tcol => $val ];
     }
 }
 
 sub add_where {
     my $self = shift;
-    my($term, $binds, $tcols) = $self->_add_where(@_);
+    my($term, $binds, $bind_columns, $tcols) = $self->_add_where(@_);
 
     push @{ $self->{where} }, "($term)";
     push @{ $self->{bind} }, @{ $binds };
+    push @{ $self->{bind_column} }, @{ $bind_columns };
     my @tcols = @{ $tcols };
     while (my($tcol, $tval) = splice @tcols, 0, 2) {
         $self->where_values->{$tcol} = $tval if defined $tcol;
@@ -164,6 +167,7 @@ sub add_where_sql {
     }
 
     push @{ $self->{where} }, sprintf("($term)", @columns);
+    push @{ $self->{bind_column} }, @columns;
     push @{ $self->{bind} }, @values;
 }
 
@@ -175,8 +179,9 @@ sub add_having {
         $col = $orig;
     }
 
-    my($term, $bind) = $stmt->_mk_term($col, $val);
+    my($term, $bind, $tcol) = $stmt->_mk_term($col, $val);
     push @{ $stmt->{having} }, "($term)";
+    push @{ $stmt->{bind_column} }, (($tcol) x scalar(@$bind));
     push @{ $stmt->{bind} }, @$bind;
 }
 

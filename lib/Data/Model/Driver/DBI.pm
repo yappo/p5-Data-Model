@@ -82,7 +82,7 @@ sub bind_params {
         my($col, $val) = @{ $column };
         my $type = $schema->column_type($col);
         my $attr = $self->dbd->bind_param_attributes($type, $columns, $col);
-        $sth->bind_param($i++, $val, $attr);
+        $sth->bind_param($i++, $val, $attr || undef);
     }
 }
 
@@ -101,6 +101,12 @@ sub fetch {
     $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
     my $sql = $stmt->as_sql;
 
+    # bind_params
+    my @params;
+    for my $i (1..scalar(@{ $stmt->bind })) {
+        push @params, [ $stmt->bind_column->[$i - 1], $stmt->bind->[$i - 1] ];
+    }
+
     my @bind;
     my $map = $stmt->select_map;
     for my $col (@{ $stmt->select }) {
@@ -110,7 +116,8 @@ sub fetch {
     my $dbh = $self->r_handle;
     $self->start_query($sql, $stmt->bind);
     my $sth = $args{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
-    $sth->execute(@{ $stmt->bind });
+    $self->bind_params($schema, \@params, $sth);
+    $sth->execute;
     $sth->bind_columns(undef, @bind);
 
     $sth;
@@ -233,9 +240,10 @@ sub _insert_or_replace {
 
 # update
 sub _update {
-    my($self, $schema, $changed_columns, $columns, $where_sql, $pre_bind) = @_;
+    my($self, $schema, $changed_columns, $columns, $where_sql, $pre_bind, $pre_bind_column) = @_;
 
     my @bind;
+    my @bind_column;
     my @set;
     for my $column (keys %{ $changed_columns }) {
         my $val = $columns->{$column};
@@ -244,17 +252,26 @@ sub _update {
         } elsif (!ref($val)) {
             push @set, "$column = ?";
             push @bind, $val;
+            push @bind_column, $column;
         } else {
             Carp::confess 'No references other than a SCALAR reference can use a update column';
         }
     }
     push @bind, @{ $pre_bind };
+    push @bind_column, @{ $pre_bind_column };
+
+    # bind_params
+    my @params;
+    for my $i (1..scalar(@bind)) {
+        push @params, [ $bind_column[$i - 1], $bind[$i - 1] ];
+    }
 
     my $sql = 'UPDATE ' . $schema->model . ' SET ' . join(', ', @set) . ' ' . $where_sql;
     my $dbh = $self->rw_handle;
     $self->start_query($sql, \@bind);
     my $sth = $dbh->prepare_cached($sql);
-    $sth->execute(@bind);
+    $self->bind_params($schema, \@params, $sth);
+    $sth->execute;
     $sth->finish;
     $self->end_query($sth);
 
@@ -278,7 +295,7 @@ sub update {
     my $where_sql = $stmt->as_sql_where;
     return unless $where_sql;
 
-    return $self->_update($schema, $changed_columns, $columns, $where_sql, $stmt->bind);
+    return $self->_update($schema, $changed_columns, $columns, $where_sql, $stmt->bind, $stmt->bind_column);
 }
 
 sub update_direct {
@@ -292,7 +309,7 @@ sub update_direct {
     my $where_sql = $stmt->as_sql_where;
     return unless $where_sql;
 
-    return $self->_update($schema, $columns, $columns, $where_sql, $stmt->bind);
+    return $self->_update($schema, $columns, $columns, $where_sql, $stmt->bind, $stmt->bind_column);
 }
 
 # delete
@@ -305,11 +322,18 @@ sub delete {
     $self->add_key_to_where($stmt, $schema->key, $key) if $key;
     $self->add_index_to_where($schema, $stmt, $index_query) if $index_query;
 
+    # bind_params
+    my @params;
+    for my $i (1..scalar(@{ $stmt->bind })) {
+        push @params, [ $stmt->bind_column->[$i - 1], $stmt->bind->[$i - 1] ];
+    }
+
     my $sql = "DELETE " . $stmt->as_sql;
     my $dbh = $self->rw_handle;
     $self->start_query($sql, $stmt->bind);
     my $sth = $dbh->prepare_cached($sql);
-    $sth->execute(@{ $stmt->bind });
+    $self->bind_params($schema, \@params, $sth);
+    $sth->execute;
     $sth->finish;
     $self->end_query($sth);
 

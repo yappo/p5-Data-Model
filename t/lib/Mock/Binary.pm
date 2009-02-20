@@ -26,6 +26,7 @@ install_model model_bin_id => schema {
         => binary => {
             size => 8,
         };
+    column 'name';
 };
 
 1;

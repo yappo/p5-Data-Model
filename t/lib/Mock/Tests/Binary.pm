@@ -28,24 +28,45 @@ sub t_02_get : Tests(4) {
     is bytes::length($get->data), 8, 'length';
 }
 
-sub t_11_set_bin_id : Tests(3) {
+sub t_11_set_bin_id : Tests(4) {
     my $bin = pack 'C*', @list; 
-    my $set = mock->set( model_bin_id => $bin );
+    my $set = mock->set( model_bin_id => $bin, { name => 'NAME' } );
     isa_ok $set, mock_class."::model_bin_id";
     is $set->id, $bin, 'id';
+    is $set->name, 'NAME', 'name';
 
     use bytes;
     is bytes::length($set->id), 8, 'length';
 }
 
-sub t_12_get : Tests(3) {
+sub t_12_get_bin_id : Tests(4) {
     my $bin = pack 'C*', @list;
     my($get) = mock->get( model_bin_id => $bin );
     isa_ok $get, mock_class."::model_bin_id";
     is $get->id, $bin, 'id';
+    is $get->name, 'NAME', 'name';
 
     use bytes;
     is bytes::length($get->id), 8, 'length';
+}
+
+sub t_13_update_bin_id : Tests(5) {
+    my $bin = pack 'C*', @list;
+    ok(mock->update( model_bin_id => $bin, undef, { name => 'namae' } ), 'update ok');
+
+    my($get) = mock->get( model_bin_id => $bin );
+    isa_ok $get, mock_class."::model_bin_id";
+    is $get->id, $bin, 'id';
+    is $get->name, 'namae', 'name';
+
+    use bytes;
+    is bytes::length($get->id), 8, 'length';
+}
+
+sub t_14_delete_bin_id : Tests(3) {
+    my $bin = pack 'C*', @list;
+    ok(mock->delete( model_bin_id => $bin ), 'delete ok');
+    ok(!mock->get( model_bin_id => $bin ), 'delete ok');
 }
 
 1;
