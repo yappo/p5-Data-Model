@@ -230,6 +230,7 @@ sub get {
     return unless $schema;
 
     my $query = $self->_get_query_args($schema, @_);
+    return if @_ && !@{ $query }; # undef key
     local $schema->{schema_obj} = $self;
     my($iterator, $iterator_options) = $schema->{driver}->get( $schema, @{ $query } );
     return unless $iterator;
@@ -410,7 +411,7 @@ sub update_direct {
     return unless $schema;
 
     my $query = $self->_get_query_args($schema, @_);
-    return unless $query;
+    return unless @{ $query };
 
     $schema->deflate($query->[2]);
     $schema->call_trigger('pre_save', $query->[2]);
@@ -450,7 +451,7 @@ sub delete_direct {
     return unless $schema;
 
     my $query = $self->_get_query_args($schema, @_);
-    return unless $query;
+    return unless @{ $query };
 
     local $schema->{schema_obj} = $self;
     $schema->{driver}->delete( $schema, @{ $query } );

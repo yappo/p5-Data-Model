@@ -40,5 +40,13 @@ sub t_01_set_values : Tests(10) {
     is $get->code1, 'code', 'code';
 }
 
+sub t_03_get_undef : Tests(2) {
+    my $all = mock->get('tbl');
+    ok($all, 'get all');
+
+    my $undef = mock->get( tbl => undef );
+    ok(!$undef, 'get undef is empty');
+}
+
 1;
 
