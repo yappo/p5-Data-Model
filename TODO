@@ -19,6 +19,8 @@ TODO
 
   Paranoia ( by DataMapper )
 
+  Drizzle
+
 =head1 FIXED
 
   Data::Model::Driver
