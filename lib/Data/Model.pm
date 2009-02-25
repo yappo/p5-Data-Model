@@ -128,6 +128,9 @@ sub _get_query_args {
         shift;
     }
 
+    # if first key is undef then nothing keys
+    $key_array = [] if $key_array && ref($key_array) && !defined $key_array->[0];
+
     # deflate search key
     if ($schema->has_deflate) {
         if ($key_array) {
@@ -146,6 +149,8 @@ sub _get_query_args {
         }
     }
 
+    return [] if ($key_array && !@{ $key_array });
+    return [] unless $key_array || $query;
     return [ $key_array, $query, @_ ];
 }
 

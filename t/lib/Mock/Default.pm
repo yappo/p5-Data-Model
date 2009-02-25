@@ -30,5 +30,16 @@ install_model tbl => schema {
 
 };
 
+install_model tbl8 => schema {
+    driver $main::DRIVER;
+    key 'id';
+
+    column id
+        => int => {
+            auto_increment => 1,
+        };
+    utf8_columns 'u8';
+};
+
 1;
 
