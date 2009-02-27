@@ -141,16 +141,23 @@ sub lookup_multi {
     my($self, $schema, $ids, %args) = @_;
 
     my @keys = @{ $schema->key };
-    my @queries;
-    for my $id (@{ $ids }) {
-        my %query;
-        @query{@keys} = @{ $id };
-        push @queries, '-and' => [ %query ];
+    my $query = {};
+    if (@keys == 1) {
+        my @id_list = map { $_->[0] } @{ $ids };
+        $query = { where => [ $keys[0] => \@id_list ] };
+    } else {
+        my @queries;
+        for my $id (@{ $ids }) {
+            my %query;
+            @query{@keys} = @{ $id };
+            push @queries, '-and' => [ %query ];
+        }
+        $query = { where => [ -or => \@queries ] };
     }
 
     my $rec = +{};
     local $args{no_cached_prepare} = 1;
-    my $sth = $self->fetch($rec, $schema, undef, { where => [ -or => \@queries ] }, %args);
+    my $sth = $self->fetch($rec, $schema, undef, $query, %args);
 
     my %resultlist;
     while ($sth->fetch) {
