@@ -61,6 +61,7 @@ sub install_model ($$;%) {
         has_deflate             => 0,
         alias_column            => {},
         aluas_column_revers_map => {},
+        _build_tmp              => {},
     );
 
     $caller->__properties->{__process_tmp}->{name} = $name;

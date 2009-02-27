@@ -55,6 +55,9 @@ sub add_column {
     Carp::croak "Column can't be called '$column': reserved name" 
             if grep { lc $_ eq lc $column } @RESERVED;
 
+    $self->{utf8_columns}->{$column} = 1
+        if delete $self->{_build_tmp}->{utf8_column}->{$column};
+
     push @{ $self->{columns} }, $column;
     $self->{column}->{$column} = +{
         type    => $type    || 'char',
@@ -63,12 +66,10 @@ sub add_column {
 }
 sub add_utf8_column {
     my $self = shift;
-    my($name) = @_;
+    my($column) = @_;
 
-    my($suger_model, $suger_name) = split '\.', $name;
-    $name = $suger_name if $suger_name;
-
-    $self->{utf8_columns}->{$name} = 1;
+    $self->{_build_tmp}->{utf8_column} ||= {};
+    $self->{_build_tmp}->{utf8_column}->{$column} = 1;
     $self->add_column(@_);
 }
 
@@ -114,6 +115,10 @@ sub add_column_sugar {
             $self->add_alias_column($column, $rename_map->{$alias_name} || $alias_name, $args);
         }
     }
+
+    $self->{utf8_columns}->{$column} = 1
+        if delete $self->{_build_tmp}->{utf8_column}->{$name};
+
     $self->add_column($column, $clone{type}, $clone{options});
 }
 
