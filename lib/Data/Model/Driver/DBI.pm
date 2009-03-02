@@ -234,9 +234,12 @@ sub _insert_or_replace {
     my $sth = $dbh->prepare_cached($sql);
     $self->bind_params($schema, \@column_list, $sth);
     eval { $sth->execute; };
-    die "Failed to execute $sql : $@" if $@;
     $sth->finish;
     $self->end_query($sth);
+    if ($@) {
+        undef $sth;
+        die "Failed to execute $sql : $@";
+    }
 
     # set autoincrement key
     $self->_set_auto_increment($schema, $columns, sub { $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth ) });
