@@ -9,28 +9,36 @@ use DBI;
 use Data::Model::SQL;
 use Data::Model::Driver::DBI::DBD;
 
-sub dsn { shift->{dsn} }
-sub dbh { shift->{dbh} }
-sub dbd { shift->{dbd} }
-sub username { shift->{username} }
-sub password { shift->{password} }
-sub connect_options { shift->{connect_options} }
+sub dbd { $_[0]->{dbd} }
+
+sub dbi_config {
+    my($self, $name) = @_;
+    $self->{dbi_config}->{$name}
+        or Carp::croak "has not dbi_config name '$name'";
+}
 
 sub init {
     my $self = shift;
     if (my($type) = $self->{dsn} =~ /^dbi:(\w*)/i) {
         $self->{dbd} = Data::Model::Driver::DBI::DBD->new($type);
     }
-    $self->{dsn} = +{
-        rw => $self->{dsn},
+    $self->{dbi_config} = +{
+        rw => +{
+            dsn             => delete $self->{dsn},
+            username        => delete $self->{username},
+            password        => delete $self->{password},
+            connect_options => delete $self->{connect_options},
+            dbh             => undef,
+        },
     };
 }
 
 sub init_db {
     my($self, $name) = @_;
+    my $dbi_config = $self->dbi_config($name);
     my $dbh = DBI->connect(
-        $self->dsn->{$name}, $self->username, $self->password,
-        { RaiseError => 1, PrintError => 0, AutoCommit => 1, %{ $self->connect_options || {} } },
+        $dbi_config->{dsn}, $dbi_config->{username}, $dbi_config->{password},
+        { RaiseError => 1, PrintError => 0, AutoCommit => 1, %{ $dbi_config->{connect_options} || {} } },
     ) or Carp::croak("Connection error: " . $DBI::errstr);
     $self->{__dbh_init_by_driver} = 1;
     $dbh;
@@ -38,15 +46,16 @@ sub init_db {
 
 sub rw_handle {
     my $self = shift;
-    $self->{dbh} = undef if $self->{dbh} and !$self->{dbh}->ping;
-    unless ($self->{dbh}) {
+    my $dbi_config = $self->dbi_config('rw');
+    $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
+    unless ($dbi_config->{dbh}) {
         if (my $getter = $self->{get_dbh}) {
-            $self->{dbh} = $getter->();
+            $dbi_config->{dbh} = $getter->();
         } else {
-            $self->{dbh} = $self->init_db('rw') or die $self->last_error;
+            $dbi_config->{dbh} = $self->init_db('rw') or die $self->last_error;
         }
     }
-    $self->{dbh};
+    $dbi_config->{dbh};
 }
 sub r_handle { shift->rw_handle(@_) }
 
