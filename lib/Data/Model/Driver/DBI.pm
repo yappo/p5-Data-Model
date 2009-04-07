@@ -44,20 +44,23 @@ sub init_db {
     $dbh;
 }
 
-sub rw_handle {
+sub _get_dbh {
     my $self = shift;
-    my $dbi_config = $self->dbi_config('rw');
+    my $name = shift || 'rw';
+    my $dbi_config = $self->dbi_config($name);
     $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
     unless ($dbi_config->{dbh}) {
         if (my $getter = $self->{get_dbh}) {
             $dbi_config->{dbh} = $getter->();
         } else {
-            $dbi_config->{dbh} = $self->init_db('rw') or die $self->last_error;
+            $dbi_config->{dbh} = $self->init_db($name) or die $self->last_error;
         }
     }
     $dbi_config->{dbh};
 }
-sub r_handle { shift->rw_handle(@_) }
+
+sub rw_handle { $_[0]->_get_dbh('rw') };
+sub r_handle  { shift->rw_handle(@_) }
 
 sub last_error {}
 
