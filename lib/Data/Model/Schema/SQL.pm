@@ -122,8 +122,9 @@ sub as_foreign {
 
 sub as_table_attributes {
     my $self = shift;
-    return '' unless ref($self->{schema}->options->{create_sql_attributes}) eq 'HASH';
-    my($ret) = $self->call_method( 'get_table_attributes', $self->{schema}->options->{create_sql_attributes} );
+    my $hash = $self->{schema}->options->{create_sql_attributes};
+    $hash = +{} unless ref($hash) eq 'HASH';
+    my($ret) = $self->call_method( 'get_table_attributes', $hash );
     $ret ? " $ret" : '';
 }
 sub get_table_attributes {}
