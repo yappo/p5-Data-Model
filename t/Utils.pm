@@ -16,7 +16,7 @@ sub import {
     strict->import;
     warnings->import;
 
-    for my $name (qw/ temp_filename run setup_schema /) {
+    for my $name (qw/ temp_filename run setup_schema teardown_schema /) {
         no strict 'refs';
         *{"$caller\::$name"} = \&{$name};
     }
@@ -180,6 +180,16 @@ sub setup_schema {
                            '', '', { RaiseError => 1, PrintError => 0 });
     for my $sql (@sqls) {
         $dbh->do( $sql );
+    }
+    $dbh->disconnect;
+}
+
+sub teardown_schema {
+    my($dsn, @tables) = @_;
+    my $dbh = DBI->connect($dsn,
+                           '', '', { RaiseError => 1, PrintError => 0 });
+    for my $table (@tables) {
+        eval { $dbh->do( "DROP TABLE IF EXISTS $table" ) };
     }
     $dbh->disconnect;
 }
