@@ -20,7 +20,8 @@ my $driver = Data::Model::Driver::Queue::Q4M->new(
 
 {
     package MyQueue;
-    use base 'Data::Model::Extend::Queue::Q4M';
+    use base 'Data::Model';
+    use Data::Model::Mixin modules => ['Queue::Q4M'];
     use Data::Model::Schema;
 
     base_driver $driver;
