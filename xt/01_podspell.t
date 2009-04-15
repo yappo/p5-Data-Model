@@ -8,3 +8,5 @@ __DATA__
 Kazuhiro Osawa
 yappo <at> shibuya <döt> pl
 Data::Model
+mixin
+

@@ -14,7 +14,7 @@ sub import {
         my $pkg = $module;
         $pkg = __PACKAGE__ . "::$pkg" unless $pkg =~ s/^\+//;
 
-        eval "use $pkg";
+        eval "use $pkg"; ## no critic
         if ($@) {
             Carp::croak $@;
         }
