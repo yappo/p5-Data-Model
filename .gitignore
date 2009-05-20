@@ -7,3 +7,6 @@ inc
 pm_to_blib
 MANIFEST
 Makefile.old
+old/
+*.swp
+test.*
