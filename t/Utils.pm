@@ -176,7 +176,7 @@ sub temp_filename {
 
 sub setup_schema {
     my($dsn, @sqls) = @_;
-    my $dbh = DBI->connect($dsn,
+    my $dbh = ref($dsn) eq 'DBI::db' ? $dsn : DBI->connect($dsn,
                            '', '', { RaiseError => 1, PrintError => 0 });
     for my $sql (@sqls) {
         $dbh->do( $sql );
@@ -186,7 +186,7 @@ sub setup_schema {
 
 sub teardown_schema {
     my($dsn, @tables) = @_;
-    my $dbh = DBI->connect($dsn,
+    my $dbh = ref($dsn) eq 'DBI::db' ? $dsn : DBI->connect($dsn,
                            '', '', { RaiseError => 1, PrintError => 0 });
     for my $table (@tables) {
         eval { $dbh->do( "DROP TABLE IF EXISTS $table" ) };
