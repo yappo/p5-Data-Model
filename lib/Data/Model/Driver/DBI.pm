@@ -125,13 +125,18 @@ sub fetch {
         push @bind, \$rec->{ exists $map->{$col} ? $map->{$col} : $col };
     }
 
-    my $dbh = $self->r_handle;
-    $self->start_query($sql, $stmt->bind);
-    my $sth = $args{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
-    $self->bind_params($schema, \@params, $sth);
-    $sth->execute;
-    $sth->bind_columns(undef, @bind);
-
+    my $sth;
+    eval {
+        my $dbh = $self->r_handle;
+        $self->start_query($sql, $stmt->bind);
+        $sth = $args{no_cached_prepare} ? $dbh->prepare($sql) : $dbh->prepare_cached($sql);
+        $self->bind_params($schema, \@params, $sth);
+        $sth->execute;
+        $sth->bind_columns(undef, @bind);
+    };
+    if ($@) {
+        $self->_stack_trace($sth, $sql, $stmt->bind, $@);
+    }
     $sth;
 }
 
@@ -241,20 +246,22 @@ sub _insert_or_replace {
     $sql .= '(' . join(', ', @{ $cols }) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @{ $cols }) . ')' . "\n";
 
-    my $dbh = $self->rw_handle;
-    $self->start_query($sql, $columns);
-    my $sth = $dbh->prepare_cached($sql);
-    $self->bind_params($schema, \@column_list, $sth);
-    eval { $sth->execute; };
-    $sth->finish;
-    $self->end_query($sth);
-    if ($@) {
-        undef $sth;
-        die "Failed to execute $sql : $@";
-    }
+    my $sth;
+    eval {
+        my $dbh = $self->rw_handle;
+        $self->start_query($sql, $columns);
+        $sth = $dbh->prepare_cached($sql);
+        $self->bind_params($schema, \@column_list, $sth);
+        $sth->execute;
+        $sth->finish;
+        $self->end_query($sth);
 
-    # set autoincrement key
-    $self->_set_auto_increment($schema, $columns, sub { $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth ) });
+        # set autoincrement key
+        $self->_set_auto_increment($schema, $columns, sub { $self->dbd->fetch_last_id( $schema, $columns, $dbh, $sth ) });
+    };
+    if ($@) {
+        $self->_stack_trace($sth, $sql, \@column_list, $@);
+    }
 
     undef $sth;
     $columns;
@@ -289,13 +296,19 @@ sub _update {
     }
 
     my $sql = 'UPDATE ' . $schema->model . ' SET ' . join(', ', @set) . ' ' . $where_sql;
-    my $dbh = $self->rw_handle;
-    $self->start_query($sql, \@bind);
-    my $sth = $dbh->prepare_cached($sql);
-    $self->bind_params($schema, \@params, $sth);
-    $sth->execute;
-    $sth->finish;
-    $self->end_query($sth);
+    my $sth;
+    eval {
+        my $dbh = $self->rw_handle;
+        $self->start_query($sql, \@bind);
+        $sth = $dbh->prepare_cached($sql);
+        $self->bind_params($schema, \@params, $sth);
+        $sth->execute;
+        $sth->finish;
+        $self->end_query($sth);
+    };
+    if ($@) {
+        $self->_stack_trace($sth, $sql, \@params, $@);
+    }
 
     if (wantarray) {
         my @ret = $sth->rows;
@@ -351,13 +364,19 @@ sub delete {
     }
 
     my $sql = "DELETE " . $stmt->as_sql;
-    my $dbh = $self->rw_handle;
-    $self->start_query($sql, $stmt->bind);
-    my $sth = $dbh->prepare_cached($sql);
-    $self->bind_params($schema, \@params, $sth);
-    $sth->execute;
-    $sth->finish;
-    $self->end_query($sth);
+    my $sth;
+    eval {
+        my $dbh = $self->rw_handle;
+        $self->start_query($sql, $stmt->bind);
+        $sth = $dbh->prepare_cached($sql);
+        $self->bind_params($schema, \@params, $sth);
+        $sth->execute;
+        $sth->finish;
+        $self->end_query($sth);
+    };
+    if ($@) {
+        $self->_stack_trace($sth, $sql, $stmt->bind, $@);
+    }
 
     if (wantarray) {
         my @ret = $sth->rows;
@@ -376,6 +395,28 @@ sub _as_sql_hook {
     $self->dbd->_as_sql_hook(@_);
 }
 
+# stack trace
+sub _stack_trace {
+    my($self, $sth, $sql, $binds, $reason) = @_;
+    require Data::Dumper;
+
+    if ($sth) {
+        # finalize sth handle
+        $sth->finish;
+        $self->end_query($sth);
+    }
+
+    $sql =~ s/\n/\n          /gm;
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    Carp::croak sprintf <<"TRACE", $reason, $sql, Data::Dumper::Dumper($binds);
+    **** { Data::Model::Driver::DBI 's Exception ****
+Reasone : %s
+SQL     : %s
+    **** BINDS DUMP ****
+%s
+    **** Data::Model::Driver::DBI 's Exception } ****
+TRACE
+}
 
 # profile
 sub start_query {}
