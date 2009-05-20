@@ -29,6 +29,10 @@ sub new_obj {
     $self->{class}->new(@_);
 }
 
+sub has_index {
+    $_[0]->{unique}->{$_[1]} || $_[0]->{index}->{$_[1]}
+}
+
 sub add_keys {
     my($self, $key, %args) = @_;
     $self->{key} = ref($key) eq 'ARRAY' ? $key : [ $key ];

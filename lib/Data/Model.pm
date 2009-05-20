@@ -146,6 +146,13 @@ sub _get_query_args {
                 index => {
                     type     => HASHREF | UNDEF,
                     optional => 1,
+                    callbacks => {
+                        has_index_name => sub {
+                            return 1 unless $_[0];
+                            my($name) = %{ $_[0] };
+                            $schema->has_index($name);
+                        },
+                    },
                 },
                 where => {
                     type     => HASHREF | ARRAYREF | UNDEF,
