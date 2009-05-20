@@ -5,6 +5,7 @@ all_from 'lib/Data/Model.pm';
 # requires '';
 requires 'Carp';
 requires 'Class::Trigger';
+requires 'Params::Validate';
 requires 'Storable';
 # DBI
 
@@ -12,6 +13,7 @@ tests 't/*.t t/*/*.t';
 author_tests 'xt';
 
 build_requires 'Test::Class';
+build_requires 'Test::Exception';
 build_requires 'Test::More';
 build_requires 'Path::Class';
 
