@@ -207,12 +207,12 @@ sub t_08_multi_column_index : Tests {
 
 sub t_09_duped_primary_key : Tests {
     eval { mock->set( multi_keys => [qw/ a001 b001 c001 /] ) };
-    ok $@;
+    like $@, qr/(?:columns key1, key2, key3 are not unique|not unique columns|Duplicate entry 'a001-b001-c001' for key 'PRIMARY')/;
 }
 
 sub t_09_duped_unique : Tests {
     eval { mock->set( multi_unique => { unq1 => 'a001', unq2 => 'b001', unq3 => 'c001' } ) };
-    ok $@;
+    like $@, qr/(?:columns unq1, unq2, unq3|not unique columns|Duplicate entry 'a001-b001-c001' for key 'unq')/;
 }
 
 1;
