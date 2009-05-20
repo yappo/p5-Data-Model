@@ -137,32 +137,9 @@ sub _get_query_args {
         shift;
     }
 
-    # if first key is undef then nothing keys
-    $key_array = [] if $key_array && ref($key_array) && !defined $key_array->[0];
 
-    # deflate search key
-    if ($schema->has_deflate) {
-        if ($key_array) {
-            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
-            $schema->deflate($columns);
-            $key_array = $schema->get_key_array_by_hash( $columns );
-        }
-
-        # deflate search index
-        if ($query && ref($query->{index}) eq 'HASH') {
-            my($name, $key_array) = ( %{ $query->{index} } );
-            $key_array = [ $key_array ] unless ref($key_array) eq 'ARRAY';
-            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array, $name);
-            $schema->deflate($columns);
-            $query->{index} = { $name => $schema->get_key_array_by_hash($columns, $name) };
-        }
-    }
-
-    return [] if ($key_array && !@{ $key_array });
-    return [] unless $key_array || $query;
-
+    # for query param validation
     if ($RUN_VALIDATION && $query) {
-        # for query param validation
         my @p = %{ $query };
         validate(
             @p, {
@@ -195,6 +172,29 @@ sub _get_query_args {
     }
 
 
+    # if first key is undef then nothing keys
+    $key_array = [] if $key_array && ref($key_array) && !defined $key_array->[0];
+
+    # deflate search key
+    if ($schema->has_deflate) {
+        if ($key_array) {
+            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array);
+            $schema->deflate($columns);
+            $key_array = $schema->get_key_array_by_hash( $columns );
+        }
+
+        # deflate search index
+        if ($query && ref($query->{index}) eq 'HASH') {
+            my($name, $key_array) = ( %{ $query->{index} } );
+            $key_array = [ $key_array ] unless ref($key_array) eq 'ARRAY';
+            my $columns = $schema->get_columns_hash_by_key_array_and_hash(+{}, $key_array, $name);
+            $schema->deflate($columns);
+            $query->{index} = { $name => $schema->get_key_array_by_hash($columns, $name) };
+        }
+    }
+
+    return [] if ($key_array && !@{ $key_array });
+    return [] unless $key_array || $query;
     return [ $key_array, $query, @_ ];
 }
 
