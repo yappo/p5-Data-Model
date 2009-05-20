@@ -167,23 +167,27 @@ sub _get_query_args {
         validate(
             @p, {
                 index => {
-                    type     => HASHREF,
+                    type     => HASHREF | UNDEF,
                     optional => 1,
                 },
                 where => {
-                    type     => ARRAYREF,
+                    type     => HASHREF | ARRAYREF | UNDEF,
                     optional => 1,
                 },
                 order => {
-                    type     => ARRAYREF,
+                    type     => HASHREF | ARRAYREF | UNDEF,
+                    optional => 1,
+                },
+                group => {
+                    type     => HASHREF | ARRAYREF | UNDEF,
                     optional => 1,
                 },
                 limit => {
-                    type     => SCALAR,
+                    type     => SCALAR | UNDEF,
                     optional => 1,
                 },
                 offset => {
-                    type     => SCALAR,
+                    type     => SCALAR | UNDEF,
                     optional => 1,
                 },
             },
