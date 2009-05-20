@@ -8,6 +8,15 @@ use Carp ();
 
 use Data::Model::Iterator;
 
+our $RUN_VALIDATION;
+if (exists $ENV{DATA_MODE_RUN_VALIDATION}) {
+    $RUN_VALIDATION = $ENV{DATA_MODE_RUN_VALIDATION} ? 1 : 0;
+} else {
+    $RUN_VALIDATION = $ENV{HARNESS_ACTIVE} ? 1 : 0;
+}
+use Params::Validate ':all';
+
+
 ## for schema methods
 sub driver  {};
 sub model   {};
@@ -151,6 +160,37 @@ sub _get_query_args {
 
     return [] if ($key_array && !@{ $key_array });
     return [] unless $key_array || $query;
+
+    if ($RUN_VALIDATION && $query) {
+        # for query param validation
+        my @p = %{ $query };
+        validate(
+            @p, {
+                index => {
+                    type     => HASHREF,
+                    optional => 1,
+                },
+                where => {
+                    type     => ARRAYREF,
+                    optional => 1,
+                },
+                order => {
+                    type     => ARRAYREF,
+                    optional => 1,
+                },
+                limit => {
+                    type     => SCALAR,
+                    optional => 1,
+                },
+                offset => {
+                    type     => SCALAR,
+                    optional => 1,
+                },
+            },
+        );
+    }
+
+
     return [ $key_array, $query, @_ ];
 }
 
