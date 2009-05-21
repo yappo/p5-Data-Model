@@ -12,7 +12,8 @@ our $RUN_VALIDATION;
 if (exists $ENV{DATA_MODE_RUN_VALIDATION}) {
     $RUN_VALIDATION = $ENV{DATA_MODE_RUN_VALIDATION} ? 1 : 0;
 } else {
-    $RUN_VALIDATION = $ENV{HARNESS_ACTIVE} ? 1 : 0;
+    $RUN_VALIDATION = 1; # default is any time validation
+    # $RUN_VALIDATION = $ENV{HARNESS_ACTIVE} ? 1 : 0;
 }
 use Params::Validate ':all';
 
