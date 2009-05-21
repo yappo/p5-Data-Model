@@ -528,7 +528,38 @@ Data::Model -
 
 =head1 SYNOPSIS
 
-  use Data::Model;
+  package Your::Model;
+  use base 'Data::Model';
+  use Data::Model::Schema;
+  use Data::Model::Driver::DBI;
+  
+  my $driver = Data::Model::Driver::DBI->new(
+      dsn => 'dbi:SQLite:dbname=/foo/bar.db',
+  );
+  base_driver( $driver );
+  
+  install_model user => schema {
+      key 'id';
+      columns qw/
+          id
+          name
+      /;
+  };
+  
+  # in your script:
+  use Your::Model;
+  
+  my $model = Your::Model->new;
+  
+  # insert
+  my $row = $model->set(
+      user => {
+          id => 1,
+      }
+  );
+  
+  my $row = $model->lookup( user => 1 );
+  $row->delete;
 
 =head1 DESCRIPTION
 
