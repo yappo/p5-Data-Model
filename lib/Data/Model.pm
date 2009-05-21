@@ -149,6 +149,7 @@ sub _get_query_args {
                     callbacks => {
                         has_index_name => sub {
                             return 1 unless $_[0];
+                            return 0 unless scalar(@{ [ %{ $_[0] } ] }) == 2;
                             my($name) = %{ $_[0] };
                             $schema->has_index($name);
                         },

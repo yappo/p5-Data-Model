@@ -1,5 +1,5 @@
 use t::Utils;
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Test::Exception;
 
 {
@@ -55,3 +55,7 @@ lives_ok {
     my($ret) = $obj->get('model' => { index => { unq => 'u1' } });
     is $ret->id, 1, 'get by unique index';
 } 'has an unique index name';
+
+throws_ok {
+    $obj->get('model' => { index => { unq => 'u1', foo => 2 } });
+} qr/did not pass the 'has_index_name' callback/;
