@@ -571,6 +571,10 @@ Data::Model is
 
 =head2 get($target => $key [, \%options ])
 
+=head2 lookup($target => $key)
+
+=head2 lookup_multi($target => \@keylist)
+
 =head2 set($target => $key, => \%values [, \%options ])
 
 =head2 delete($target => $key [, \%options ])
