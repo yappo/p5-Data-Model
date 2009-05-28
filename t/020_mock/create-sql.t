@@ -1,7 +1,7 @@
 use t::Utils;
 use Mock::Tests::Basic;
 use Data::Model::Driver::DBI;
-use Test::More tests => 32;
+use Test::More tests => 34;
 
 BEGIN {
     my $dbfile = temp_filename;
@@ -135,3 +135,10 @@ is scalar(@in_bin), 1;
 is($in_bin[0], "CREATE TABLE in_bin (
     name            BLOB           
 )");
+
+my @in_bin_option = $mock->get_schema('in_bin_option')->sql->as_sql;
+is scalar(@in_bin_option), 1;
+is($in_bin_option[0], "CREATE TABLE in_bin_option (
+    name            COLLATE BINARY 
+)");
+

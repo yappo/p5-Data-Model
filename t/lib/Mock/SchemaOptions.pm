@@ -39,5 +39,15 @@ install_model in_bin => schema {
         };
 };
 
+install_model in_bin_option => schema {
+    driver $main::DRIVER;
+
+    column name
+        => varchar => {
+            binary => 1,
+            size   => 64,
+        };
+};
+
 
 1;

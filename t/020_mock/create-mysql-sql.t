@@ -6,7 +6,7 @@ use Test::More;
 BEGIN {
     plan skip_all => "Set TEST_MYSQL environment variable to run this test"
         unless $ENV{TEST_MYSQL};
-    plan tests => 29;
+    plan tests => 31;
 };
 
 BEGIN {
@@ -143,4 +143,10 @@ my @in_bin = $mock->get_schema('in_bin')->sql->as_sql;
 is scalar(@in_bin), 1;
 is($in_bin[0], "CREATE TABLE in_bin (
     name            BINARY(64)     
+)");
+
+my @in_bin_option = $mock->get_schema('in_bin_option')->sql->as_sql;
+is scalar(@in_bin_option), 1;
+is($in_bin_option[0], "CREATE TABLE in_bin_option (
+    name            VARCHAR(64)     BINARY
 )");

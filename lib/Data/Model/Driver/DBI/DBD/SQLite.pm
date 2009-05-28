@@ -19,10 +19,20 @@ sub bind_param_attributes {
 
 sub _as_sql_column {
     my($self, $c, $column, $args) = @_;
+
+    # for primary key
     if (exists $args->{options}->{auto_increment} && $args->{options}->{auto_increment}) {
         $c->{_sqlite_output_primary_key} = 1;
         return sprintf('%-15s %-15s', $column, 'INTEGER') . ' NOT NULL PRIMARY KEY';
     }
+
+    # binary flagged is COLLATE BINARY
+    if (exists $args->{options}->{binary} && $args->{options}->{binary}) {
+        return sprintf('%-15s %-15s', $column, 'COLLATE BINARY');
+    }
+
+    # TODO: you need COLLATE NOCASE suppor?
+
     return;
 }
 
