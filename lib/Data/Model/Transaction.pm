@@ -23,7 +23,7 @@ sub DESTROY {
     my($dismiss, $model) = @{ $_[0] };
     return if $dismiss;
 
-    { 
+    {
         local $@;
         eval { $model->txn_rollback };
         my $rollback_exception = $@;
