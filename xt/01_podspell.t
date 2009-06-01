@@ -9,4 +9,11 @@ Kazuhiro Osawa
 yappo <at> shibuya <döt> pl
 Data::Model
 mixin
+DBI
+Mapper
+Memcached
+SQLite
+Memcached
+memcached
+tokuhirom
 

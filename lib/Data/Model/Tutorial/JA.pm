@@ -265,9 +265,9 @@ DBI や Memcached のストレージへのアクセスするさいに Memcached 
 
 =head2 delete
 
-=head1 Mixinについて
+=head1 Mixin について
 
-=head1 triggerについて
+=head1 trigger について
 
 =head1 このドキュメントの作者
 
