@@ -29,6 +29,10 @@ sub get_multi_from_cache {
     \%got;
 }
 
+sub remove_multi_from_cache {
+    my($self, $keys) = @_;
+    $self->remove_from_cache($_) for @{ $keys };
+}
 
 sub init {
     my $self = shift;
@@ -44,6 +48,7 @@ sub init {
 # lookupは真面目にキャッシュする
 sub lookup {
     my $self = shift;
+    return $self->{fallback}->lookup(@_) if $self->{active_transaction};
     my($schema, $id) = @_;
 
     my $cache_key = $self->cache_key($schema, $id);
@@ -59,6 +64,7 @@ sub lookup {
 # 先に get_multi でキャッシュデータを全部取ってきて、キャッシュから取って来れなければfallbackして取得
 sub lookup_multi {
     my $self = shift;
+    return $self->{fallback}->lookup_multi(@_) if $self->{active_transaction};
     my($schema, $ids) = @_;
 
     my %cache_keys = map { join("\0", @{ $_ }) => [ $_, $self->cache_key($schema, $_) ] } @{ $ids };
@@ -89,6 +95,7 @@ sub lookup_multi {
 # key 指定の検索でないならキャッシュ処理しない (未実装)
 sub get {
     my $self = shift;
+    return $self->{fallback}->get(@_) if $self->{active_transaction};
     return $self->{fallback}->get(@_);
     my($schema, $key, $columns, %args) = @_;
 
@@ -110,7 +117,7 @@ sub replace {
 
     if (scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_from_cache($cache_key);
+        return unless $self->remove_cache($cache_key);
     }
     $self->{fallback}->replace(@_);
 }
@@ -125,7 +132,7 @@ sub update {
 
     if (scalar(@{ $old_key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $old_key);
-        return unless $self->remove_from_cache($cache_key);
+        return unless $self->remove_cache($cache_key);
     }
 
    $self->{fallback}->update(@_);
@@ -140,7 +147,7 @@ sub _delete_cache {
         while (my $row = $it->()) {
             my $key = $schema->get_key_array_by_hash($row);
             my $cache_key = $self->cache_key($schema, $key);
-            unless ($self->remove_from_cache($cache_key)) {
+            unless ($self->remove_cache($cache_key)) {
                 $is_return = 1;
                 last;
             }
@@ -157,7 +164,7 @@ sub update_direct {
 
     if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_from_cache($cache_key);
+        return unless $self->remove_cache($cache_key);
     } else {
         return unless $self->_delete_cache($schema, $key, $query, %args);
     }
@@ -170,11 +177,55 @@ sub delete {
 
     if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_from_cache($cache_key);
+        return unless $self->remove_cache($cache_key);
     } else {
         return unless $self->_delete_cache(@_);
     }
     $self->{fallback}->delete($schema, $key, $columns, %args);
+}
+
+
+sub remove_cache {
+    my($self, $cache_key) = @_;
+    if ($self->{active_transaction}) {
+        push @{ $self->{transaction_delete_queue} }, $cache_key;
+    } else {
+        $self->remove_from_cache($cache_key);
+    }
+}
+
+# for transactions
+sub txn_begin {
+    my $self = shift;
+    $self->{active_transaction} = 1;
+    $self->{transaction_delete_queue} = [];
+    $self->{fallback}->txn_begin;
+}
+
+sub txn_rollback {
+    my $self = shift;
+    return unless $self->{active_transaction};
+    $self->{fallback}->txn_rollback;
+
+    $self->{transaction_delete_queue} = [];
+}
+
+sub txn_commit {
+    my $self = shift;
+    return unless $self->{active_transaction};
+    $self->{fallback}->txn_commit;
+
+    # apply delete queue
+    $self->remove_multi_from_cache($self->{transaction_delete_queue});
+
+    $self->{transaction_delete_queue} = [];
+}
+
+sub txn_end {
+    my $self = shift;
+    $self->{fallback}->txn_end;
+    $self->{active_transaction} = 0;
+    $self->{transaction_delete_queue} = [];
 }
 
 1;

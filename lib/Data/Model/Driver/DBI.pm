@@ -431,5 +431,23 @@ sub DESTROY {
 #    }
 }
 
+# for transactions
+sub txn_begin {
+    my $self = shift;
+    my $dbh = $self->rw_handle;
+    eval { $dbh->begin_work } or Carp::croak $@;
+}
+
+sub txn_rollback {
+    my $self = shift;
+    my $dbh = $self->rw_handle;
+    eval { $dbh->rollback } or Carp::croak $@;
+}
+
+sub txn_commit {
+    my $self = shift;
+    my $dbh = $self->rw_handle;
+    eval { $dbh->commit } or Carp::croak $@;
+}
 
 1;

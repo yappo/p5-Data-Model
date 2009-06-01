@@ -7,6 +7,7 @@ our $VERSION = '0.01';
 use Carp ();
 
 use Data::Model::Iterator;
+use Data::Model::Transaction;
 
 our $RUN_VALIDATION;
 if (exists $ENV{DATA_MODE_RUN_VALIDATION}) {
@@ -209,6 +210,7 @@ sub _get_query_args {
 
 sub lookup {
     my($self, $model, $id) = @_;
+    Carp::croak "The 'lookup' method can not be performed during a transaction." if $self->{active_transaction};
     my $schema = $self->get_schema($model);
     return unless $schema;
 
@@ -236,6 +238,7 @@ sub lookup {
 
 sub lookup_multi {
     my($self, $model, $ids) = @_;
+    Carp::croak "The 'lookup_multi' method can not be performed during a transaction." if $self->{active_transaction};
     my $schema = $self->get_schema($model);
     return unless $schema;
 
@@ -283,6 +286,7 @@ sub lookup_multi {
 
 sub get {
     my $self   = shift;
+    Carp::croak "The 'get' method can not be performed during a transaction." if $self->{active_transaction};
     my $model  = shift;
     my $schema = $self->get_schema($model);
     return unless $schema;
@@ -321,6 +325,8 @@ sub get {
 }
 
 sub get_multi {
+    my $self = shift;
+    Carp::croak "The 'get_multi' method can not be performed during a transaction." if $self->{active_transaction};
 }
 
 =head2 set
@@ -334,10 +340,12 @@ sub get_multi {
 =cut
 
 sub set {
+    Carp::croak "The 'set' method can not be performed during a transaction." if $_[0]->{active_transaction};
     shift->_insert_or_replace(0, @_);
 }
 
 sub replace {
+    Carp::croak "The 'replace' method can not be performed during a transaction." if $_[0]->{active_transaction};
     shift->_insert_or_replace(1, @_);
 }
 
@@ -402,6 +410,8 @@ sub _insert_or_replace {
 }
 
 sub set_multi {
+    my $self = shift;
+    Carp::croak "The 'set_multi' method can not be performed during a transaction." if $self->{active_transaction};
 }
 
 
@@ -418,6 +428,7 @@ sub _get_schema_by_row {
 
 sub update {
     my $self = shift;
+    Carp::croak "The 'update' method can not be performed during a transaction." if $self->{active_transaction};
     my $row  = shift;
     return $self->update_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
 
@@ -463,6 +474,7 @@ sub update {
 #direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
 sub update_direct {
     my $self   = shift;
+    Carp::croak "The 'update_direct' method can not be performed during a transaction." if $self->{active_transaction};
     my $model  = shift;
 
     my $schema = $self->get_schema($model);
@@ -488,6 +500,7 @@ sub update_direct {
 
 sub delete {
     my $self = shift;
+    Carp::croak "The 'delete' method can not be performed during a transaction." if $self->{active_transaction};
     my $row  = shift;
     return $self->delete_direct($row, @_) unless ref($row) && $row->isa('Data::Model::Row');
 
@@ -504,6 +517,7 @@ sub delete {
 
 sub delete_direct {
     my $self   = shift;
+    Carp::croak "The 'delete_direct' method can not be performed during a transaction." if $self->{active_transaction};
     my $model  = shift;
     my $schema = $self->get_schema($model);
     return unless $schema;
@@ -516,6 +530,50 @@ sub delete_direct {
 }
 
 sub delete_multi {
+    my $self   = shift;
+    Carp::croak "The 'delete_multi' method can not be performed during a transaction." if $self->{active_transaction};
+}
+
+
+# for transactions
+sub txn_scope {
+    Carp::croak "The 'txn_scope' method can not be performed during a transaction." if $_[0]->{active_transaction};
+    Data::Model::Transaction->new( @_ );
+}
+
+sub txn_begin {
+    my $self = shift;
+    Carp::croak "The 'txn_begin' method can not be performed during a transaction." if $self->{active_transaction};
+    my $driver = $self->get_base_driver;
+    Carp::croak 'You cannot use transaction, Because base_driver is not set by schema.' unless $driver;
+    $self->{active_transaction} = 1;
+
+    $driver->txn_begin;
+}
+
+sub txn_rollback {
+    my $self = shift;
+    my $driver = $self->get_base_driver;
+
+    $driver->txn_rollback;
+    $self->txn_end;
+    1;
+}
+
+sub txn_commit {
+    my $self = shift;
+    my $driver = $self->get_base_driver;
+
+    $driver->txn_commit;
+    $self->txn_end;
+    1;
+}
+
+sub txn_end {
+    my $self = shift;
+    my $driver = $self->get_base_driver;
+    $self->{active_transaction} = 0;
+    $driver->txn_end;
 }
 
 

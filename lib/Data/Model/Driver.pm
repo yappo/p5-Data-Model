@@ -75,4 +75,9 @@ sub get_multi {}
 sub set_multi {}
 sub delete_multi {}
 
+sub txn_begin { Carp::croak 'not transaction support' }
+sub txn_rollback { Carp::croak 'not transaction support' }
+sub txn_commit { Carp::croak 'not transaction support' }
+sub txn_end {}
+
 1;
