@@ -21,8 +21,8 @@ my $driver = Data::Model::Driver::DBI::MasterSlave->new(
     use base 'Data::Model';
     use Data::Model::Schema;
 
+    base_driver $driver;
     install_model counter => schema {
-        driver $driver;
         key 'id';
         column id
             => int => {
@@ -32,6 +32,16 @@ my $driver = Data::Model::Driver::DBI::MasterSlave->new(
             => int => {
                 default => 0,
             };
+    };
+
+    install_model user => schema {
+        key 'name';
+
+        columns qw/ name nickname /;
+
+        schema_options create_sql_attributes => {
+            mysql => 'TYPE=InnoDB',
+        };
     };
 }
 
@@ -80,6 +90,43 @@ my $model = MyModel->new;
             my($master_get) = $model->get( counter => 1 );
             ok(!$master_get, 'master get');
         };
+    }
+
+    sub t_11_transaction : Tests(11) {
+        isnt($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle != r_handle');
+        
+        my $scope = $model->txn_scope;
+        is($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle == r_handle');
+        $scope->rollback;
+        isnt($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle != r_handle');
+
+        $model->txn_scope;
+        isnt($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle != r_handle');
+
+        do {
+            my $scope = $model->txn_scope;
+            is($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle == r_handle');
+        };
+        isnt($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle != r_handle');
+
+
+        $scope = $model->txn_scope;
+        $scope->set( user => { name => 'osawa', nickname => 'yappo' } );
+        my($get) = $scope->get( user => 'osawa' );
+        is($get->nickname, 'yappo', 'get from rw_handle');
+        $scope->commit;
+        isnt($model->get_base_driver->rw_handle, $model->get_base_driver->r_handle, 'rw_handle != r_handle');
+
+        ($get) = $model->get( user => 'osawa' );
+        ok(!$get, 'get from r_handle');
+
+        $scope = $model->txn_scope;
+        ($get) = $scope->get( user => 'osawa' );
+        is($get->nickname, 'yappo', 'get from rw_handle');
+        $scope->rollback;
+
+        ($get) = $model->get( user => 'osawa' );
+        ok(!$get, 'get from r_handle');
     }
 }
 

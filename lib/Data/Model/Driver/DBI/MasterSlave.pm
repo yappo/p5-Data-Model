@@ -21,6 +21,7 @@ sub init {
 }
 
 sub rw_handle { $_[0]->_get_dbh('master') };
-sub r_handle  { $_[0]->_get_dbh('slave') };
+# トランザクション中は master のみを返す
+sub r_handle  { $_[0]->_get_dbh( $_[0]->{active_transaction} ? 'master' : 'slave' ) };
 
 1;
