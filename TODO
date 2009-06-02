@@ -4,8 +4,8 @@ TODO
 
 =head1 WISHLIST
 
-  Data::Model::Cache
-  ? Data::Model::Schema::ReadOnly
+  Data::Model::Driver::Cache::Memcached
+
   Data::Model::Validate
   Data::Model::Driver::DBM
   Data::Model::Driver::File
@@ -15,7 +15,6 @@ TODO
   TheSchwartz
 
   partition
-  replication
 
   Paranoia ( by DataMapper )
 
@@ -35,5 +34,9 @@ TODO
 
   Data::Model::Driver::Memcache ?
   Data::Model::Driver::DBI::mysql ?
+
+  Data::Model::Cache -> Data::Model::Driver::Cache::*
+  replication -> Data::Model::Driver::DBI::MasterSlave
+  ? Data::Model::Schema::ReadOnly -> Data::Model::Driver::DBI::MasterSlave
 
 =cut
