@@ -645,9 +645,9 @@ Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
 
 =head1 REPOSITORY
 
-  svn co http://svn.coderepos.org/share/lang/perl/Data-Model/trunk Data-Model
+  git clone git://github.com/yappo/p5-Data-Model.git
 
-Data::Model is Subversion repository is hosted at L<http://coderepos.org/share/>.
+Data::Model's Git repository is hosted at L<http://github.com/yappo/p5-Data-Model>.
 patches and collaborators are welcome.
 
 =head1 LICENSE
