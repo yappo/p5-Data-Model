@@ -286,7 +286,7 @@ target table_name => schema {
     column field_name
         => char => {
             size       => 10,
-            require    => 1,
+            required   => 1,
             signed     => 1,
             default    => 'aaa',
             validation => Foo::Schema::Validator::Str->new(),

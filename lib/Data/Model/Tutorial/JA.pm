@@ -47,13 +47,13 @@ Data::Model は、Data::Model のスキーマ定義からCREATE TABLE 文を発�
   
   column_sugar 'user.id'
       => int => {
-          require => 1,
+          required => 1,
           unsigned => 1,
       };
   column_sugar 'user.name'
       => 'varchar' => {
-          require => 1,
-          size => 255,
+          required => 1,
+          size     => 255,
       };
   1;
 
