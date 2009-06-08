@@ -642,7 +642,9 @@ Data::Model is
 
 Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
 
-=head1 SEE ALSO
+=head1 ACKNOWLEDGEMENTS
+
+Benjamin Trott more idea given by L<Data::ObjectDriver>
 
 =head1 REPOSITORY
 
