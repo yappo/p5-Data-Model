@@ -2,11 +2,14 @@ package Data::Model::Driver::DBI::DBD;
 use strict;
 use warnings;
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 sub new {
     my($class, $dbd, %args) = @_;
     my $dbd_class = "$class\::$dbd";
     eval "use $dbd_class;"; ## no critic
-    die $@ if $@;
+    Carp::croak $@ if $@;
     bless { %args }, $dbd_class;
 }
 

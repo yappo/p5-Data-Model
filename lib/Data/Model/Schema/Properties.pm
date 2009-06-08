@@ -48,7 +48,7 @@ BEGIN {
         *{"add_$name"} = sub {
             my($self, $index, $columns, %args) = @_;
             my $key = $columns || $index;
-            die sprintf '%s::%s : %s name is require', $self->schema_class, $self->name, $name
+            Carp::croak sprintf '%s::%s : %s name is require', $self->schema_class, $self->name, $name
                 if ref($index) || !defined $index; 
             $key = [ $key ] unless ref($key) eq 'ARRAY';
             $self->{$name}->{$index} = $key;
@@ -418,7 +418,7 @@ sub get_columns_hash_by_key_array_and_hash {
 
     # by key
     my $key;
-    $key = $self->{unique}->{$index} || $self->{index}->{$index} || die "Cannot find index '$index'" if $index;
+    $key = $self->{unique}->{$index} || $self->{index}->{$index} || Carp::croak "Cannot find index '$index'" if $index;
     $key ||= $self->{key};
     $key = [ $key ] unless ref($key) eq 'ARRAY';
 

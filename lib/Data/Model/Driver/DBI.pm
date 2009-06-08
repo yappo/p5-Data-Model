@@ -54,7 +54,7 @@ sub _get_dbh {
         if (my $getter = $self->{get_dbh}) {
             $dbi_config->{dbh} = $getter->();
         } else {
-            $dbi_config->{dbh} = $self->init_db($name) or die $self->last_error;
+            $dbi_config->{dbh} = $self->init_db($name) or Carp::croak $self->last_error;
         }
     }
     $dbi_config->{dbh};
