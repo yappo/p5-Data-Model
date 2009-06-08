@@ -61,6 +61,9 @@ sub add_column {
 
     Carp::croak 'The multiplex definition of "require" and the "required" is carried out.'
             if exists $options->{require} && exists $options->{required};
+    if (exists $options->{require}) {
+        $options->{required} = delete $options->{require};
+    }
 
     $self->{utf8_columns}->{$column} = 1
         if delete $self->{_build_tmp}->{utf8_column}->{$column};

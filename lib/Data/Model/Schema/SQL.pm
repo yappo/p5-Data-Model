@@ -71,10 +71,9 @@ sub as_column {
     my($self, $column, $args) = @_;
 
     my $opts = $args->{options};
-    my $required = exists $opts->{required} ? $opts->{required} : $opts->{require};
     return sprintf('%-15s %-15s', $column, $self->call_method( as_column_type => $column, $args ))
         . $self->call_method( as_type_attributes => $column, $args )
-        . ($required ? ' NOT NULL' : ($opts->{null} ? ' NULL' : ''))
+        . ($opts->{required} ? ' NOT NULL' : ($opts->{null} ? ' NULL' : ''))
         . $self->call_method( as_default => $column, $args )
         . ($opts->{auto_increment} ? ' AUTO_INCREMENT' : '')
         . ($self->{unique} ? ' UNIQUE' : '')
