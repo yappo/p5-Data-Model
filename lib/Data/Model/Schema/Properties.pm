@@ -5,6 +5,7 @@ use base qw(Data::Model::Accessor);
 
 use Class::Trigger qw( pre_insert pre_save post_save post_load pre_update pre_inflate post_inflate pre_deflate post_deflate );
 use Encode ();
+use Params::Validate ':all';
 
 use Data::Model::Schema;
 use Data::Model::Schema::Inflate;
@@ -63,6 +64,73 @@ sub add_column {
             if exists $options->{require} && exists $options->{required};
     if (exists $options->{require}) {
         $options->{required} = delete $options->{require};
+    }
+
+    # validation for $options
+    if ($Data::Model::RUN_VALIDATION) {
+        my @p = %{ $options };
+        validate(
+            @p, {
+                size   => {
+                    type     => SCALAR,
+                    regex    => qr/\A[0-9]+\z/,
+                    optional => 1,
+                },
+                required   => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                null       => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                signed     => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                unsigned   => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                decimals   => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                zerofill   => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                binary     => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                ascii      => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                unicode    => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                default    => {
+                    type     => SCALAR | CODEREF,
+                    optional => 1,
+                },
+                # validation => {},
+                auto_increment => {
+                    type     => BOOLEAN,
+                    optional => 1,
+                },
+                inflate => {
+                    type     => SCALAR | CODEREF,
+                    optional => 1,
+                },
+                deflate => {
+                    type     => SCALAR | CODEREF,
+                    optional => 1,
+                },
+            }
+        );
     }
 
     $self->{utf8_columns}->{$column} = 1
