@@ -53,7 +53,7 @@ do {
             1,
         );
     };
-    like $@, qr/illegal parameter/, 'illegal parameter';
+    like $@, qr/illegal parameter.*q4m\.t/, 'illegal parameter';
 };
 
 # required is callback handler
@@ -61,7 +61,7 @@ do {
     eval {
         $model->queue_running( pop => 1 );
     };
-    like $@, qr/required is callback handler/, 'required is callback handler';
+    like $@, qr/required is callback handler.*q4m\.t/, 'required is callback handler';
 };
 
 # missing model name error
@@ -71,7 +71,7 @@ do {
             table => sub {},
         );
     };
-    like $@, qr/'table' is missing model name/, 'missing model name';
+    like $@, qr/'table' is missing model name.*q4m\.t/, 'missing model name';
 
     eval {
         $model->queue_running(
@@ -79,7 +79,7 @@ do {
             table => sub {},
         );
     };
-    like $@, qr/'table' is missing model name/, 'missing model name';
+    like $@, qr/'table' is missing model name.*q4m\.t/, 'missing model name';
 };
 
 # timeout
@@ -173,7 +173,7 @@ do {
             smtp => sub { die 'ouffu' }
         );
     };
-    like($@, qr/ouffu/, 'aborting queue_running');
+    like($@, qr/ouffu.*q4m\.t/, 'aborting queue_running');
 
     my $retval = $model->queue_running(
         smtp => sub {
@@ -194,7 +194,7 @@ do {
             timeout => 10,
         );
     };
-    like($@, qr/timeout/, 'timeout queue_running');
+    like($@, qr/timeout.*q4m\.t/, 'timeout queue_running');
 };
 
 

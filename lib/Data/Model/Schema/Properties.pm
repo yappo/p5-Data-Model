@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 use Class::Trigger qw( pre_insert pre_save post_save post_load pre_update pre_inflate post_inflate pre_deflate post_deflate );
 use Encode ();
 use Params::Validate ':all';

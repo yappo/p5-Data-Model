@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use base qw(Data::Model::Accessor);
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 __PACKAGE__->mk_accessors(qw/ select where having bind bind_column limit offset select_map select_map_reverse column_mutator where_values /);
 
 
@@ -243,7 +246,7 @@ sub as_sql_having {
 sub as_limit {
     my $self = shift;
     my $n = $self->limit or return '';
-    die "Non-numerics in limit clause ($n)" if $n =~ /\D/;
+    Carp::croak "Non-numerics in limit clause ($n)" if $n =~ /\D/;
     return sprintf "LIMIT %d%s\n", $n,
            ($self->offset ? " OFFSET " . int($self->offset) : "");
 }

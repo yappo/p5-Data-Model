@@ -4,6 +4,7 @@ use warnings;
 use base 'Data::Model::Driver::DBI';
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 
 sub init {
     my $self = shift;

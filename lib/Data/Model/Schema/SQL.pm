@@ -2,6 +2,9 @@ package Data::Model::Schema::SQL;
 use strict;
 use warnings;
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 sub new {
     my($class, $schema) = @_;
     bless { schema => $schema }, $class;

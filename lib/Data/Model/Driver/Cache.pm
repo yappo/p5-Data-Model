@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use base 'Data::Model::Driver';
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 use Storable ();
 
 sub fallback { shift->{fallback} }

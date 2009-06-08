@@ -5,6 +5,7 @@ use warnings;
 use base 'Data::Model::Driver';
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 
 sub memcached { shift->{memcached} }
 

@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 use Encode ();
 
 use Data::Model::Row;
@@ -187,7 +188,6 @@ sub _get_model_schema {
 
     my $method = (caller(1))[3];
     $method =~ s/.+:://;
-    local $Carp::CarpLevel = 2;
     Carp::croak "'$method' method is target internal only";
 }
 

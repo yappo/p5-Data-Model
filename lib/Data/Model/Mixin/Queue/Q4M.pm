@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 
 sub register_method {
     +{
@@ -15,7 +16,6 @@ sub queue_running {
     my $driver = $self->get_base_driver;
     Carp::croak "Can't find base_driver" unless $driver;
 
-    local $Carp::CarpLevel = 2;
     $driver->queue_running( @_ );
 }
 

@@ -5,6 +5,7 @@ use warnings;
 our $VERSION = '0.01';
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 
 use Data::Model::Iterator;
 use Data::Model::Transaction;

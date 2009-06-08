@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 
 sub import {
     my $class  = shift;

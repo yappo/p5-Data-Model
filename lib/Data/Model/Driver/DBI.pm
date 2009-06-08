@@ -4,6 +4,7 @@ use warnings;
 use base 'Data::Model::Driver';
 
 use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
 use DBI;
 
 use Data::Model::SQL;
@@ -407,7 +408,6 @@ sub _stack_trace {
     }
 
     $sql =~ s/\n/\n          /gm;
-    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     Carp::croak sprintf <<"TRACE", $reason, $sql, Data::Dumper::Dumper($binds);
     **** { Data::Model::Driver::DBI 's Exception ****
 Reasone : %s

@@ -1,6 +1,9 @@
 package Data::Model::Transaction;
 use strict;
 
+use Carp ();
+$Carp::Internal{(__PACKAGE__)}++;
+
 sub new {
     my($class, $model) = @_;
     $model->txn_begin;
@@ -28,7 +31,7 @@ sub DESTROY {
         eval { $model->txn_rollback };
         my $rollback_exception = $@;
         if($rollback_exception) {
-            die "Rollback failed: ${rollback_exception}";
+            Carp::croak "Rollback failed: ${rollback_exception}";
         }
     }
 }
