@@ -77,6 +77,46 @@ __END__
 
 =head1 NAME
 
-Data::Model::Transaction - transaction manager
+Data::Model::Transaction - transaction manager for Data::Model
+
+=head1 SYNOPSIS
+
+  sub foo {
+      my $is_die = shift;
+  
+      my $model = Your::Model->new;
+      my $txn = $model->txn_scope; # start transaction
+  
+      my $row = $txn->lookup( user => 1 ); # $model->lookup doesn't work.
+      $row->name('transaction name');
+      $txn->update( $row ); # update
+      return if $is_die; # rollback
+      if ($is_die) {
+          $txn->rollback; # explicitly rollback
+          return;
+      }
+
+      $txn->commit; # commit
+  }
+
+  foo(1); # rollback
+  foo(0); # commit
+
+lookup, lookup_multi, get, get_multi, set, replace, set_multi, update, update_direct, delete, delete_direct, delete_multi and txn_scope and txn_begin derived from DataModel are not usable temporarily.
+
+When you use these methods, please carry out via the instance which txn_scope returns.
+
+=head1 SEE ALSO
+
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
