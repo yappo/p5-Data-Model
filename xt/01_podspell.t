@@ -18,3 +18,14 @@ memcached
 tokuhirom
 Trott
 ACKNOWLEDGEMENTS
+DSL
+InnoDB
+ParamsValidate
+ascii
+inflateing
+unicode
+utf
+zerofill
+DataModel
+ORM
+mapper
