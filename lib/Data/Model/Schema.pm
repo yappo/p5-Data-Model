@@ -366,7 +366,7 @@ set driver ( Data::Model::Driver::* ) for current package's default.
 
 column_sugar promotes reuse of a schema definition.
 
-see head1 COLUMN SUGER
+see head1 COLUMN SUGAR
 
 =head1 SCHEMA DSL
 
@@ -567,7 +567,7 @@ Pasted the definition of ParamsValidate. It writes later.
                 },
 
 
-=head1 COLUMN SUGER
+=head1 COLUMN SUGAR
 
 UNDOCUMENTED
 
