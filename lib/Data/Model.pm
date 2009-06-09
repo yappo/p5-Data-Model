@@ -620,6 +620,12 @@ Data::Model is can use as ORM which can be defined briefly.
 
 There are few documents. It is due to be increased in the near future.
 
+=head1 SCHEMA DEFINITION
+
+One package can define two or more tables using DSL.
+
+see L<Data::Model::Schema>.
+
 =head1 METHODS
 
 =head2 new([ \%options ]);
