@@ -52,3 +52,37 @@ sub get_changed_columns {
 }
 
 1;
+
+=head1 NAME
+
+Data::Model::Row - Data::Model's Row class
+
+=head1 METHODS
+
+=head2 update
+
+update is executed for instance record.
+
+It works by schema in which primary key exists.
+
+=head2 delete
+
+delete is executed for instance record.
+
+It works by schema in which primary key exists.
+
+=head1 SEE ALSO
+
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
