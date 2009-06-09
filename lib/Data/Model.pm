@@ -276,15 +276,11 @@ sub lookup_multi {
     map { $results->{join("\0", @{ $_ })} } @id_list;
 }
 
-=head2 get
 
-  $model->get( model_name => 'key' );
-  $model->get( model_name => [qw/ key1 key2 /] );
-  $model->get( model_name => 'key' => { query options ... });
-  $model->set( model_name => { search query, ... } );
-
-=cut
-
+#  $model->get( model_name => 'key' );
+#  $model->get( model_name => [qw/ key1 key2 /] );
+#  $model->get( model_name => 'key' => { query options ... });
+#  $model->set( model_name => { search query, ... } );
 sub get {
     my $self   = shift;
     Carp::croak "The 'get' method can not be performed during a transaction." if $self->{active_transaction};
@@ -330,16 +326,12 @@ sub get_multi {
     Carp::croak "The 'get_multi' method can not be performed during a transaction." if $self->{active_transaction};
 }
 
-=head2 set
 
-  $model->set( model_name => 'key' );
-  $model->set( model_name => [qw/ key1 key2 /] );
-  $model->set( model_name => 'key' => { column => 'value', ... });
-  $model->set( model_name => [qw/ key1 key2 /] => { column => 'value', ... } );
-  $model->set( model_name => { column => 'value', ... } );
-
-=cut
-
+#  $model->set( model_name => 'key' );
+#  $model->set( model_name => [qw/ key1 key2 /] );
+#  $model->set( model_name => 'key' => { column => 'value', ... });
+#  $model->set( model_name => [qw/ key1 key2 /] => { column => 'value', ... } );
+#  $model->set( model_name => { column => 'value', ... } );
 sub set {
     Carp::croak "The 'set' method can not be performed during a transaction." if $_[0]->{active_transaction};
     shift->_insert_or_replace(0, @_);
@@ -464,15 +456,11 @@ sub update {
     $row;
 }
 
-=head2 update_direct
 
-  $model->update_direct( model_name => 'key', +{ querys }, +{ update columns } );
-  $model->update_direct( model_name => [qw/ key1 key2 /], +{ querys }, +{ update columns } );
-  $model->update_direct( model_name => +{ querys }, +{ update columns } );
-
-=cut
-
-#direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
+#  $model->update_direct( model_name => 'key', +{ querys }, +{ update columns } );
+#  $model->update_direct( model_name => [qw/ key1 key2 /], +{ querys }, +{ update columns } );
+#  $model->update_direct( model_name => +{ querys }, +{ update columns } );
+# direct_update get しないで直接 updateする where の組み立ては get/delete と同じ
 sub update_direct {
     my $self   = shift;
     Carp::croak "The 'update_direct' method can not be performed during a transaction." if $self->{active_transaction};
@@ -492,13 +480,9 @@ sub update_direct {
     $schema->{driver}->update_direct( $schema, @{ $query } );
 }
 
-=head2 delete
 
-  $model->delete( model_name => 'key' );
-  $model->delete( model_name => [qw/ key1 key2 /] );
-
-=cut
-
+#  $model->delete( model_name => 'key' );
+#  $model->delete( model_name => [qw/ key1 key2 /] );
 sub delete {
     my $self = shift;
     Carp::croak "The 'delete' method can not be performed during a transaction." if $self->{active_transaction};
@@ -583,7 +567,7 @@ __END__
 
 =head1 NAME
 
-Data::Model - 
+Data::Model - model interface which had more data sources unified, a.k.a data/object mapper
 
 =head1 SYNOPSIS
 
@@ -592,8 +576,9 @@ Data::Model -
   use Data::Model::Schema;
   use Data::Model::Driver::DBI;
   
+  my $dbfile = '/foo/bar.db';
   my $driver = Data::Model::Driver::DBI->new(
-      dsn => 'dbi:SQLite:dbname=/foo/bar.db',
+      dsn => "dbi:SQLite:dbname=$dbfile",
   );
   base_driver( $driver );
   
@@ -604,6 +589,15 @@ Data::Model -
           name
       /;
   };
+  
+  # create database file
+  unless (-f $dbfile) {
+      my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, PrintError => 0 });
+      for my $sql (__PACKAGE__->as_sqls) {
+          $dbh->do( $sql );
+      }
+      $dbh->disconnect;
+  }
   
   # in your script:
   use Your::Model;
@@ -622,29 +616,112 @@ Data::Model -
 
 =head1 DESCRIPTION
 
-Data::Model is
+Data::Model is can use as ORM which can be defined briefly.
+
+There are few documents. It is due to be increased in the near future.
 
 =head1 METHODS
 
 =head2 new([ \%options ]);
 
-=head2 get($target => $key [, \%options ])
+  my $model = Class->new;
 
 =head2 lookup($target => $key)
 
+  my $row = $model->lookup( user => $id );
+  print $row->name;
+
 =head2 lookup_multi($target => \@keylist)
+
+  my @row = $model->lookup_multi( user => [ $id1, $id2 ] );
+  print $row[0]->name;
+  print $row[1]->name;
+
+=head2 get($target => $key [, \%options ])
+
+  my $iterator = $model->get( user => { 
+      id => {
+          IN => [ $id1, $id2 ],
+      }
+  });
+  while (my $row = $iterator->next) {
+      print $row->name;
+  }
 
 =head2 set($target => $key, => \%values [, \%options ])
 
+  $model->set( user => {
+    id   => 3,
+    name => 'insert record',
+  });
+
 =head2 delete($target => $key [, \%options ])
 
-=head1 AUTHOR
+  $model->delete( user => 3 ); # id = 3 is deleted
 
-Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+=head1 ROW OBJECT METHODS
+
+row object is provided by L<Data::Model::Row>.
+
+=head2 update
+
+  my $row = $model->lookup( user => $id );
+  $row->name('update record');
+  $row->update;
+
+=head2 delete
+
+  my $row = $model->lookup( user => $id );
+  $row->delete;
+
+=head1 TRANSACTION
+
+see L<Data::Model::Transaction>.
+
+=head1 DATA DRIVERS
+
+=head2 DBI
+
+see L<Data::Model::Driver::DBI>.
+
+=head2 DBI::MasterSlave
+
+master-slave composition for mysql.
+
+see L<Data::Model::Driver::DBI::MasterSlave>.
+
+=head2 Cache
+
+Cash of the result of a query.
+
+see L<Data::Model::Driver::Cache::Hash>,
+see L<Data::Model::Driver::Cache::Memcached>.
+
+=head2 Memcached
+
+memcached is used for data storage.
+
+see L<Data::Model::Driver::Memcached>.
+
+=head2 Queue::Q4M
+
+queuing manager for Q4M.
+
+see L<Data::Model::Driver::Queue::Q4M>.
+
+=head2 Memory
+
+on memory storage.
+
+see L<Data::Model::Driver::Memory>.
 
 =head1 ACKNOWLEDGEMENTS
 
 Benjamin Trott more idea given by L<Data::ObjectDriver>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
 
 =head1 REPOSITORY
 
