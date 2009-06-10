@@ -73,5 +73,18 @@ Data::Model::Mixin::FindOrCreate - add find_or_create method
       }
   );
 
+=head1 SEE ALSO
+
+L<Data::Model::Mixin>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =cut
 

@@ -20,3 +20,22 @@ sub queue_running {
 }
 
 1;
+
+=head1 NAME
+
+Data::Model::Mixin::Queue::Q4m - add methods for Driver::Queue::Q4M
+
+=head1 SEE ALSO
+
+L<Data::Model::Driver::Queue::Q4M>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
