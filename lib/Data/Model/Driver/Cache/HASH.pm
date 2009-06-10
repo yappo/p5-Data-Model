@@ -39,7 +39,6 @@ Data::Model::Driver::Cache::HASH - Penetration cache is offered to the basic dri
 
   package MyDB;
   use base 'Data::Model';
-  use Data::Model::Mixin modules => ['Queue::Q4M'];
   use Data::Model::Schema;
   use Data::Model::Driver::DBI;
   use Data::Model::Driver::Cache::HASH;

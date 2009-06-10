@@ -467,7 +467,6 @@ Data::Model::Driver::DBI - storage driver for DBI
 
   package MyDB;
   use base 'Data::Model';
-  use Data::Model::Mixin modules => ['Queue::Q4M'];
   use Data::Model::Schema;
   use Data::Model::Driver::DBI;
   

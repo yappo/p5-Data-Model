@@ -35,7 +35,6 @@ Data::Model::Driver::DBI::MasterSlave - master-slave composition for mysql
 
   package MyDB;
   use base 'Data::Model';
-  use Data::Model::Mixin modules => ['Queue::Q4M'];
   use Data::Model::Schema;
   use Data::Model::Driver::DBI;
   

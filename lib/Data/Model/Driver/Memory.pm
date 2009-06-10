@@ -572,7 +572,6 @@ Data::Model::Driver::Memory - storage driver for memory
 
   package MyDB;
   use base 'Data::Model';
-  use Data::Model::Mixin modules => ['Queue::Q4M'];
   use Data::Model::Schema;
   use Data::Model::Driver::Memory;
   
