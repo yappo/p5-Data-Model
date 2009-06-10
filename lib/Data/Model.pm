@@ -700,7 +700,7 @@ see L<Data::Model::Driver::DBI::MasterSlave>.
 
 Cash of the result of a query.
 
-see L<Data::Model::Driver::Cache::Hash>,
+see L<Data::Model::Driver::Cache::HASH>,
 see L<Data::Model::Driver::Cache::Memcached>.
 
 =head2 Memcached
