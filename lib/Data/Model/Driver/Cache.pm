@@ -120,7 +120,7 @@ sub replace {
 
     if (scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_cache($cache_key);
+        $self->remove_cache($cache_key);
     }
     $self->{fallback}->replace(@_);
 }
@@ -135,7 +135,7 @@ sub update {
 
     if (scalar(@{ $old_key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $old_key);
-        return unless $self->remove_cache($cache_key);
+        $self->remove_cache($cache_key);
     }
 
    $self->{fallback}->update(@_);
@@ -162,7 +162,7 @@ sub update_direct {
 
     if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_cache($cache_key);
+        $self->remove_cache($cache_key);
     } else {
         return unless $self->_delete_cache($schema, $key, $query, %args);
     }
