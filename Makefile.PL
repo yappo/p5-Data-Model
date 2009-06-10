@@ -2,12 +2,12 @@ use inc::Module::Install;
 name 'Data-Model';
 all_from 'lib/Data/Model.pm';
 
-# requires '';
 requires 'Carp';
 requires 'Class::Trigger';
 requires 'Params::Validate';
 requires 'Storable';
-# DBI
+requires 'DBI';
+requires 'DBD::SQLite';
 
 tests 't/*.t t/*/*.t';
 author_tests 'xt';

@@ -2,7 +2,7 @@ package Data::Model;
 
 use strict;
 use warnings;
-our $VERSION = '0.01';
+our $VERSION = '0.00001';
 
 use Carp ();
 $Carp::Internal{(__PACKAGE__)}++;
