@@ -146,17 +146,12 @@ sub _delete_cache {
 
     my($it, $it_opt) = $self->{fallback}->get($schema, $key, $columns ? Storable::dclone($columns) : $columns, %args);
     if ($it) {
-        my $is_return;
         while (my $row = $it->()) {
             my $key = $schema->get_key_array_by_hash($row);
             my $cache_key = $self->cache_key($schema, $key);
-            unless ($self->remove_cache($cache_key)) {
-                $is_return = 1;
-                last;
-            }
+            $self->remove_cache($cache_key);
         }
         $it_opt->{end}->() if exists $it_opt->{end} && ref($it_opt->{end}) eq 'CODE';
-        return if $is_return;
     }
     return 1;
 }
@@ -180,7 +175,7 @@ sub delete {
 
     if ($key && !$columns && scalar(@{ $key }) == scalar(@{ $schema->key })) {
         my $cache_key = $self->cache_key($schema, $key);
-        return unless $self->remove_cache($cache_key);
+        $self->remove_cache($cache_key);
     } else {
         return unless $self->_delete_cache(@_);
     }

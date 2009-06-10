@@ -25,7 +25,7 @@ sub remove_from_cache {
     my($self, $key) = @_;
     
     my $ret = delete $CACHE{$key};
-    return 1 if !defined $ret;
+    return if !defined $ret;
     return $ret;
 }
 
