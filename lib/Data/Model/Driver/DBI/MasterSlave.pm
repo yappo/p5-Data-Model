@@ -44,13 +44,13 @@ Data::Model::Driver::DBI::MasterSlave - master-slave composition for mysql
           dsn => 'dbi:mysql:host=master.server:database=test',
           username => 'master',
           password => 'master',
-          connect_options =. $dbi_connect_options,
+          connect_options => $dbi_connect_options,
       },
       slave  => {
           dsn => 'dbi:mysql:host=slave.server:database=test',
           username => 'slave',
           password => 'slave',
-          connect_options =. $dbi_connect_options,
+          connect_options => $dbi_connect_options,
       },
   );
 

@@ -48,7 +48,7 @@ Data::Model::Driver::Cache::HASH - Penetration cache is offered to the basic dri
       dsn             => 'dbi:mysql:host=localhost:database=test',
       username        => 'user',
       password        => 'password',
-      connect_options =. $dbi_connect_options,
+      connect_options => $dbi_connect_options,
   );
 
   my $driver = Data::Model::Driver::Cache::HASH->new(

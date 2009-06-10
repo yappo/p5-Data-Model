@@ -475,7 +475,7 @@ Data::Model::Driver::DBI - storage driver for DBI
       dsn             => 'dbi:mysql:host=localhost:database=test',
       username        => 'user',
       password        => 'password',
-      connect_options =. $dbi_connect_options,
+      connect_options => $dbi_connect_options,
   );
   
   base_driver $driver;
