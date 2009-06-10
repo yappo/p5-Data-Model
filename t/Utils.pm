@@ -26,21 +26,53 @@ sub import {
     }
 }
 
+my $RUN_CODE = sub {};
+my $CLEANUP_CODE = sub {};
 my $CACHE_CLASS;
 sub _make_driver_instance {
     my $class = shift;
     my $driver = $class->new( @_ );
 
     if ($CACHE_CLASS) {
+        my %options = ();
+        if ($CACHE_CLASS =~ /::Memcached$/) {
+            my $memcached_bin     = $ENV{TEST_MEMCACHED_BIN};
+
+            eval "use Cache::Memcached::Fast";
+            plan skip_all => "Cache::Memcached::Fast required for testing memcached driver" if $@;
+
+            if ($memcached_bin && -x $memcached_bin) {
+
+                eval "use Test::TCP";
+                plan skip_all => "Test::TCP required for testing memcached driver" if $@;
+
+                my $port = empty_port();
+                $options{memcached} = Cache::Memcached::Fast->new({ servers => [ { address => "localhost:$port" }, ], });
+
+                my $run = $RUN_CODE;
+                $RUN_CODE = sub {
+                    test_tcp(
+                        client => sub {
+                            $run->();
+                        },
+                        server => sub {
+                            exec $memcached_bin, '-p', $port;
+                        },
+                        port => $port,
+                    );
+                };
+            } else {
+                plan skip_all => "Set TEST_MEMCACHED_BIN environment variable to run this test";
+            }
+        }
         $driver = $CACHE_CLASS->new(
-            fallback => $driver
+            fallback => $driver,
+            %options,
         );
     }
     $driver;
 }
 
-my $RUN_CODE = sub {};
-my $CLEANUP_CODE = sub {};
 sub setup_test {
     my($class, $caller, $config) = @_;
 
