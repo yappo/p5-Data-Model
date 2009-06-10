@@ -203,4 +203,24 @@ Data::Model::Driver::Queue::Q4M - Q4M manager for Data::Model
       },
   );
 
+=head1 DESCRIPTION
+
+Since Q4M works on MySQL, it has inherited L<Data::Model::Driver::DBI> inevitably.
+
+=head1 SEE ALSO
+
+Q4M L<http://q4m.31tools.com/>,
+L<Data::Model::Mixin::Queue::Q4M>,
+L<Data::Model::Mixin::DBI>,
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
 =cut

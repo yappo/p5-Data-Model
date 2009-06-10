@@ -458,3 +458,48 @@ sub txn_end {
 }
 
 1;
+
+=head1 NAME
+
+Data::Model::Driver::DBI - storage driver for DBI
+
+=head1 SYNOPSIS
+
+  package MyDB;
+  use base 'Data::Model';
+  use Data::Model::Mixin modules => ['Queue::Q4M'];
+  use Data::Model::Schema;
+  use Data::Model::Driver::DBI;
+  
+  my $dbi_connect_options = {};
+  my $driver = Data::Model::Driver::DBI->new(
+      dsn             => 'dbi:mysql:host=localhost:database=test',
+      username        => 'user',
+      password        => 'password',
+      connect_options =. $dbi_connect_options,
+  );
+  
+  base_driver $driver;
+  install_model model_name => schema {
+    ....
+  };
+
+=head1 DESCRIPTION
+
+DBD that is working now is only mysql and SQLite.
+
+=head1 SEE ALSO
+
+L<DBI>,
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

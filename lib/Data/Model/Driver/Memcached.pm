@@ -91,3 +91,45 @@ sub delete {
 
 1;
 
+=head1 NAME
+
+Data::Model::Driver::Memcached - storage driver for memcached protocol
+
+=head1 SYNOPSIS
+
+  package MyDB;
+  use base 'Data::Model';
+  use Data::Model::Schema;
+  use Data::Model::Driver::Memcached;
+  
+  my $dbi_connect_options = {};
+  my $driver = Data::Model::Driver::Memcached->new(
+      memcached => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:11211" }, ], }),
+  );
+  
+  base_driver $driver;
+  install_model model_name => schema {
+    ....
+  };
+
+=head1 DESCRIPTION
+
+Storage is used via a memcached protocol.
+
+It can save at memcached, Tokyo Tyrant, kai, groonga, etc.
+
+=head1 SEE ALSO
+
+L<Cache::Memcache::Fast>,
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

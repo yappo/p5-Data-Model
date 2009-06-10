@@ -26,3 +26,57 @@ sub rw_handle { $_[0]->_get_dbh('master') };
 sub r_handle  { $_[0]->_get_dbh( $_[0]->{active_transaction} ? 'master' : 'slave' ) };
 
 1;
+
+=head1 NAME
+
+Data::Model::Driver::DBI::MasterSlave - master-slave composition for mysql
+
+=head1 SYNOPSIS
+
+  package MyDB;
+  use base 'Data::Model';
+  use Data::Model::Mixin modules => ['Queue::Q4M'];
+  use Data::Model::Schema;
+  use Data::Model::Driver::DBI;
+  
+  my $dbi_connect_options = {};
+  my $driver = Data::Model::Driver::DBI::MasterSlave->new(
+      master => {
+          dsn => 'dbi:mysql:host=master.server:database=test',
+          username => 'master',
+          password => 'master',
+          connect_options =. $dbi_connect_options,
+      },
+      slave  => {
+          dsn => 'dbi:mysql:host=slave.server:database=test',
+          username => 'slave',
+          password => 'slave',
+          connect_options =. $dbi_connect_options,
+      },
+  );
+
+  base_driver $driver;
+  install_model model_name => schema {
+    ....
+  };
+
+=head1 DESCRIPTION
+
+It can use with standard master-slave composition.
+
+=head1 SEE ALSO
+
+L<DBI>,
+L<Data::Model::Driver::DBI>,
+L<Data::Model>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
