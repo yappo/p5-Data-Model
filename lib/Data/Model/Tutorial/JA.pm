@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Data::Model::Tutorial - Data::Model::Tutorial日本語版
+Data::Model::Tutorial::JA - Data::Model::Tutorial日本語版
 
 =head1 Data::Model とは
 

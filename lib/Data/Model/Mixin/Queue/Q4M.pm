@@ -23,7 +23,7 @@ sub queue_running {
 
 =head1 NAME
 
-Data::Model::Mixin::Queue::Q4m - add methods for Driver::Queue::Q4M
+Data::Model::Mixin::Queue::Q4M - add methods for Driver::Queue::Q4M
 
 =head1 SEE ALSO
 
