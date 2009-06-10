@@ -7,6 +7,7 @@ TODO
   Data::Model::Driver::Cache::Memcached
 
   Data::Model::Validate
+  Data::Model::Driver::Pacific
   Data::Model::Driver::DBM
   Data::Model::Driver::File
   Data::Model::Driver::YAML
