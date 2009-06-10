@@ -36,7 +36,7 @@ Data::Model::Driver::DBI::MasterSlave - master-slave composition for mysql
   package MyDB;
   use base 'Data::Model';
   use Data::Model::Schema;
-  use Data::Model::Driver::DBI;
+  use Data::Model::Driver::DBI::MasterSlave;
   
   my $dbi_connect_options = {};
   my $driver = Data::Model::Driver::DBI::MasterSlave->new(
