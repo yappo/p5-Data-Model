@@ -4,6 +4,7 @@ all_from 'lib/Data/Model.pm';
 
 requires 'Carp';
 requires 'Class::Trigger';
+requires 'Encode';
 requires 'Params::Validate';
 requires 'Storable';
 requires 'DBI';
