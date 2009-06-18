@@ -60,6 +60,7 @@ sub queue_abort {
     my $sql = 'SELECT queue_abort()';
     my $sth = $dbh->prepare($sql);
     $sth->execute;
+    $self->{is_aborted} = 1;
 }
 
 sub queue_end {
@@ -73,6 +74,7 @@ sub queue_end {
 
 sub queue_running {
     my($self, $c) = (shift, shift);
+    $self->{is_aborted} = 0;
     my $arg_length = scalar(@_);
     Carp::croak 'illegal parameter' if $arg_length % 2;
 
@@ -106,9 +108,10 @@ sub queue_running {
         $callbacks->{$running_table}->($row);
     };
     if ($@) {
-        $self->queue_abort;
+        $self->queue_abort unless $self->{is_aborted};
         die $@; # throwing exception
     }
+    return if $self->{is_aborted};
 
     $self->queue_end;
     return $real_table;
@@ -202,6 +205,19 @@ Data::Model::Driver::Queue::Q4M - Q4M manager for Data::Model
           is($row->data, 1);
       },
   );
+  ok($retval);
+
+
+  # explicit abort
+  my $retval = $model->queue_running(
+      'smtp:data>10' => sub {
+          my $row = shift;
+          is($row->id, 'foo');
+          is($row->data, 1);
+          $model->queue_abort; # queue is aborted
+      },
+  );
+  ok(!$retval);
 
 =head1 DESCRIPTION
 

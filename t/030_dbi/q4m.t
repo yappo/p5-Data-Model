@@ -8,7 +8,7 @@ $is_running = 1;
 
 use Data::Model::Driver::Queue::Q4M;
 
-plan tests => 46;
+plan tests => 52;
 
 my $dsn = $ENV{Q4M_DSN} || 'dbi:mysql:database=test';
 my $driver = Data::Model::Driver::Queue::Q4M->new(
@@ -101,6 +101,35 @@ do {
         }
     );
     my $retval = $model->queue_running(
+        smtp => sub {
+            my $row = shift;
+            is($row->id, 'foo', 'id: foo');
+            is($row->data, 1, 'data: 1');
+        },
+    );
+    is($retval, 'smtp', 'queue running is success: smtp');
+};
+
+
+# abort in callback
+do {
+    $model->set(
+        smtp => {
+            id   => 'foo',
+            data => 1,
+        }
+    );
+    my $retval = $model->queue_running(
+        smtp => sub {
+            my $row = shift;
+            is($row->id, 'foo', 'id: foo');
+            is($row->data, 1, 'data: 1');
+            $model->queue_abort;
+        },
+    );
+    ok(!$retval, 'queue running is abort: smtp');
+
+    $retval = $model->queue_running(
         smtp => sub {
             my $row = shift;
             is($row->id, 'foo', 'id: foo');
