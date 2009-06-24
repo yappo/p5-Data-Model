@@ -318,6 +318,7 @@ sub deserialize {
             }
         }
     }
+    Carp::croak "extra bytes" unless $len == $pos;;
 
     $hash;
 }
