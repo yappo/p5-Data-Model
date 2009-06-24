@@ -125,7 +125,7 @@ sub delete {
 package
     Data::Model::Driver::Memcached::Serializer::Default;
 # serializer use messagepack format
-# implement format is map16, map32, fixmap and nil, raw16, rwa32, fixraw
+# implement format is map16, map32, fixmap and nil, raw16, rwa32, fixraw and Positive FixNum, uint
 # see http://msgpack.sourceforge.jp/spec
 use strict;
 use warnings;
@@ -138,6 +138,12 @@ my $MAP32 = pack 'C', 0xdf;
 my $RAW16 = pack 'C', 0xda;
 my $RAW32 = pack 'C', 0xdb;
 my $NIL   = pack 'C', 0xc0;
+
+my $UINT8  = pack 'C', 0xcc;
+my $UINT16 = pack 'C', 0xcd;
+my $UINT32 = pack 'C', 0xce;
+my $UINT64 = pack 'C', 0xcf;
+
 
 sub serialize {
     my($class, $c, $hash) = @_;
@@ -159,34 +165,72 @@ sub serialize {
 
     while (my($k, $v) = each %{ $hash }) {
         if (defined $k) {
-            my $l = length($k);
-            if ($l < 32) {
-                $pack .= pack 'C', 0xa0 + $l;
-            } elsif ($l < 256*256) {
-                $pack .= $RAW16 . pack('n', $l);
-            } elsif ($l < 2**32) {
-                $pack .= $RAW32 . pack('N', $l);
+            if ($k =~ /\A[0-9]+\z/ && $k <= 0xffffffff) {
+                # Positive FixNum, uint
+                if ($k <= 0x7f) {
+                    # Positive FixNum
+                    $pack .= pack('C', $k);
+                } elsif ($k <= 0xff) {
+                    # uint 8
+                    $pack .= $UINT8 . pack('C', $k);
+                } elsif ($k <= 0xffff) {
+                    # uint 16
+                    $pack .= $UINT16 . pack('n', $k);
+                } elsif ($k <= 0xffffffff) {
+                    # uint 32
+                    $pack .= $UINT32 . pack('N', $k);
+                } else {
+                    Carp::croak "oops? ($k => $v)";
+                }
             } else {
-                Carp::croak "this serializer work is under 2^32 length ($k => $v)";
+                my $l = length($k);
+                if ($l < 32) {
+                    $pack .= pack 'C', 0xa0 + $l;
+                } elsif ($l < 256*256) {
+                    $pack .= $RAW16 . pack('n', $l);
+                } elsif ($l < 2**32) {
+                    $pack .= $RAW32 . pack('N', $l);
+                } else {
+                    Carp::croak "this serializer work is under 2^32 length ($k => $v)";
+                }
+                $pack .= $k;
             }
-            $pack .= $k;
         } else {
             # undef
             $pack .= $NIL;
         }
 
         if (defined $v) {
-            my $l = length($v);
-            if ($l < 32) {
-                $pack .= pack 'C', 0xa0 + $l;
-            } elsif ($l < 256*256) {
-                $pack .= $RAW16 . pack('n', $l);
-            } elsif ($l < 2**32) {
-                $pack .= $RAW32 . pack('N', $l);
+            if ($v =~ /\A[0-9]+\z/ && $v <= 0xffffffff) {
+                # Positive FixNum, uint
+                if ($v <= 0x7f) {
+                    # Positive FixNum
+                    $pack .= pack('C', $v);
+                } elsif ($v <= 0xff) {
+                    # uint 8
+                    $pack .= $UINT8 . pack('C', $v);
+                } elsif ($v <= 0xffff) {
+                    # uint 16
+                    $pack .= $UINT16 . pack('n', $v);
+                } elsif ($v <= 0xffffffff) {
+                    # uint 32
+                    $pack .= $UINT32 . pack('N', $v);
+                } else {
+                    Carp::croak "oops? ($k => $v)";
+                }
             } else {
-                Carp::croak "this serializer work is under 2^32 length ($k => $v)";
+                my $l = length($v);
+                if ($l < 32) {
+                    $pack .= pack 'C', 0xa0 + $l;
+                } elsif ($l < 256*256) {
+                    $pack .= $RAW16 . pack('n', $l);
+                } elsif ($l < 2**32) {
+                    $pack .= $RAW32 . pack('N', $l);
+                } else {
+                    Carp::croak "this serializer work is under 2^32 length ($k => $v)";
+                }
+                $pack .= $v;
             }
-            $pack .= $v;
         } else {
             # undef
             $pack .= $NIL;
@@ -232,7 +276,18 @@ sub deserialize {
             my $data_type = substr($pack, $pos++, 1);
             if ($data_type eq $NIL) {
                 $v = undef;
+            } elsif ($data_type eq $UINT8 || $data_type eq $UINT16 || $data_type eq $UINT32) {
+                if ($data_type eq $UINT8) {
+                    $v = unpack('C', substr($pack, $pos++));
+                } elsif ($data_type eq $UINT16) {
+                    $v = unpack('n', substr($pack, $pos));
+                    $pos += 2;
+                } elsif ($data_type eq $UINT32) {
+                    $v = unpack('N', substr($pack, $pos));
+                    $pos += 4;
+                }
             } else {
+                my $is_num;
                 if ($data_type eq $RAW16) {
                     $len = unpack 'n', substr($pack, $pos);
                     $pos += 2;
@@ -241,11 +296,19 @@ sub deserialize {
                     $pos += 4;
                 } else {
                     $len = unpack 'C', $data_type;
-                    $len -= 0xa0;
-                    Carp::croak "extra bytes" if $len >= 32;
+                    if ($len <= 0x7f) {
+                        # Positive FixNum
+                        $v = $len;
+                        $is_num = 1;
+                    } else {
+                        $len -= 0xa0;
+                        Carp::croak "extra bytes" if $len >= 32;
+                    }
                 }
-                $v = substr($pack, $pos, $len);
-                $pos += $len;
+                unless ($is_num) {
+                    $v = substr($pack, $pos, $len);
+                    $pos += $len;
+                }
             }
 
             if ($_) {
