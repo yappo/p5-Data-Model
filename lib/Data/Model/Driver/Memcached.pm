@@ -149,13 +149,13 @@ sub serialize {
     my($class, $c, $hash) = @_;
     Carp::croak "usage: $class->serialize(\$self, \$hashref)" unless ref($hash) eq 'HASH';
     my $num = scalar(keys(%{ $hash }));
-    Carp::croak "this serializer work is under 2^32 columns" if $num >= (2**32);
+    Carp::croak "this serializer work is under 2^32 columns" if $num > 0xffffffff;
 
     my $pack = $MAGIC;
     if ($num < 16) {
         # FixMap
         $pack .= pack 'C', (0x80 + $num);
-    } elsif ($num < 256*256) {
+    } elsif ($num < 0xffff) {
         # map16
         $pack .= $MAP16 . pack('n', $num);
    } else {
@@ -186,9 +186,9 @@ sub serialize {
                 my $l = length($k);
                 if ($l < 32) {
                     $pack .= pack 'C', 0xa0 + $l;
-                } elsif ($l < 256*256) {
+                } elsif ($l <= 0xffff) {
                     $pack .= $RAW16 . pack('n', $l);
-                } elsif ($l < 2**32) {
+                } elsif ($l <= 0xffffffff) {
                     $pack .= $RAW32 . pack('N', $l);
                 } else {
                     Carp::croak "this serializer work is under 2^32 length ($k => $v)";
@@ -222,9 +222,9 @@ sub serialize {
                 my $l = length($v);
                 if ($l < 32) {
                     $pack .= pack 'C', 0xa0 + $l;
-                } elsif ($l < 256*256) {
+                } elsif ($l <= 0xffff) {
                     $pack .= $RAW16 . pack('n', $l);
-                } elsif ($l < 2**32) {
+                } elsif ($l <= 0xffffffff) {
                     $pack .= $RAW32 . pack('N', $l);
                 } else {
                     Carp::croak "this serializer work is under 2^32 length ($k => $v)";
