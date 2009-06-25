@@ -32,6 +32,9 @@ sub lookup {
     if ($self->{serializer}) {
         $ret = $self->{serializer}->deserialize($self, $ret);
     }
+    if (my $map = $schema->options->{column_name_rename}) {
+        $ret = $self->column_name_rename($map, $ret, 1);
+    }
     if ($self->{strip_keys}) {
         $ret = $self->revert_keyvalue($schema, $key, $ret);
     }
@@ -49,6 +52,9 @@ sub lookup_multi {
     while (my($id, $data) = each %{ $ret }) {
         if ($self->{serializer}) {
             $data = $self->{serializer}->deserialize($self, $data);
+        }
+        if (my $map = $schema->options->{column_name_rename}) {
+            $data = $self->column_name_rename($map, $data, 1);
         }
         if ($self->{strip_keys}) {
             $data = $self->revert_keyvalue($schema, $keys_map->{$id}, $data);
@@ -68,6 +74,9 @@ sub get {
     if ($self->{serializer}) {
         $ret = $self->{serializer}->deserialize($self, $ret);
     }
+    if (my $map = $schema->options->{column_name_rename}) {
+        $ret = $self->column_name_rename($map, $ret, 1);
+    }
     if ($self->{strip_keys}) {
         $ret = $self->revert_keyvalue($schema, $key, $ret);
     }
@@ -81,6 +90,9 @@ sub set {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if (my $map = $schema->options->{column_name_rename}) {
+        $data = $self->column_name_rename($map, $data);
     }
     if ($self->{serializer}) {
         $data = $self->{serializer}->serialize($self, $data);
@@ -98,6 +110,9 @@ sub replace {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if (my $map = $schema->options->{column_name_rename}) {
+        $data = $self->column_name_rename($map, $data);
     }
     if ($self->{serializer}) {
         $data = $self->{serializer}->serialize($self, $data);
@@ -121,6 +136,9 @@ sub update {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if (my $map = $schema->options->{column_name_rename}) {
+        $data = $self->column_name_rename($map, $data);
     }
     if ($self->{serializer}) {
         $data = $self->{serializer}->serialize($self, $data);
@@ -156,6 +174,27 @@ sub revert_keyvalue {
     my $data = { %{ $columns } };
     for my $key (@{ $schema->key }) {
         $data->{$key} = $keys->[$i++].''; # copy
+    }
+    $data;
+}
+
+sub column_name_rename {
+    my($self, $map, $columns, $is_reverse) = @_;
+    if ($is_reverse) {
+        my $tmp = {};
+        while (my($k, $v) = each %{ $map }) {
+            $tmp->{$v} = $k;
+        }
+        $map = $tmp;
+    }
+
+    my $data = {};
+    while (my($k, $v) = each %{ $columns }) {
+        if (my $n = $map->{$k}) {
+            $data->{$n} = $v;
+        } else {
+            $data->{$k} = $v;
+        }
     }
     $data;
 }
