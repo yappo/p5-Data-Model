@@ -18,6 +18,10 @@ sub import {
     $SUGAR_MAP->{$caller} = $args{sugar} || 'default';
     $COLUMN_SUGAR->{$SUGAR_MAP->{$caller}} ||= +{};
 
+    if ($caller eq 'Data::Model::Schema::Properties') {
+        $args{skip_import}++;
+    }
+
     unless ($args{skip_import}) {
         no strict 'refs';
         for my $name (qw/ base_driver driver install_model schema column columns key index unique schema_options column_sugar

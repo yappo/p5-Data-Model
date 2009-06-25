@@ -10,7 +10,7 @@ use Class::Trigger qw( pre_insert pre_save post_save post_load pre_update pre_in
 use Encode ();
 use Params::Validate ':all';
 
-use Data::Model::Schema skip_import => 1;
+use Data::Model::Schema;
 use Data::Model::Schema::Inflate;
 use Data::Model::Schema::SQL;
 
