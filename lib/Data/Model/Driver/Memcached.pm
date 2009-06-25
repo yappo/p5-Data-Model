@@ -32,12 +32,16 @@ sub lookup {
     if ($self->{serializer}) {
         $ret = $self->{serializer}->deserialize($self, $ret);
     }
+    if ($self->{strip_keys}) {
+        $ret = $self->revert_keyvalue($schema, $key, $ret);
+    }
     return $ret;
 }
 
 sub lookup_multi {
     my($self, $schema, $keys) = @_;
-    my @cache_keys = map { $self->cache_key($schema, $_) } @{ $keys };
+    my $keys_map = {};
+    my @cache_keys = map { my $k = $self->cache_key($schema, $_); $keys_map->{$k} = $_ ; $k } @{ $keys };
     my $ret = $self->{memcached}->get_multi( @cache_keys );
     return unless $ret;
 
@@ -45,6 +49,9 @@ sub lookup_multi {
     while (my($id, $data) = each %{ $ret }) {
         if ($self->{serializer}) {
             $data = $self->{serializer}->deserialize($self, $data);
+        }
+        if ($self->{strip_keys}) {
+            $data = $self->revert_keyvalue($schema, $keys_map->{$id}, $data);
         }
         my $key = $schema->get_key_array_by_hash($data);
         $resultlist{join "\0", @{ $key }} = +{ %{ $data } };
@@ -61,6 +68,9 @@ sub get {
     if ($self->{serializer}) {
         $ret = $self->{serializer}->deserialize($self, $ret);
     }
+    if ($self->{strip_keys}) {
+        $ret = $self->revert_keyvalue($schema, $key, $ret);
+    }
     return $self->_generate_result_iterator([ $ret ]), +{};
 }
 
@@ -69,8 +79,11 @@ sub set {
 
     my $cache_key = $self->cache_key($schema, $key);
     my $data = $columns;
+    if ($self->{strip_keys}) {
+        $data = $self->strip_keyvalue($schema, $key, $data);
+    }
     if ($self->{serializer}) {
-        $data = $self->{serializer}->serialize($self, $columns);
+        $data = $self->{serializer}->serialize($self, $data);
     }
     my $ret = $self->{memcached}->add( $cache_key, $data );
     return unless $ret;
@@ -83,8 +96,11 @@ sub replace {
 
     my $cache_key = $self->cache_key($schema, $key);
     my $data = $columns;
+    if ($self->{strip_keys}) {
+        $data = $self->strip_keyvalue($schema, $key, $data);
+    }
     if ($self->{serializer}) {
-        $data = $self->{serializer}->serialize($self, $columns);
+        $data = $self->{serializer}->serialize($self, $data);
     }
     my $ret = $self->{memcached}->set( $cache_key, $data );
     return unless $ret;
@@ -103,8 +119,11 @@ sub update {
     }
 
     my $data = $columns;
+    if ($self->{strip_keys}) {
+        $data = $self->strip_keyvalue($schema, $key, $data);
+    }
     if ($self->{serializer}) {
-        $data = $self->{serializer}->serialize($self, $columns);
+        $data = $self->{serializer}->serialize($self, $data);
     }
     my $ret = $self->{memcached}->set( $new_cache_key, $data );
     return unless $ret;
@@ -119,6 +138,25 @@ sub delete {
     return unless $data;
     my $ret = $self->{memcached}->delete( $cache_key );
     return unless $ret;
+    $data;
+}
+
+sub strip_keyvalue {
+    my($self, $schema, $keys, $columns) = @_;
+    my $data = { %{ $columns } };
+    for my $key (@{ $schema->key }) {
+        delete $data->{$key};
+    }
+    $data;
+}
+
+sub revert_keyvalue {
+    my($self, $schema, $keys, $columns) = @_;
+    my $i = 0;
+    my $data = { %{ $columns } };
+    for my $key (@{ $schema->key }) {
+        $data->{$key} = $keys->[$i++].''; # copy
+    }
     $data;
 }
 
