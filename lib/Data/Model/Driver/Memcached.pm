@@ -97,7 +97,7 @@ sub set {
     if ($self->{serializer}) {
         $data = $self->{serializer}->serialize($self, $data);
     }
-    my $ret = $self->{memcached}->add( $cache_key, $data );
+    my $ret = $self->{always_overwrite} ? $self->{memcached}->set( $cache_key, $data ) :  $self->{memcached}->add( $cache_key, $data );
     return unless $ret;
 
     $columns;
