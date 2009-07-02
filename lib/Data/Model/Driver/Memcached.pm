@@ -319,8 +319,9 @@ sub serialize {
 
 sub deserialize {
     my($class, $c, $pack) = @_;
+    $pack ||= '';
     $pack =~ s/^(.)//;
-    my $fmt = $1;
+    my $fmt = $1 || '';
     Carp::croak "this pack data is not Default format" unless $fmt eq $MAGIC;
 
     my $pos = 0;
