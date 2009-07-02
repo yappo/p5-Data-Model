@@ -1,5 +1,5 @@
 use t::Utils;
-use Test::More tests => 11;
+use Test::More;
 
 my $memcached_bin     = $ENV{TEST_MEMCACHED_BIN};
 eval "use Cache::Memcached::Fast";
@@ -9,6 +9,7 @@ plan skip_all => "Test::TCP required for testing memcached driver" if $@;
 unless ($memcached_bin && -x $memcached_bin) {
     plan skip_all => "Set TEST_MEMCACHED_BIN environment variable to run this test";
 }
+plan tests => 11;
 
 my $port = empty_port();
 my $memd = Cache::Memcached::Fast->new({ servers => [ { address => "localhost:$port" }, ], });
