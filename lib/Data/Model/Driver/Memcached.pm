@@ -221,10 +221,15 @@ my $UINT16 = pack 'C', 0xcd;
 my $UINT32 = pack 'C', 0xce;
 my $UINT64 = pack 'C', 0xcf;
 
+my $HAS_DATA_MESSAGEPACK = eval "use Data::MessagePack; if (\$Data::MessagePack::VERSION >= 0.02) { 1 } else { 0 };" or 0;
+$HAS_DATA_MESSAGEPACK = 0 unless $ENV{USE_DATA_MESSAGEPACK};
 
 sub serialize {
     my($class, $c, $hash) = @_;
     Carp::croak "usage: $class->serialize(\$self, \$hashref)" unless ref($hash) eq 'HASH';
+    if ($HAS_DATA_MESSAGEPACK) {
+        return $MAGIC.Data::MessagePack->pack( $hash );
+    }
     my $num = scalar(keys(%{ $hash }));
     Carp::croak "this serializer work is under 2^32 columns" if $num > 0xffffffff;
 
@@ -323,6 +328,9 @@ sub deserialize {
     $pack =~ s/^(.)//;
     my $fmt = $1 || '';
     Carp::croak "this pack data is not Default format" unless $fmt eq $MAGIC;
+    if ($HAS_DATA_MESSAGEPACK) {
+        return Data::MessagePack->unpack( $pack );
+    }
 
     my $pos = 0;
     my $len = length($pack);
