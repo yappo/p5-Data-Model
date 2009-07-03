@@ -221,8 +221,7 @@ my $UINT16 = pack 'C', 0xcd;
 my $UINT32 = pack 'C', 0xce;
 my $UINT64 = pack 'C', 0xcf;
 
-my $HAS_DATA_MESSAGEPACK = eval "use Data::MessagePack; if (\$Data::MessagePack::VERSION >= 0.02) { 1 } else { 0 };" or 0;
-$HAS_DATA_MESSAGEPACK = 0 unless $ENV{USE_DATA_MESSAGEPACK};
+my $HAS_DATA_MESSAGEPACK = eval "use Data::MessagePack; if (\$Data::MessagePack::VERSION >= 0.04) { 1 } else { 0 };" or 0;
 
 sub serialize {
     my($class, $c, $hash) = @_;
