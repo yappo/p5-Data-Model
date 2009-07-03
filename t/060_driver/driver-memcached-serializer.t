@@ -4,8 +4,8 @@ use t::Utils;
 use Test::More;
 
 our $has_dmp = 0;
-if (eval "use Data::MessagePack; 1;") {
-    plan tests => 48;
+if (eval "use Data::MessagePack; if (\$Data::MessagePack::VERSION >= 0.05 ) { 1 } else { 0 }") {
+    plan tests => 100;
     $has_dmp = 1;
 } else {
     plan tests => 20;
@@ -16,6 +16,7 @@ use Data::Model::Driver::Memcached;
 
 sub run_tests {
     my $in = shift;
+    local $Data::Model::Driver::Memcached::Serializer::Default::HAS_DATA_MESSAGEPACK = 0;
 
     my $pack = Data::Model::Driver::Memcached::Serializer::Default->serialize(
         undef, $in,
@@ -32,6 +33,22 @@ sub run_tests {
         is($pack, $pack2, 'pack');
         my $ret2  = Data::MessagePack->unpack($pack);
         is_deeply($ret, $ret2, 'unpack');
+
+        local $Data::Model::Driver::Memcached::Serializer::Default::HAS_DATA_MESSAGEPACK = 1;
+        my $pack3 = Data::Model::Driver::Memcached::Serializer::Default->serialize(
+            undef, $in,
+        );
+        my $ret3 = Data::Model::Driver::Memcached::Serializer::Default->deserialize(
+            undef, $pack3,
+        );
+        is_deeply($ret3, $in);
+        $pack3 =~ s/^.//;
+
+        if ($Data::MessagePack::PreferInteger) {
+            is($pack, $pack3, 'INT: pack with Data::MessagePack');
+        } else {
+            is($pack, $pack3, 'NOT INT: pack with Data::MessagePack');
+        }
     }
 }
 
@@ -141,7 +158,7 @@ run_tests +{
 
 
 do {
-    local $has_dmp = 0;
+    local $Data::MessagePack::PreferInteger = 1;
 
     run_tests +{
         1 => 2,
