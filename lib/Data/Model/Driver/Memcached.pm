@@ -432,13 +432,22 @@ Data::Model::Driver::Memcached - storage driver for memcached protocol
     ....
   };
 
+=head1 DESCRIPTION
 
-use customizable serializer
+Storage is used via a memcached protocol.
+
+It can save at memcached, Tokyo Tyrant, kai, groonga, etc.
+
+=head1 OPTIONS
+
+=head2 serializer
 
   my $driver = Data::Model::Driver::Memcached->new(
       memcached  => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:11211" }, ], }),
-      serializer => 'Default', # default is messagepack minimum set for Data::Model
+      serializer => 'Default', # default is L<Data::MessagePack> or messagepack minimum set for Data::Model
   );
+
+you can use customizable serializer.
 
   {
       package MySerializer;
@@ -458,12 +467,50 @@ use customizable serializer
       serializer => '+MySerializer',
   );
 
+=head2 strip_keys
 
-=head1 DESCRIPTION
+strip tables key data, Because key data stored in a memcached key part.
 
-Storage is used via a memcached protocol.
+  my $driver = Data::Model::Driver::Memcached->new(
+      memcached  => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:11211" }, ], }),
+      strip_keys => 1,
+  );
 
-It can save at memcached, Tokyo Tyrant, kai, groonga, etc.
+=head2 model_name_realname column_name_rename
+
+compress your table name and column name.
+
+=head1 OPTIONS EXAMPLE
+
+  my $driver = Data::Model::Driver::Memcached->new(
+      memcached  => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:11211" }, ], namespace => 'test', }),
+      serializer => 'Default',
+      strip_keys => 1,
+  );
+  install_model simple => schema {
+      schema_options model_name_realname => 's';
+      key 'id';
+      column 'id';
+      column 'name';
+      column 'nickname';
+      schema_options column_name_rename => {
+          id       => 1,
+          name     => 2,
+          nickname => 3,
+      };
+  };
+
+  $model->set(
+      simple => 'keyvalue' => {
+          name     => 'osawa',
+          nickname => 'yappo',
+      }
+  );
+  # same code
+  $memcached->add(
+      'tests:keyvalue',
+      Data::MessagePack->pack({ 2 => 'osawa', 3 => 'yappo' }),
+  );
 
 =head1 SEE ALSO
 
