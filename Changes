@@ -1,5 +1,10 @@
 Revision history for Perl extension Data::Model
 
+0.00003    2009-07-04T14:20:27+09:00
+           - Driver::Memcached: add more KeyValueStorage friendly features.
+             see L<Data::Model::Driver::Memcached> OPTIONS
+           -
+
 0.00002    2009-06-18T13:55:21+09:00
            - add dependency Encode
            - Q4M: add queue_abort method
