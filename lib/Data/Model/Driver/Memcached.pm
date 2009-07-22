@@ -232,6 +232,13 @@ sub serialize {
         if ($@) {
             require Data::Dumper;
             warn Data::Dumper::Dumper($hash);
+            {
+                local $@;
+                eval { require Devel::Peek };
+                unless ($@) {
+                    warn Devel::Peek::Dump($hash);
+                }
+            }
             die $@;
         }
         return $MAGIC.$ret;
