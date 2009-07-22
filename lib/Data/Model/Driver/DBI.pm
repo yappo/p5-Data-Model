@@ -59,9 +59,10 @@ sub init_db {
 sub _get_dbh {
     my $self = shift;
     my $name = shift || 'rw';
+    my %args = @_;
     my $dbi_config = $self->dbi_config($name);
     $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
-    unless ($dbi_config->{dbh}) {
+    unless ($dbi_config->{dbh} || $args{isnt_reconnect}) {
         if (my $getter = $self->{get_dbh}) {
             $dbi_config->{dbh} = $getter->();
         } else {
@@ -71,7 +72,7 @@ sub _get_dbh {
     $dbi_config->{dbh};
 }
 
-sub rw_handle { $_[0]->_get_dbh('rw') };
+sub rw_handle { shift->_get_dbh('rw', @_) };
 sub r_handle  { shift->rw_handle(@_) }
 
 sub last_error {}
