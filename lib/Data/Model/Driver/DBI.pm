@@ -36,14 +36,14 @@ sub init {
 
 my %reuse_handles;
 sub init_db {
-    my($self, $name) = @_;
+    my($self, $name, %args) = @_;
     my $dbi_config = $self->dbi_config($name);
     my $dsn = $dbi_config->{dsn};
     my $dbh;
     if ($self->{reuse_dbh}) {
         $dbh = $reuse_handles{$dsn};
     }
-    unless ($dbh) {
+    unless ($dbh && ($args{no_ping} || $dbh->ping)) {
         $dbh = DBI->connect(
             $dsn, $dbi_config->{username}, $dbi_config->{password},
             { RaiseError => 1, PrintError => 0, AutoCommit => 1, %{ $dbi_config->{connect_options} || {} } },
@@ -59,16 +59,16 @@ sub init_db {
 sub _get_dbh {
     my $self = shift;
     my $name = shift || 'rw';
-    my %args = @_;
+    my %args = @_; # this option is experimental
     my $dbi_config = $self->dbi_config($name);
     unless ($args{no_ping}) {
         $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
     }
-    unless ($dbi_config->{dbh} || $args{isnt_reconnect}) {
+    unless ($dbi_config->{dbh} || $args{cannot_reconnect}) {
         if (my $getter = $self->{get_dbh}) {
             $dbi_config->{dbh} = $getter->();
         } else {
-            $dbi_config->{dbh} = $self->init_db($name) or Carp::croak $self->last_error;
+            $dbi_config->{dbh} = $self->init_db($name, %args) or Carp::croak $self->last_error;
         }
     }
     $dbi_config->{dbh};
@@ -490,10 +490,10 @@ Data::Model::Driver::DBI - storage driver for DBI
       username        => 'user',
       password        => 'password',
       connect_options => $dbi_connect_options,
-      reuse_dbh       => 1, # sharing dbh (optional)
+      reuse_dbh       => 1, # sharing dbh (experimental option)
                             # When you use by MySQL, please set up
                             # connect_options => { mysql_auto_reconnect => 1 },
-                            # simultaneously.
+                            # simultaneously. but mysql_auto_reconnect is very unsettled.
   );
   
   base_driver $driver;
