@@ -61,7 +61,9 @@ sub _get_dbh {
     my $name = shift || 'rw';
     my %args = @_;
     my $dbi_config = $self->dbi_config($name);
-    $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
+    unless ($args{no_ping}) {
+        $dbi_config->{dbh} = undef if $dbi_config->{dbh} and !$dbi_config->{dbh}->ping;
+    }
     unless ($dbi_config->{dbh} || $args{isnt_reconnect}) {
         if (my $getter = $self->{get_dbh}) {
             $dbi_config->{dbh} = $getter->();
