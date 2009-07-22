@@ -236,7 +236,7 @@ sub serialize {
                 local $@;
                 eval { require Devel::Peek };
                 unless ($@) {
-                    warn Devel::Peek::Dump($hash);
+                    Devel::Peek::Dump($hash);
                 }
             }
             die $@;
