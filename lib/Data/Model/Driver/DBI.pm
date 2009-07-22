@@ -34,13 +34,24 @@ sub init {
     };
 }
 
+my %reuse_handles;
 sub init_db {
     my($self, $name) = @_;
     my $dbi_config = $self->dbi_config($name);
-    my $dbh = DBI->connect(
-        $dbi_config->{dsn}, $dbi_config->{username}, $dbi_config->{password},
-        { RaiseError => 1, PrintError => 0, AutoCommit => 1, %{ $dbi_config->{connect_options} || {} } },
-    ) or Carp::croak("Connection error: " . $DBI::errstr);
+    my $dsn = $dbi_config->{dsn};
+    my $dbh;
+    if ($self->{reuse_dbh}) {
+        $dbh = $reuse_handles{$dsn};
+    }
+    unless ($dbh) {
+        $dbh = DBI->connect(
+            $dsn, $dbi_config->{username}, $dbi_config->{password},
+            { RaiseError => 1, PrintError => 0, AutoCommit => 1, %{ $dbi_config->{connect_options} || {} } },
+        ) or Carp::croak("Connection error: " . $DBI::errstr);
+        if ($self->{reuse_dbh}) {
+            $reuse_handles{$dsn} = $dbh;
+        }
+    }
     $self->{__dbh_init_by_driver} = 1;
     $dbh;
 }
@@ -476,6 +487,10 @@ Data::Model::Driver::DBI - storage driver for DBI
       username        => 'user',
       password        => 'password',
       connect_options => $dbi_connect_options,
+      reuse_dbh       => 1, # sharing dbh (optional)
+                            # When you use by MySQL, please set up
+                            # connect_options => { mysql_auto_reconnect => 1 },
+                            # simultaneously.
   );
   
   base_driver $driver;
