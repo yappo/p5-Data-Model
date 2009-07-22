@@ -228,7 +228,13 @@ sub serialize {
     Carp::croak "usage: $class->serialize(\$self, \$hashref)" unless ref($hash) eq 'HASH';
     if ($HAS_DATA_MESSAGEPACK) {
         local $Data::MessagePack::PreferInteger = 1;
-        return $MAGIC.Data::MessagePack->pack( $hash );
+        my $ret = eval { Data::MessagePack->pack( $hash ) };
+        if ($@) {
+            require Data::Dumper;
+            warn Data::Dumper::Dumper($hash);
+            die $@;
+        }
+        return $MAGIC.$ret;
     }
     my $num = scalar(keys(%{ $hash }));
     Carp::croak "this serializer work is under 2^32 columns" if $num > 0xffffffff;
