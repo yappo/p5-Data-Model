@@ -424,7 +424,7 @@ sub _stack_trace {
     $sql =~ s/\n/\n          /gm;
     Carp::croak sprintf <<"TRACE", $reason, $sql, Data::Dumper::Dumper($binds);
     **** { Data::Model::Driver::DBI 's Exception ****
-Reasone : %s
+Reason : %s
 SQL     : %s
     **** BINDS DUMP ****
 %s
