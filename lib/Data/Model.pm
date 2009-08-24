@@ -292,7 +292,10 @@ sub get {
     return if @_ && !@{ $query }; # undef key
     local $schema->{schema_obj} = $self;
     my($iterator, $iterator_options) = $schema->{driver}->get( $schema, @{ $query } );
-    return unless $iterator;
+    unless ($iterator) {
+        return if wantarray;
+        return Data::Model::Iterator::Empty->new;
+    }
 
     if (wantarray) {
         my @objs = ();
