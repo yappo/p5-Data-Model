@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 76;
+use Test::More tests => 80;
 
 use Data::Model::Iterator;
 
@@ -22,6 +22,12 @@ $itr->reset;
 my $i = 1;
 while (<$itr>) {
     is($_, $i, "Iterator overload: $i");
+    ++$i;
+}
+$itr->reset;
+$i = 1;
+while (my $row = <$itr>) {
+    is($row, $i, "Iterator overload: $i");
     ++$i;
 }
 $itr->reset;
