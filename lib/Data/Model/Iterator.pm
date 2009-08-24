@@ -35,4 +35,18 @@ sub end {
 
 sub DESTROY { shift->end };
 
+package Data::Model::Iterator::Empty;
+use strict;
+use warnings;
+use overload
+    q{""}  => sub { undef },
+    q{0+}  => sub { undef },
+    'bool' => sub { undef },
+    fallback => 1;
+
+sub new { bless {}, shift }
+sub next  { undef }
+sub reset { undef }
+sub end   { undef }
+
 1;
