@@ -17,6 +17,8 @@ sub fetch_last_id {}
 sub bind_param_attributes {}
 sub can_replace { 1 }
 
+sub has_support { 0 }
+
 sub _as_sql_hook {
     my $self   = shift;
     my $c      = shift;

@@ -17,6 +17,12 @@ sub _as_sql_inner_index {
     return @sql;
 }
 
+sub has_support {
+    exists {
+        on_duplicate_key_update => 1,
+    }->{$_[1]};
+}
+
 sub _as_sql_index { '' }
 
 sub _as_sql_column_type {

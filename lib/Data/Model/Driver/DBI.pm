@@ -248,6 +248,54 @@ sub replace {
     }
 }
 
+sub _on_duplicate_key_update {
+    my($self, $schema, $columns, $args, $sql, $column_list) = @_;
+    my $table = $schema->model;
+
+    # check unique keys
+    my $keys   = $schema->key;
+    my $unique = $schema->unique;
+    my $key_columns = [];
+    if (scalar(@{ $keys }) >= 1) {
+        if (scalar(keys %{ $unique }) >= 1) {
+            Carp::croak "on_duplicate_key_update support: $table has multi unique key";
+        }
+        # OK
+        $key_columns = $keys;
+    } elsif (scalar(keys %{ $unique }) > 1) {
+        Carp::croak "on_duplicate_key_update support: $table has multi unique key";
+    } elsif (scalar(keys %{ $unique }) == 1) {
+        # OK
+        while (my($k, $v) = each %{ $unique }) {
+            $key_columns = $v;
+        }
+    } else {
+        Carp::croak "on_duplicate_key_update support: $table not has key or unique index";
+    }
+
+    # check key num
+    my $has_keys = 1;
+    for my $k (@{ $key_columns }) {
+        $has_keys = 0 unless defined $columns->{$k};
+    }
+    Carp::croak "on_duplicate_key_update support: $table is insufficient keys" unless $has_keys;
+
+    # append sql
+    my @set;
+    for my $column (keys %{ $args }) {
+        my $val = $args->{$column};
+        if (ref($val) eq 'SCALAR') {
+            push @set, "$column = " . ${ $val };
+        } elsif (!ref($val)) {
+            push @set, "$column = ?";
+            push @{ $column_list }, [ $column => $val ];
+        } else {
+            Carp::confess 'No references other than a SCALAR reference can use a update column';
+        }
+    }
+    ${ $sql } .= ' ON DUPLICATE KEY UPDATE ' . join(', ', @set) . "\n";
+}
+
 sub _insert_or_replace {
     my($self, $is_replace, $schema, $key, $columns, %args) = @_;
     my $select_or_replace = $is_replace ? 'REPLACE' : 'INSERT';
@@ -260,6 +308,11 @@ sub _insert_or_replace {
     my $sql = "$select_or_replace INTO $table\n";
     $sql .= '(' . join(', ', @{ $cols }) . ')' . "\n" .
             'VALUES (' . join(', ', ('?') x @{ $cols }) . ')' . "\n";
+
+    # ON DUPLICATE KEY UPDATE support for MySQL
+    if ($args{on_duplicate_key_update} && $self->dbd->has_support('on_duplicate_key_update')) {
+        $self->_on_duplicate_key_update($schema, $columns, $args{on_duplicate_key_update}, \$sql, \@column_list);
+    }
 
     my $sth;
     eval {
