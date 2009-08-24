@@ -62,3 +62,68 @@ sub reset { undef }
 sub end   { undef }
 
 1;
+__END__
+
+=head1 NAME
+
+Data::Model::Iterator - Data::Model's iteration class
+
+=head1 SYNOPSIS
+
+  use Data::Model::Iterator;
+
+  my @stack = qw( 1 2 );
+  my $itr = Data::Model::Iterator->new(
+      sub { ok(1, 'do shift'); shift @stack },
+      end   => sub { ok(1, 'do end') },
+      reset => sub { ok(1, 'do reset') },
+  );
+
+  #
+  Dump($itr->next) if $itr->has_next;
+
+  # iteration
+  while (my $row = $itr->next) {
+      say $row;
+      # some code
+  }
+
+  while (<$itr>) {
+      say $_;
+      # some code
+  }
+
+  while (my $row = <$itr>) {
+      say $row;
+      # some code
+  }
+
+for empty iteration
+
+  my $itr = Data::Model::Iterator::Empty->new;
+  return unless $itr; # bool overload
+  return unless $itr->has_next;
+
+=head1 METHODS
+
+=head2 has_next
+
+=head2 next
+
+=head2 reset
+
+=head1 SEE ALSO
+
+L<overload>
+
+=head1 AUTHOR
+
+Kazuhiro Osawa E<lt>yappo <at> shibuya <döt> plE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
