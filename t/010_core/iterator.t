@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 64;
+use Test::More tests => 76;
 
 use Data::Model::Iterator;
 
@@ -18,6 +18,18 @@ $itr->reset;
 is($itr->next, 1, 'next 1');
 is($itr->next, 2, 'next 2');
 is($itr->next, undef, 'next is undef');
+$itr->reset;
+my $i = 1;
+while (<$itr>) {
+    is($_, $i, "Iterator overload: $i");
+    ++$i;
+}
+$itr->reset;
+ok($itr->has_next, 'has_next is true');
+is(<$itr>, 1, 'Iterator overload line: 1');
+ok($itr->has_next, 'has_next is true');
+is(<$itr>, 2, 'Iterator overload line: 2');
+ok(!$itr->has_next, 'has_next is false');
 $itr->end;
 
 @stack = qw( 1 2 );
@@ -65,3 +77,7 @@ ok(!$itr->has_next, 'has_next is false');
 is($itr->next, undef, 'next is undef');
 ok(!$itr->has_next, 'has_next is false');
 is($itr->end, undef, 'end is undef');
+while (<$itr>) {
+    ok(0, 'not iteration');
+}
+is(<$itr>, undef, 'Iterator overload line: undef');

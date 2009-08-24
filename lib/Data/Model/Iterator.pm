@@ -1,6 +1,9 @@
 package Data::Model::Iterator;
 use strict;
 use warnings;
+use overload
+    '<>' => sub { shift->next },
+    fallback => 1;
 
 sub new {
     my($class, $code, %args) = @_;
@@ -12,6 +15,13 @@ sub new {
         end     => delete $args{end}     || sub {},
         wrapper => delete $args{wrapper} || sub { shift },
     }, $class;
+}
+
+sub has_next {
+    my $self = shift;
+    my $obj = $self->next;
+    $self->{count}--;
+    !!$obj;
 }
 
 sub next {
@@ -42,9 +52,11 @@ use overload
     q{""}  => sub { undef },
     q{0+}  => sub { undef },
     'bool' => sub { undef },
+    '<>'   => sub { shift->next },
     fallback => 1;
 
 sub new { bless {}, shift }
+sub has_next { 0 }
 sub next  { undef }
 sub reset { undef }
 sub end   { undef }
