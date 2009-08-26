@@ -1,5 +1,16 @@
 Revision history for Perl extension Data::Model
 
+0.00004    2009-08-26T13:19:05+09:00
+           - Iterator::Empty will be returned if get-method result is empty
+           - Driver::DBI
+             add reuse_dbh option
+             add isnt_reconnect option for rw_handle, r_handle
+             add on_duplicate_key_update support for mysql
+             add pseudo bigint emulation for sqlite
+           - Iterator
+             add $itr->has_next
+             add overloaded iteration
+
 0.00003    2009-07-04T14:20:27+09:00
            - Driver::Memcached: add more KeyValueStorage friendly features.
              see L<Data::Model::Driver::Memcached> OPTIONS
