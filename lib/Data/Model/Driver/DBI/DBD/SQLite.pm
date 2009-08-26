@@ -8,7 +8,7 @@ sub fetch_last_id { $_[3]->func('last_insert_rowid') }
 sub bind_param_attributes {
     my($self, $data_type) = @_;
     if ($data_type) { 
-        if ($data_type =~ /blob/i || $data_type =~ /bin/i) {
+        if ($data_type =~ /blob/i || $data_type =~ /bin/i || $data_type =~ /\Abigint\Z/i) {
             return DBI::SQL_BLOB;
         }
     }
@@ -43,6 +43,13 @@ sub _as_sql_column_type {
         $args->{options}->{binary} = 0;
         return "BLOB";
     }
+
+    # for pseudo bigint emulation
+    if ($type eq 'BIGINT') {
+        $args->{options}->{binary} = 0;
+        return "BLOB";
+    }
+
     return;
 }
 
