@@ -64,7 +64,7 @@ sub as_default {
         return '';
     }
 
-    if ($args->{type} =~ m/(?:int|real|float|double|numeric|decimal)/i) {
+    if ($args->{type} =~ m/(?:int|real|float|double|numeric|decimal|bit)/i) {
         return ' DEFAULT ' . $default
     }
     return " DEFAULT '" . $default ."'";
