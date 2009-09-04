@@ -49,6 +49,10 @@ sub queue_wait {
     my $rv = $sth->fetch;
     $sth->finish;
     undef $sth;
+
+    unless (defined $retcode) { # queue_wait return code is NULL is illegal table name
+        Carp::croak "no created queue table";
+    }
     return 0 unless $rv && $retcode;
     return $retcode;
 }

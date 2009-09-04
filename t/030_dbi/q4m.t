@@ -8,7 +8,7 @@ $is_running = 1;
 
 use Data::Model::Driver::Queue::Q4M;
 
-plan tests => 52;
+plan tests => 53;
 
 my $dsn = $ENV{Q4M_DSN} || 'dbi:mysql:database=test';
 my $driver = Data::Model::Driver::Queue::Q4M->new(
@@ -45,6 +45,16 @@ my $model = MyQueue->new;
 teardown_schema($dsn, $model->schema_names);
 setup_schema( $dsn => MyQueue->as_sqls );
 
+{
+    package MyQueue;
+
+    install_model no_created_queue_table => schema {
+        column id
+            => char => {};
+        column data
+            => int => {};
+    };
+}
 
 # illegal parameter
 do {
@@ -80,6 +90,18 @@ do {
         );
     };
     like $@, qr/'table' is missing model name.*q4m\.t/, 'missing model name';
+};
+
+# no_created_queue_table
+do {
+    eval {
+        $model->queue_running(
+            pop                    => sub {},
+            smtp                   => sub {},
+            no_created_queue_table => sub {},
+        );
+    };
+    like $@, qr/no created queue table.*q4m\.t/, 'no created queue table';
 };
 
 # timeout
