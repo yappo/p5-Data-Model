@@ -51,6 +51,8 @@ sub get_changed_columns {
     +{ %{ $self->{changed_cols} } };
 }
 
+sub get_model { $_[0]->{model} }
+
 1;
 
 =head1 NAME
