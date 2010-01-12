@@ -1,27 +1,163 @@
-This is Perl module Data::Model.
+NAME
+    Data::Model - model interface which had more data sources unified, a.k.a
+    data/object mapper
 
-INSTALLATION
+SYNOPSIS
+      package Your::Model;
+      use base 'Data::Model';
+      use Data::Model::Schema;
+      use Data::Model::Driver::DBI;
+  
+      my $dbfile = '/foo/bar.db';
+      my $driver = Data::Model::Driver::DBI->new(
+          dsn => "dbi:SQLite:dbname=$dbfile",
+      );
+      base_driver( $driver );
+  
+      install_model user => schema {
+          key 'id';
+          columns qw/
+              id
+              name
+          /;
+      };
+  
+      # create database file
+      unless (-f $dbfile) {
+          my $dbh = DBI->connect($dsn, '', '', { RaiseError => 1, PrintError => 0 });
+          for my $sql (__PACKAGE__->as_sqls) {
+              $dbh->do( $sql );
+          }
+          $dbh->disconnect;
+      }
+  
+      # in your script:
+      use Your::Model;
+  
+      my $model = Your::Model->new;
+  
+      # insert
+      my $row = $model->set(
+          user => {
+              id => 1,
+          }
+      );
+  
+      my $row = $model->lookup( user => 1 );
+      $row->delete;
 
-Data::Model installation is straightforward. If your CPAN shell is set up,
-you should just be able to do
+DESCRIPTION
+    Data::Model is can use as ORM which can be defined briefly.
 
-    % cpan Data::Model
+    There are few documents. It is due to be increased in the near future.
 
-Download it, unpack it, then build it as per the usual:
+SCHEMA DEFINITION
+    One package can define two or more tables using DSL.
 
-    % perl Makefile.PL
-    % make && make test
+    see Data::Model::Schema.
 
-Then install it:
+METHODS
+  new([ \%options ]);
+      my $model = Class->new;
 
-    % make install
+  lookup($target => $key)
+      my $row = $model->lookup( user => $id );
+      print $row->name;
 
-DOCUMENTATION
+  lookup_multi($target => \@keylist)
+      my @row = $model->lookup_multi( user => [ $id1, $id2 ] );
+      print $row[0]->name;
+      print $row[1]->name;
 
-Data::Model documentation is available as in POD. So you can do:
+  get($target => $key [, \%options ])
+      my $iterator = $model->get( user => { 
+          id => {
+              IN => [ $id1, $id2 ],
+          }
+      });
+      while (my $row = $iterator->next) {
+          print $row->name;
+      }
+      # or
+      while (my $row = <$iterator>) {
+          print $row->name;
+      }
+      # or
+      while (<$iterator>) {
+          print $_->name;
+      }
 
-    % perldoc Data::Model
+  set($target => $key, => \%values [, \%options ])
+      $model->set( user => {
+        id   => 3,
+        name => 'insert record',
+      });
 
-to read the documentation online with your favorite pager.
+  delete($target => $key [, \%options ])
+      $model->delete( user => 3 ); # id = 3 is deleted
 
-Kazuhiro Osawa
+ROW OBJECT METHODS
+    row object is provided by Data::Model::Row.
+
+  update
+      my $row = $model->lookup( user => $id );
+      $row->name('update record');
+      $row->update;
+
+  delete
+      my $row = $model->lookup( user => $id );
+      $row->delete;
+
+TRANSACTION
+    see Data::Model::Transaction.
+
+DATA DRIVERS
+  DBI
+    see Data::Model::Driver::DBI.
+
+  DBI::MasterSlave
+    master-slave composition for mysql.
+
+    see Data::Model::Driver::DBI::MasterSlave.
+
+  Cache
+    Cash of the result of a query.
+
+    see Data::Model::Driver::Cache::HASH, see
+    Data::Model::Driver::Cache::Memcached.
+
+  Memcached
+    memcached is used for data storage.
+
+    see Data::Model::Driver::Memcached.
+
+  Queue::Q4M
+    queuing manager for Q4M.
+
+    see Data::Model::Driver::Queue::Q4M.
+
+  Memory
+    on memory storage.
+
+    see Data::Model::Driver::Memory.
+
+SEE ALSO
+    Data::Model::Row, Data::Model::Iterator
+
+ACKNOWLEDGEMENTS
+    Benjamin Trott more idea given by Data::ObjectDriver
+
+AUTHOR
+    Kazuhiro Osawa <yappo <at> shibuya <döt> pl>
+
+REPOSITORY
+      git clone git://github.com/yappo/p5-Data-Model.git
+
+    Data::Model's Git repository is hosted at
+    <http://github.com/yappo/p5-Data-Model>. patches and collaborators are
+    welcome.
+
+LICENSE
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+

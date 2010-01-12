@@ -1,6 +1,9 @@
 use inc::Module::Install;
 name 'Data-Model';
 all_from 'lib/Data/Model.pm';
+readme_from 'lib/Data/Model.pm';
+readme_pod_from 'lib/Data/Model.pm';
+githubmeta;
 
 requires 'Carp';
 requires 'Class::Trigger';
@@ -21,7 +24,6 @@ build_requires 'Path::Class';
 test_requires 'URI';
 test_requires 'IO::Socket::INET';
 
-use_test_base;
 auto_include;
 auto_set_repository;
 WriteAll;
