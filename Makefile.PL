@@ -10,7 +10,7 @@ requires 'Storable';
 requires 'DBI';
 requires 'DBD::SQLite';
 
-tests 't/*.t t/*/*.t';
+tests 't/*.t t/*/*.t t/*/*/*.t';
 author_tests 'xt';
 
 build_requires 'Test::Class';
