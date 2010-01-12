@@ -489,6 +489,17 @@ strip tables key data, Because key data stored in a memcached key part.
       strip_keys => 1,
   );
 
+=head2 ignore_undef_value
+
+When B<value> is B<undef>, a value is not put into storage.
+
+It becomes size saving at the time of obvious empty data.
+
+  my $driver = Data::Model::Driver::Memcached->new(
+      memcached          => Cache::Memcached::Fast->new({ servers => [ { address => "localhost:11211" }, ], }),
+      ignore_undef_value => 1,
+  );
+
 =head2 model_name_realname column_name_rename
 
 compress your table name and column name.
