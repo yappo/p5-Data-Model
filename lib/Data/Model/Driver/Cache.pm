@@ -88,7 +88,7 @@ sub lookup_multi {
     return $results unless scalar(%{ $fallback_results });
 
     while (my($key, $val) = each %{ $fallback_results }) {
-        $self->add_to_cache($cache_keys{$key}->[1], $val);
+        $self->add_to_cache($cache_keys{$key}->[1], $val) if defined $val;
         $results->{$key} = $val;
     }
 
