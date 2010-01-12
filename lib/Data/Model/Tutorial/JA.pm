@@ -12,6 +12,10 @@ id:yappo さんがつくっている O/R Mapper。新興のものでチュート
 とはいえ、Data::Model 自体がまだまだαクオリティですので、チュートリアルもてぬき
 です。
 
+現在の Data::Model のドキュメントは Data::Model Track - JPerl Advent Calendar 2009 に良質なドキュメントがありますので、そちらを参考にしてください。
+L<http://perl-users.jp/articles/advent-calendar/2009/data-model/>
+近い将来、これらのドキュメントが POD に統合されます。
+
 =head1 つかってみる
 
 =head2 DBI を対象につかってみる
