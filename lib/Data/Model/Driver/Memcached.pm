@@ -35,6 +35,9 @@ sub lookup {
     if (my $map = $schema->options->{column_name_rename}) {
         $ret = $self->column_name_rename($map, $ret, 1);
     }
+    if ($self->{ignore_undef_value}) {
+        $ret = $self->revert_undefvalue($schema, $ret);
+    }
     if ($self->{strip_keys}) {
         $ret = $self->revert_keyvalue($schema, $key, $ret);
     }
@@ -55,6 +58,9 @@ sub lookup_multi {
         }
         if (my $map = $schema->options->{column_name_rename}) {
             $data = $self->column_name_rename($map, $data, 1);
+        }
+        if ($self->{ignore_undef_value}) {
+            $ret = $self->revert_undefvalue($schema, $ret);
         }
         if ($self->{strip_keys}) {
             $data = $self->revert_keyvalue($schema, $keys_map->{$id}, $data);
@@ -77,6 +83,9 @@ sub get {
     if (my $map = $schema->options->{column_name_rename}) {
         $ret = $self->column_name_rename($map, $ret, 1);
     }
+    if ($self->{ignore_undef_value}) {
+        $ret = $self->revert_undefvalue($schema, $ret);
+    }
     if ($self->{strip_keys}) {
         $ret = $self->revert_keyvalue($schema, $key, $ret);
     }
@@ -90,6 +99,9 @@ sub set {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if ($self->{ignore_undef_value}) {
+        $data = $self->strip_undefvalue($schema, $data);
     }
     if (my $map = $schema->options->{column_name_rename}) {
         $data = $self->column_name_rename($map, $data);
@@ -110,6 +122,9 @@ sub replace {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if ($self->{ignore_undef_value}) {
+        $data = $self->strip_undefvalue($schema, $data);
     }
     if (my $map = $schema->options->{column_name_rename}) {
         $data = $self->column_name_rename($map, $data);
@@ -136,6 +151,9 @@ sub update {
     my $data = $columns;
     if ($self->{strip_keys}) {
         $data = $self->strip_keyvalue($schema, $key, $data);
+    }
+    if ($self->{ignore_undef_value}) {
+        $data = $self->strip_undefvalue($schema, $data);
     }
     if (my $map = $schema->options->{column_name_rename}) {
         $data = $self->column_name_rename($map, $data);
@@ -174,6 +192,24 @@ sub revert_keyvalue {
     my $data = { %{ $columns } };
     for my $key (@{ $schema->key }) {
         $data->{$key} = $keys->[$i++].''; # copy
+    }
+    $data;
+}
+
+sub strip_undefvalue {
+    my($self, $schema, $columns) = @_;
+    my $data = { %{ $columns } };
+    for my $key (@{ $schema->columns }) {
+        delete $data->{$key} unless exists $data->{$key} && defined $data->{$key};
+    }
+    $data;
+}
+
+sub revert_undefvalue {
+    my($self, $schema, $columns) = @_;
+    my $data = { %{ $columns } };
+    for my $key (@{ $schema->columns }) {
+        $data->{$key} = undef unless exists $data->{$key} && defined $data->{$key};
     }
     $data;
 }
