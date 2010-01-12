@@ -60,7 +60,7 @@ sub lookup_multi {
             $data = $self->column_name_rename($map, $data, 1);
         }
         if ($self->{ignore_undef_value}) {
-            $ret = $self->revert_undefvalue($schema, $ret);
+            $data = $self->revert_undefvalue($schema, $data);
         }
         if ($self->{strip_keys}) {
             $data = $self->revert_keyvalue($schema, $keys_map->{$id}, $data);
