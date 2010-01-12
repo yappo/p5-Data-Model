@@ -1,6 +1,7 @@
 use t::Utils config => +{
-    type   => 'AliasColumn',
+    type   => 'Binary',
     driver => 'DBI',
     dsn    => 'dbi:SQLite:dbname=',
+    cache  => 'Memcached',
 };
 run;

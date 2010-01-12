@@ -1,6 +1,5 @@
 use t::Utils config => +{
     type   => 'NoKey',
-    driver => 'DBI',
-    dsn    => 'dbi:SQLite:dbname=',
+    driver => 'Memory',
 };
 run;

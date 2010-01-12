@@ -1,5 +1,5 @@
 use t::Utils config => +{
-    type   => 'Default',
+    type   => 'Bigint',
     driver => 'Memory',
 };
 run;

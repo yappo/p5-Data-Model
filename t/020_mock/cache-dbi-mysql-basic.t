@@ -1,7 +1,7 @@
 use t::Utils config => +{
-    type   => 'AliasColumn',
+    type   => 'Basic',
     driver => 'DBI',
-    dsn    => 'dbi:SQLite:dbname=',
+    dsn    => 'dbi:mysql:database=test',
     cache  => 'HASH',
 };
 run;

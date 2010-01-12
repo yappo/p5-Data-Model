@@ -1,5 +1,6 @@
 use t::Utils config => +{
-    type   => 'Default',
+    type   => 'Inflate',
     driver => 'Memory',
+    cache  => 'Memcached',
 };
 run;

@@ -1,5 +1,6 @@
 use t::Utils config => +{
-    type   => 'Default',
+    type   => 'Iterator',
     driver => 'Memory',
+    cache  => 'Memcached',
 };
 run;

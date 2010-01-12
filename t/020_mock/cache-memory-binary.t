@@ -1,5 +1,6 @@
 use t::Utils config => +{
-    type   => 'Default',
+    type   => 'Binary',
     driver => 'Memory',
+    cache  => 'HASH',
 };
 run;

@@ -1,5 +1,6 @@
 use t::Utils config => +{
-    type   => 'Default',
+    type   => 'Index',
     driver => 'Memory',
+    cache  => 'Memcached',
 };
 run;
