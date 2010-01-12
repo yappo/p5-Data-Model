@@ -33,3 +33,4 @@ fallback
 groonga
 kai
 DBD
+JPerl
