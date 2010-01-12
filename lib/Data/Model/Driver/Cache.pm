@@ -58,7 +58,7 @@ sub lookup {
     my $ret = $self->get_from_cache($cache_key);
     unless ($ret) {
         $ret = $self->{fallback}->lookup(@_);
-        return unless $ret;
+        return unless defined $ret;
         $self->add_to_cache($cache_key, $ret);
     }
     return $ret;
