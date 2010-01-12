@@ -9,15 +9,19 @@ for my $cache_name (qw/ cache cache-memcached none /) {
         'none'            => '',
     }->{$cache_name};
 
-    for my $driver_name (qw/ dbi dbi-mysql memory /) {
+    for my $driver_name (qw/ dbi dbi-mysql memory d-memcached /) {
         my $driver = +{
-            'dbi'       => qq{    driver => 'DBI',\n    dsn    => 'dbi:SQLite:dbname=',\n},
-            'dbi-mysql' => qq{    driver => 'DBI',\n    dsn    => 'dbi:mysql:database=test',\n},
-            'memory'    => qq{    driver => 'Memory',\n},
+            'dbi'         => qq{    driver => 'DBI',\n    dsn    => 'dbi:SQLite:dbname=',\n},
+            'dbi-mysql'   => qq{    driver => 'DBI',\n    dsn    => 'dbi:mysql:database=test',\n},
+            'memory'      => qq{    driver => 'Memory',\n},
+            'd-memcached' => qq{    driver => 'Memcached',\n},
         }->{$driver_name};
 
         for my $test_type (qw/ alias_column-suger-rename alias_column-suger alias_column basic bigint binary default for_cache index inflate inflate_column-suger iterator no_key transaction/) {
             next if $driver_name eq 'memory' && $test_type eq 'transaction';
+            if ($driver_name eq 'd-memcached') {
+                next unless $test_type eq 'bigint';
+            }
 
             my $type = +{
                 'alias_column-suger-rename' => 'AliasColumnSugerRename',
