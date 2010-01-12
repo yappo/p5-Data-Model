@@ -14,7 +14,7 @@ use Data::Model::Schema;
 use Data::Model::Schema::Inflate;
 use Data::Model::Schema::SQL;
 
-__PACKAGE__->mk_accessors(qw/ driver schema_class model class column index unique key options has_inflate has_deflate alias_column aluas_column_revers_map /);
+__PACKAGE__->mk_accessors(qw/ driver schema_class model class column columns index unique key options has_inflate has_deflate alias_column aluas_column_revers_map /);
 
 
 our @RESERVED = qw(
