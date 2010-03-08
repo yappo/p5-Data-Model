@@ -1,5 +1,10 @@
 Revision history for Perl extension Data::Model
 
+0.00006    2010-03-08T18:52:06+09:00
+           - added requires check to mysql auto reconnect test
+           - dependend Test::Class 0.34
+             because broken was 't/020_mock/cache-driver-memcached.t' in perl 5.10
+
 0.00005    2010-01-12T21:36:59+09:00
            - Core
              add BIT type
