@@ -6,6 +6,8 @@ use Data::Model::Driver::DBI;
 
 plan skip_all => "Set TEST_MYSQL environment variable to run this test"
     unless $ENV{TEST_MYSQL};
+eval "use DBD::mysql";
+plan skip_all => "DBD::mysql required for testing DBI mysql driver" if $@;
 plan tests => 17;
 
 my $driver1 = Data::Model::Driver::DBI->new(
