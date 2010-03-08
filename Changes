@@ -1,5 +1,17 @@
 Revision history for Perl extension Data::Model
 
+0.00005    2010-01-12T21:36:59+09:00
+           - Core
+             add BIT type
+             add get_model method for Data::Model::Row
+             fixed validate tests broken using Params::Validate::PP
+           - Driver::Memcached
+             add ignore_undef_value option
+           - Driver::Cache
+             fixed bug, cache of defined value only
+           - Queue::Q4M:
+             add validation to 'no created queue table'
+
 0.00004    2009-08-26T13:19:05+09:00
            - Iterator::Empty will be returned if get-method result is empty
            - Driver::DBI
