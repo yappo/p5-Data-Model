@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 80;
+use Test::More tests => 78;
 
 use Data::Model::Iterator;
 
@@ -72,8 +72,6 @@ $itr->end;
 
 $itr = Data::Model::Iterator::Empty->new;
 isa_ok($itr, 'Data::Model::Iterator::Empty');
-ok(1, 'empty is undef') unless $itr;
-is($itr, undef, 'empty is undef');
 ok(!$itr, 'empty is undef');
 ok(!$itr->has_next, 'has_next is false');
 is($itr->next, undef, 'next is undef');
