@@ -672,6 +672,14 @@ see L<Data::Model::Schema>.
     name => 'insert record',
   });
 
+
+if insert to table has auto increment then return $row object with fill in key column by last_insert_id.
+
+  my $row = $model->set( user => {
+    name => 'insert record',
+  });
+  say $row->id; # show last_insert_id()
+
 =head2 delete($target => $key [, \%options ])
 
   $model->delete( user => 3 ); # id = 3 is deleted
