@@ -1,5 +1,7 @@
 Revision history for Perl extension Data::Model
 
+{{$NEXT}}
+
 0.00007    2010-09-08T02:30:23+09:00
            - fixed Iterator::Empty test error (thanks to ytnobody for report)
 

@@ -1,0 +1,82 @@
+{
+   "abstract" : "model interface which had more data sources unified, a.k.a data/object mapper",
+   "author" : [
+      "Kazuhiro Osawa <yappo <at> shibuya <d\u00c3\u00b6t> pl>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Milla version v1.0.2, Dist::Zilla version 4.300034, CPAN::Meta::Converter version 2.120921",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Data-Model",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "inc",
+         "share",
+         "eg",
+         "examples"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.020"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Test::Pod" : "1.41"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "Class::Trigger" : "0",
+            "DBD::SQLite" : "0",
+            "DBI" : "0",
+            "Encode" : "0",
+            "Params::Validate" : "0",
+            "Storable" : "0",
+            "URI" : "0",
+            "perl" : "5.008005"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "IO::Socket::INET" : "0",
+            "Path::Class" : "0",
+            "Test::Class" : "0.34",
+            "Test::Exception" : "0",
+            "Test::More" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/yappo/p5-Data-Model/issues"
+      },
+      "homepage" : "https://github.com/yappo/p5-Data-Model",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/yappo/p5-Data-Model.git",
+         "web" : "https://github.com/yappo/p5-Data-Model"
+      }
+   },
+   "version" : "0.00007",
+   "x_contributors" : [
+      "Kazuhiro Osawa <yappo@shibuya.pl>",
+      "Tokuhiro Matsuno <tokuhirom@gmail.com>",
+      "tokuhirom <tokuhirom@d0d07461-0603-4401-acd4-de1884942a52>",
+      "yappo <yappo@d0d07461-0603-4401-acd4-de1884942a52>",
+      "yappo <yappo@shibuya.pl>",
+      "\u5927\u6ca2 \u548c\u5b8f <yappo>"
+   ]
+}
+

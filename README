@@ -93,6 +93,14 @@ METHODS
         name => 'insert record',
       });
 
+    if insert to table has auto increment then return $row object with fill
+    in key column by last_insert_id.
+
+      my $row = $model->set( user => {
+        name => 'insert record',
+      });
+      say $row->id; # show last_insert_id()
+
   delete($target => $key [, \%options ])
       $model->delete( user => 3 ); # id = 3 is deleted
 
@@ -148,7 +156,7 @@ ACKNOWLEDGEMENTS
     Benjamin Trott more idea given by Data::ObjectDriver
 
 AUTHOR
-    Kazuhiro Osawa <yappo <at> shibuya <dÃ¶t> pl>
+    Kazuhiro Osawa <yappo <at> shibuya <döt> pl>
 
 REPOSITORY
       git clone git://github.com/yappo/p5-Data-Model.git
@@ -160,4 +168,11 @@ REPOSITORY
 LICENSE
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
+
+POD ERRORS
+    Hey! The above document had some coding errors, which are explained
+    below:
+
+    Around line 754:
+        Non-ASCII character seen before =encoding in '<döt>'. Assuming UTF-8
 
