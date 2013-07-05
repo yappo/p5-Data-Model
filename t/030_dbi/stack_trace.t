@@ -87,7 +87,7 @@ throws_ok {
             ids => 2,
         },
     );
-} qr{Data::Model::Driver::DBI 's Exception.+no column named ids.+INSERT.+\(count, ids\).+stack_trace\.t}sm;
+} qr{Data::Model::Driver::DBI 's Exception.+no column named ids.+INSERT.+\((?:count, ids|ids, count)\).+stack_trace\.t}sm;
 
 
 throws_ok {
@@ -96,5 +96,5 @@ throws_ok {
             ids => 2,
         },
     );
-} qr{Data::Model::Driver::DBI 's Exception.+no column named ids.+REPLACE.+\(count, ids\).+stack_trace\.t}sm;
+} qr{Data::Model::Driver::DBI 's Exception.+no column named ids.+REPLACE.+\((?:count, ids|ids, count)\).+stack_trace\.t}sm;
 
