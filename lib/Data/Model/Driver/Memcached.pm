@@ -254,7 +254,8 @@ sub serialize {
         $pack .= $MAP32 . pack('N', $num);
     }
 
-    while (my($k, $v) = each %{ $hash }) {
+    for my $k (sort keys %{ $hash }) {
+        my $v = $hash->{$k};
         if (defined $k) {
             if ($k =~ /\A[0-9]+\z/ && $k <= 0xffffffff) {
                 # Positive FixNum, uint
