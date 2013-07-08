@@ -73,7 +73,7 @@ is($stmt->as_sql, "FROM foo\nGROUP BY baz DESC, quux DESC\n", 'multiple group by
 $stmt = ns();
 $stmt->from('foo');
 $stmt->group({ baz => 'DESC', quux => 'DESC' });
-is($stmt->as_sql, "FROM foo\nGROUP BY baz DESC, quux DESC\n", 'multiple group by with desc');
+like($stmt->as_sql, qr/FROM foo\nGROUP BY (?:baz|quux) DESC, (?:quux|baz) DESC\n/, 'multiple group by with desc');
 
 ## Testing ORDER BY
 $stmt = ns();
