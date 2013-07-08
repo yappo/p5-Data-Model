@@ -69,7 +69,7 @@
          "web" : "https://github.com/yappo/p5-Data-Model"
       }
    },
-   "version" : "0.00007",
+   "version" : "0.00008",
    "x_contributors" : [
       "Kazuhiro Osawa <yappo@shibuya.pl>",
       "Tokuhiro Matsuno <tokuhirom@gmail.com>",

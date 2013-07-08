@@ -2,6 +2,11 @@ Revision history for Perl extension Data::Model
 
 {{$NEXT}}
 
+0.00008  2013-07-08 20:19:38 JST
+           - same as the order of the Data::MessagePack serialization for Driver::Memcached serialize
+           - fixed to perl 5.18 hash randomization bug
+           - fixed CREATE TABLE bug for MySQL test
+
 0.00007    2010-09-08T02:30:23+09:00
            - fixed Iterator::Empty test error (thanks to ytnobody for report)
 
