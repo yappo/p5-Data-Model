@@ -466,7 +466,7 @@ some option to schema is added.
 It is used when using InnoDB in MySQL.
 
   schema_options create_sql_attributes => {
-      mysql => 'TYPE=InnoDB',
+      mysql => 'ENGINE=InnoDB',
   };
 
 =head1 COLUMN OPTIONS

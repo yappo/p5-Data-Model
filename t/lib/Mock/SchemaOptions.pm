@@ -13,7 +13,7 @@ install_model unq => schema {
 
     schema_options key_as_unique => 'unq_1';
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 
@@ -26,7 +26,7 @@ install_model unq2 => schema {
 
     schema_options key_as_unique => 'unq_2';
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 

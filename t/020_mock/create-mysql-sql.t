@@ -128,7 +128,7 @@ is($unq[0], "CREATE TABLE unq (
     id2             CHAR(255)      ,
     UNIQUE unq_1 (id1, id2),
     UNIQUE unq_2 (id2, id1)
-) TYPE=InnoDB");
+) ENGINE=InnoDB");
 
 my @unq2 = $mock->get_schema('unq2')->sql->as_sql;
 is scalar(@unq2), 1;
@@ -137,7 +137,7 @@ is($unq2[0], "CREATE TABLE unq2 (
     id2             CHAR(255)      ,
     UNIQUE unq_2 (id2, id1),
     UNIQUE unq_1 (id1, id2)
-) TYPE=InnoDB");
+) ENGINE=InnoDB");
 
 my @in_bin = $mock->get_schema('in_bin')->sql->as_sql;
 is scalar(@in_bin), 1;

@@ -13,7 +13,7 @@ install_model user => schema {
     columns qw/ name nickname /;
 
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 
@@ -23,7 +23,7 @@ install_model user2 => schema {
     columns qw/ name nickname /;
 
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 
@@ -33,7 +33,7 @@ install_model user3 => schema {
     columns qw/ name nickname /;
 
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 
@@ -44,7 +44,7 @@ install_model is_base => schema {
     columns qw/ id name nickname /;
 
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 
@@ -57,7 +57,7 @@ install_model isnot_base => schema {
     columns qw/ id name nickname /;
 
     schema_options create_sql_attributes => {
-        mysql => 'TYPE=InnoDB',
+        mysql => 'ENGINE=InnoDB',
     };
 };
 

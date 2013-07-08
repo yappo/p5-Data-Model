@@ -40,7 +40,7 @@ my $driver = Data::Model::Driver::DBI::MasterSlave->new(
         columns qw/ name nickname /;
 
         schema_options create_sql_attributes => {
-            mysql => 'TYPE=InnoDB',
+            mysql => 'ENGINE=InnoDB',
         };
     };
 }
